@@ -350,7 +350,7 @@ async def create_order_from_request(
 ):
     """إنشاء أمر شراء من طلب موجود"""
     from datetime import datetime, timezone
-    from database import PurchaseOrder, PurchaseOrderItem, MaterialRequest, RequestItem, Project, Supplier
+    from database import PurchaseOrder, PurchaseOrderItem, MaterialRequest, MaterialRequestItem, Project, Supplier
     from sqlalchemy import select
     import uuid as uuid_lib
     
@@ -366,7 +366,7 @@ async def create_order_from_request(
     
     # Get request items
     items_result = await session.execute(
-        select(RequestItem).where(RequestItem.request_id == data.request_id)
+        select(MaterialRequestItem).where(MaterialRequestItem.request_id == data.request_id)
     )
     request_items = list(items_result.scalars().all())
     
