@@ -13,6 +13,92 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Card, CardContent } from "../ui/card";
 import { Plus, Edit, Trash2, Users, Phone, Mail, MapPin } from "lucide-react";
 
+// Supplier Form Component - خارج المكون الرئيسي لتجنب إعادة الإنشاء
+const SupplierForm = ({ data, setData, onSubmit, onCancel, isEdit = false }) => (
+  <div className="space-y-3 bg-slate-50 p-4 rounded-lg">
+    <h3 className="font-medium text-sm">{isEdit ? "تعديل المورد" : "إضافة مورد جديد"}</h3>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div>
+        <Label className="text-xs">اسم المورد *</Label>
+        <Input 
+          data-testid={isEdit ? "edit-supplier-name" : "new-supplier-name"}
+          placeholder="اسم الشركة أو المورد" 
+          value={data.name} 
+          onChange={(e) => setData({...data, name: e.target.value})} 
+          className="h-9 mt-1" 
+        />
+      </div>
+      <div>
+        <Label className="text-xs">جهة الاتصال</Label>
+        <Input 
+          data-testid={isEdit ? "edit-supplier-contact" : "new-supplier-contact"}
+          placeholder="اسم الشخص" 
+          value={data.contact_person} 
+          onChange={(e) => setData({...data, contact_person: e.target.value})} 
+          className="h-9 mt-1" 
+        />
+      </div>
+      <div>
+        <Label className="text-xs">رقم الهاتف</Label>
+        <Input 
+          data-testid={isEdit ? "edit-supplier-phone" : "new-supplier-phone"}
+          placeholder="05xxxxxxxx" 
+          value={data.phone} 
+          onChange={(e) => setData({...data, phone: e.target.value})} 
+          className="h-9 mt-1" 
+        />
+      </div>
+      <div>
+        <Label className="text-xs">البريد الإلكتروني</Label>
+        <Input 
+          data-testid={isEdit ? "edit-supplier-email" : "new-supplier-email"}
+          type="email"
+          placeholder="email@example.com" 
+          value={data.email} 
+          onChange={(e) => setData({...data, email: e.target.value})} 
+          className="h-9 mt-1" 
+        />
+      </div>
+      <div className="col-span-2">
+        <Label className="text-xs">العنوان</Label>
+        <Input 
+          data-testid={isEdit ? "edit-supplier-address" : "new-supplier-address"}
+          placeholder="عنوان المورد" 
+          value={data.address} 
+          onChange={(e) => setData({...data, address: e.target.value})} 
+          className="h-9 mt-1" 
+        />
+      </div>
+      <div className="col-span-2">
+        <Label className="text-xs">ملاحظات</Label>
+        <Textarea 
+          data-testid={isEdit ? "edit-supplier-notes" : "new-supplier-notes"}
+          placeholder="ملاحظات إضافية" 
+          value={data.notes} 
+          onChange={(e) => setData({...data, notes: e.target.value})} 
+          className="mt-1" 
+          rows={2}
+        />
+      </div>
+    </div>
+    <div className="flex gap-2">
+      <Button 
+        data-testid={isEdit ? "save-supplier-btn" : "create-supplier-btn"}
+        onClick={onSubmit} 
+        className="bg-orange-600 hover:bg-orange-700"
+      >
+        {isEdit ? "حفظ التعديلات" : "إضافة المورد"}
+      </Button>
+      <Button 
+        variant="outline" 
+        onClick={onCancel}
+      >
+        إلغاء
+      </Button>
+    </div>
+  </div>
+);
+
 const SupplierManagement = ({ 
   open, 
   onOpenChange, 
@@ -71,91 +157,6 @@ const SupplierManagement = ({
       toast.error(error.response?.data?.detail || "فشل في حذف المورد");
     }
   };
-
-  const SupplierForm = ({ data, setData, onSubmit, onCancel, isEdit = false }) => (
-    <div className="space-y-3 bg-slate-50 p-4 rounded-lg">
-      <h3 className="font-medium text-sm">{isEdit ? "تعديل المورد" : "إضافة مورد جديد"}</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <Label className="text-xs">اسم المورد *</Label>
-          <Input 
-            data-testid={isEdit ? "edit-supplier-name" : "new-supplier-name"}
-            placeholder="اسم الشركة أو المورد" 
-            value={data.name} 
-            onChange={(e) => setData({...data, name: e.target.value})} 
-            className="h-9 mt-1" 
-          />
-        </div>
-        <div>
-          <Label className="text-xs">جهة الاتصال</Label>
-          <Input 
-            data-testid={isEdit ? "edit-supplier-contact" : "new-supplier-contact"}
-            placeholder="اسم الشخص" 
-            value={data.contact_person} 
-            onChange={(e) => setData({...data, contact_person: e.target.value})} 
-            className="h-9 mt-1" 
-          />
-        </div>
-        <div>
-          <Label className="text-xs">رقم الهاتف</Label>
-          <Input 
-            data-testid={isEdit ? "edit-supplier-phone" : "new-supplier-phone"}
-            placeholder="05xxxxxxxx" 
-            value={data.phone} 
-            onChange={(e) => setData({...data, phone: e.target.value})} 
-            className="h-9 mt-1" 
-          />
-        </div>
-        <div>
-          <Label className="text-xs">البريد الإلكتروني</Label>
-          <Input 
-            data-testid={isEdit ? "edit-supplier-email" : "new-supplier-email"}
-            type="email"
-            placeholder="email@example.com" 
-            value={data.email} 
-            onChange={(e) => setData({...data, email: e.target.value})} 
-            className="h-9 mt-1" 
-          />
-        </div>
-        <div className="col-span-2">
-          <Label className="text-xs">العنوان</Label>
-          <Input 
-            data-testid={isEdit ? "edit-supplier-address" : "new-supplier-address"}
-            placeholder="عنوان المورد" 
-            value={data.address} 
-            onChange={(e) => setData({...data, address: e.target.value})} 
-            className="h-9 mt-1" 
-          />
-        </div>
-        <div className="col-span-2">
-          <Label className="text-xs">ملاحظات</Label>
-          <Textarea 
-            data-testid={isEdit ? "edit-supplier-notes" : "new-supplier-notes"}
-            placeholder="ملاحظات إضافية" 
-            value={data.notes} 
-            onChange={(e) => setData({...data, notes: e.target.value})} 
-            className="mt-1" 
-            rows={2}
-          />
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <Button 
-          data-testid={isEdit ? "save-supplier-btn" : "create-supplier-btn"}
-          onClick={onSubmit} 
-          className="bg-orange-600 hover:bg-orange-700"
-        >
-          {isEdit ? "حفظ التعديلات" : "إضافة المورد"}
-        </Button>
-        <Button 
-          variant="outline" 
-          onClick={onCancel}
-        >
-          إلغاء
-        </Button>
-      </div>
-    </div>
-  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
