@@ -597,6 +597,27 @@ const BuildingsSystem = () => {
     setSelectCatalogDialogOpen(false);
   };
 
+  // Remove project from buildings system (not delete, just hide)
+  const handleRemoveProjectFromBuildings = async (projectId) => {
+    if (!window.confirm("هل أنت متأكد من إزالة هذا المشروع من نظام الكميات؟ (لن يتم حذف المشروع، فقط إخفاؤه من نظام الكميات)")) return;
+    
+    try {
+      await axios.delete(`${BUILDINGS_API}/projects/${projectId}`, getAuthHeaders());
+      toast.success("تم إزالة المشروع من نظام الكميات بنجاح");
+      
+      // Clear selected project if it was removed
+      if (selectedProject?.id === projectId) {
+        setSelectedProject(null);
+      }
+      
+      // Refresh projects list
+      fetchDashboard();
+    } catch (error) {
+      console.error("Error removing project from buildings:", error);
+      toast.error("فشل في إزالة المشروع");
+    }
+  };
+
   // Fetch reports
   const fetchReports = useCallback(async () => {
     try {
