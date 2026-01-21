@@ -11,10 +11,12 @@ NO direct SQL in routes.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
+from typing import List as ListType
 from uuid import UUID
 from datetime import datetime, timezone
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func
 
 from database import PurchaseOrder
 from database.connection import get_postgres_session
