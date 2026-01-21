@@ -26,6 +26,18 @@ const DeliveryTrackerDashboard = () => {
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   
+  // Filters - الفلاتر
+  const [filters, setFilters] = useState({
+    project: '',
+    supervisor: '',
+    engineer: '',
+    supplier: ''
+  });
+  const [projects, setProjects] = useState([]);
+  const [supervisors, setSupervisors] = useState([]);
+  const [engineers, setEngineers] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  
   // Receipt form
   const [supplierReceiptNumber, setSupplierReceiptNumber] = useState("");
   const [supplierInvoiceNumber, setSupplierInvoiceNumber] = useState("");
@@ -34,12 +46,36 @@ const DeliveryTrackerDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [ordersRes, statsRes] = await Promise.all([
+      const [ordersRes, statsRes, projectsRes, suppliersRes] = await Promise.all([
         axios.get(`${API_V2_URL}/delivery/pending`, getAuthHeaders()),
         axios.get(`${API_V2_URL}/delivery/stats`, getAuthHeaders()),
+        axios.get(`${API_V2_URL}/projects/`, getAuthHeaders()).catch(() => ({ data: { items: [] } })),
+        axios.get(`${API_V2_URL}/suppliers/`, getAuthHeaders()).catch(() => ({ data: [] }))
       ]);
-      setOrders(ordersRes.data.items || ordersRes.data || []);
+      const allOrders = ordersRes.data.items || ordersRes.data || [];
+      setOrders(allOrders);
       setStats(statsRes.data);
+      
+      // Set projects
+      const projectsList = projectsRes.data?.items || projectsRes.data || [];
+      setProjects(projectsList);
+      
+      // Set suppliers
+      setSuppliers(suppliersRes.data || []);
+      
+      // Extract supervisors and engineers from orders
+      const supMap = new Map();
+      const engMap = new Map();
+      allOrders.forEach(order => {
+        if (order.supervisor_id && order.supervisor_name) {
+          supMap.set(order.supervisor_id, { id: order.supervisor_id, name: order.supervisor_name });
+        }
+        if (order.engineer_id && order.engineer_name) {
+          engMap.set(order.engineer_id, { id: order.engineer_id, name: order.engineer_name });
+        }
+      });
+      setSupervisors(Array.from(supMap.values()));
+      setEngineers(Array.from(engMap.values()));
     } catch (error) {
       toast.error("فشل في تحميل البيانات");
     } finally {
