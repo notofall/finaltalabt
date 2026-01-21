@@ -137,6 +137,89 @@ async def get_pending_deliveries(
     return result
 
 
+@router.get("/delivered")
+async def get_delivered_orders(
+    current_user: dict = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    """الحصول على أوامر الشراء التي تم استلامها"""
+    from database import PurchaseOrder, Project, Supplier, MaterialRequest, PurchaseOrderItem
+    from sqlalchemy import select
+    
+    # Get delivered orders
+    orders_result = await session.execute(
+        select(PurchaseOrder)
+        .where(PurchaseOrder.status.in_(['delivered', 'partially_delivered']))
+        .order_by(PurchaseOrder.delivered_at.desc().nulls_last(), PurchaseOrder.created_at.desc())
+    )
+    orders = list(orders_result.scalars().all())
+    result = []
+    
+    for o in orders:
+        # Get project name
+        project_name = o.project_name
+        if not project_name and o.project_id:
+            project_result = await session.execute(
+                select(Project.name).where(Project.id == o.project_id)
+            )
+            project_name = project_result.scalar_one_or_none()
+        
+        # Get supplier name
+        supplier_name = o.supplier_name
+        if not supplier_name and o.supplier_id:
+            supplier_result = await session.execute(
+                select(Supplier.name).where(Supplier.id == o.supplier_id)
+            )
+            supplier_name = supplier_result.scalar_one_or_none()
+        
+        # Get request number
+        request_number = o.request_number
+        if not request_number and o.request_id:
+            request_result = await session.execute(
+                select(MaterialRequest.request_number).where(MaterialRequest.id == o.request_id)
+            )
+            request_number = request_result.scalar_one_or_none()
+        
+        # Get order items from PurchaseOrderItem table
+        items_result = await session.execute(
+            select(PurchaseOrderItem).where(PurchaseOrderItem.order_id == o.id)
+        )
+        items = list(items_result.scalars().all())
+        
+        result.append({
+            "id": str(o.id),
+            "order_number": o.order_number,
+            "request_number": request_number,
+            "project_id": o.project_id,
+            "project_name": project_name,
+            "supplier_id": o.supplier_id,
+            "supplier_name": supplier_name,
+            "status": o.status,
+            "total_amount": o.total_amount or 0,
+            "items_count": len(items),
+            "items": [
+                {
+                    "id": str(item.id),
+                    "name": item.name,
+                    "quantity": item.quantity,
+                    "unit": item.unit or "قطعة",
+                    "unit_price": item.unit_price or 0,
+                    "total_price": item.total_price or 0,
+                    "delivered_quantity": item.delivered_quantity or 0,
+                    "remaining_quantity": item.quantity - (item.delivered_quantity or 0)
+                }
+                for item in items
+            ],
+            "created_at": o.created_at.isoformat() if o.created_at else None,
+            "delivered_at": o.delivered_at.isoformat() if o.delivered_at else None,
+            "supplier_receipt_number": o.supplier_receipt_number if hasattr(o, 'supplier_receipt_number') else None,
+            "received_by_name": o.received_by_name if hasattr(o, 'received_by_name') else None,
+            "delivery_notes": o.delivery_notes if hasattr(o, 'delivery_notes') else None
+        })
+    
+    return result
+
+
 @router.post("/{order_id}/ship")
 async def mark_as_shipped(
     order_id: UUID,
