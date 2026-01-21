@@ -439,7 +439,7 @@ async def create_order_from_request(
                 unit_price=unit_price,
                 total_price=total_price,
                 delivered_quantity=0,
-                created_at=datetime.now(timezone.utc)
+                item_index=idx
             )
             session.add(order_item)
     
