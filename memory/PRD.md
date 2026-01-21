@@ -182,11 +182,19 @@
 ### Frontend (React + Tailwind + Shadcn/UI)
 ```
 /app/frontend/src/
-├── components/         # Reusable components
-├── context/           # React context
-├── pages/             # Page components
-│   └── BuildingsSystem.js  # نظام الكميات
-└── lib/               # Utilities
+├── components/
+│   ├── procurement/      # مكونات المشتريات (جديد)
+│   │   ├── ProjectManagement.js
+│   │   ├── CatalogManagement.js
+│   │   ├── SupplierManagement.js
+│   │   └── index.js
+│   ├── buildings/        # مكونات نظام الكميات
+│   └── ui/              # Shadcn components
+├── context/             # React context
+├── pages/
+│   ├── ProcurementDashboard.js  # لوحة المشتريات (~4700 سطر)
+│   └── BuildingsSystem.js       # نظام الكميات (~2285 سطر)
+└── lib/                 # Utilities
 ```
 
 ### قاعدة البيانات (SQLite حالياً)
