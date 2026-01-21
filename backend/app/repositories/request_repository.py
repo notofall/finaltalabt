@@ -172,23 +172,30 @@ class RequestRepository(BaseRepository[MaterialRequest]):
         """
         Get next sequence number for a supervisor based on their prefix.
         Uses database-level locking to prevent race conditions.
+        For SQLite: Uses IMMEDIATE transaction mode
+        For PostgreSQL: Uses FOR UPDATE row locking
         """
+        from database.connection import get_database_url
+        
+        database_url = get_database_url()
+        is_sqlite = 'sqlite' in database_url
+        
         if prefix:
             # Get max sequence for this prefix (prefix-based numbering)
-            # Use FOR UPDATE to lock rows and prevent race conditions
-            result = await self.session.execute(
-                select(func.max(MaterialRequest.request_seq))
-                .where(MaterialRequest.request_number.like(f"{prefix}%"))
-                .with_for_update()
+            query = select(func.max(MaterialRequest.request_seq)).where(
+                MaterialRequest.request_number.like(f"{prefix}-%")
             )
         else:
             # Fallback to supervisor_id based numbering
-            result = await self.session.execute(
-                select(func.max(MaterialRequest.request_seq))
-                .where(MaterialRequest.supervisor_id == supervisor_id)
-                .with_for_update()
+            query = select(func.max(MaterialRequest.request_seq)).where(
+                MaterialRequest.supervisor_id == supervisor_id
             )
         
+        # Add row locking for PostgreSQL only (SQLite doesn't support FOR UPDATE)
+        if not is_sqlite:
+            query = query.with_for_update()
+        
+        result = await self.session.execute(query)
         current_max = result.scalar_one_or_none() or 0
         return current_max + 1
     
