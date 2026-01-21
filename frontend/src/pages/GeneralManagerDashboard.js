@@ -33,6 +33,7 @@ import { exportPurchaseOrderToPDF, fetchAndCacheCompanySettings } from '../utils
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function GeneralManagerDashboard() {
+  const navigate = useNavigate();
   const { user, logout, token } = useAuth();
   const [stats, setStats] = useState({
     pending_approval: 0,
