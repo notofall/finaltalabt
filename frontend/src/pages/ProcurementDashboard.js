@@ -2964,14 +2964,22 @@ const ProcurementDashboard = () => {
                       <div key={cat.id} className="bg-white border rounded-lg p-3">
                         {editingDefaultCategory?.id === cat.id ? (
                           <div className="space-y-2">
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-3 gap-2">
                               <Input 
+                                placeholder="الكود"
+                                value={editingDefaultCategory.code || ""}
+                                onChange={(e) => setEditingDefaultCategory({...editingDefaultCategory, code: e.target.value})}
+                                className="h-8"
+                              />
+                              <Input 
+                                placeholder="الاسم"
                                 value={editingDefaultCategory.name}
                                 onChange={(e) => setEditingDefaultCategory({...editingDefaultCategory, name: e.target.value})}
                                 className="h-8"
                               />
                               <Input 
                                 type="number"
+                                placeholder="الميزانية"
                                 value={editingDefaultCategory.default_budget}
                                 onChange={(e) => setEditingDefaultCategory({...editingDefaultCategory, default_budget: e.target.value})}
                                 className="h-8"
@@ -2985,8 +2993,11 @@ const ProcurementDashboard = () => {
                         ) : (
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="font-medium">{cat.name}</p>
-                              <p className="text-xs text-slate-500">
+                              <div className="flex items-center gap-2">
+                                <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-sm font-mono">{cat.code || '-'}</span>
+                                <p className="font-medium">{cat.name}</p>
+                              </div>
+                              <p className="text-xs text-slate-500 mt-1">
                                 الميزانية الافتراضية: {(cat.default_budget || 0).toLocaleString('ar-SA')} ر.س
                               </p>
                             </div>
