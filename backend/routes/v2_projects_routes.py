@@ -11,8 +11,11 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
 from uuid import UUID
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import Project
+from database.connection import get_postgres_session
 
 # Import Services via DI
 from app.services import ProjectService
