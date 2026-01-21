@@ -108,10 +108,12 @@ const BuildingsSystem = () => {
       const res = await axios.get(`${BUILDINGS_API}/dashboard`, getAuthHeaders());
       setDashboardData(res.data);
       
-      // Using buildings projects API (only projects enabled for buildings system)
-      const projectsRes = await axios.get(`${BUILDINGS_API}/projects`, getAuthHeaders());
-      const projectsList = Array.isArray(projectsRes.data) ? projectsRes.data : [];
-      setProjects(projectsList);
+      // Using V2 API for projects - all active projects should appear in buildings system
+      const projectsRes = await axios.get(`${API_V2_URL}/projects/`, getAuthHeaders());
+      const projectsList = projectsRes.data.items || (Array.isArray(projectsRes.data) ? projectsRes.data : []);
+      // Filter only active projects
+      const activeProjects = projectsList.filter(p => p.status === 'active');
+      setProjects(activeProjects);
       
     } catch (error) {
       console.error("Error fetching dashboard:", error);
