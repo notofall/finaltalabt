@@ -845,7 +845,7 @@ class SupplierQuotationItem(Base):
 
 
 
-class BuildingPermission(Base):
+class BuildingsPermission(Base):
     """صلاحيات نظام إدارة كميات العمائر"""
     __tablename__ = "building_permissions"
     
