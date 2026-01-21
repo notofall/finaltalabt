@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, delete
+from uuid import uuid4
 
 from app.services import BuildingsService
 from app.dependencies import get_buildings_service
