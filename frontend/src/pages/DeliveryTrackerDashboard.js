@@ -46,13 +46,16 @@ const DeliveryTrackerDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [ordersRes, statsRes, projectsRes, suppliersRes] = await Promise.all([
+      const [ordersRes, deliveredRes, statsRes, projectsRes, suppliersRes] = await Promise.all([
         axios.get(`${API_V2_URL}/delivery/pending`, getAuthHeaders()),
+        axios.get(`${API_V2_URL}/delivery/delivered`, getAuthHeaders()),
         axios.get(`${API_V2_URL}/delivery/stats`, getAuthHeaders()),
         axios.get(`${API_V2_URL}/projects/`, getAuthHeaders()).catch(() => ({ data: { items: [] } })),
         axios.get(`${API_V2_URL}/suppliers/`, getAuthHeaders()).catch(() => ({ data: [] }))
       ]);
-      const allOrders = ordersRes.data.items || ordersRes.data || [];
+      const pendingOrdersList = ordersRes.data.items || ordersRes.data || [];
+      const deliveredOrdersList = deliveredRes.data.items || deliveredRes.data || [];
+      const allOrders = [...pendingOrdersList, ...deliveredOrdersList];
       setOrders(allOrders);
       setStats(statsRes.data);
       
