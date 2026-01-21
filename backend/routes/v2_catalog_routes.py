@@ -76,6 +76,8 @@ class AliasResponse(BaseModel):
     id: str
     alias_name: str
     catalog_item_id: str
+    catalog_item_name: Optional[str] = None
+    usage_count: int = 0
     created_at: Optional[str] = None
     
     class Config:
