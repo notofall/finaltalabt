@@ -1593,6 +1593,9 @@ const ProcurementDashboard = () => {
             
             {/* Desktop Navigation - Hidden on Mobile */}
             <div className="hidden lg:flex items-center gap-1">
+              <Button variant="ghost" size="sm" onClick={() => setProjectDialogOpen(true)} className="text-slate-300 hover:text-white h-8 px-2">
+                <Building2 className="w-4 h-4 ml-1" />المشاريع
+              </Button>
               <Button variant="ghost" size="sm" onClick={() => setBudgetDialogOpen(true)} className="text-slate-300 hover:text-white h-8 px-2">
                 <DollarSign className="w-4 h-4 ml-1" />الميزانيات
               </Button>
@@ -1603,7 +1606,7 @@ const ProcurementDashboard = () => {
                 <FileText className="w-4 h-4 ml-1" />عروض الأسعار
               </Button>
               <Button variant="ghost" size="sm" onClick={() => navigate('/buildings')} className="text-emerald-400 hover:text-emerald-300 h-8 px-2" title="نظام العمائر">
-                <Building2 className="w-4 h-4 ml-1" />العمائر
+                <Building2 className="w-4 h-4 ml-1" />الكميات
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setAdvancedReportsOpen(true)} className="text-purple-400 hover:text-purple-300 h-8 px-2" title="التقارير المتقدمة">
                 <PieChart className="w-4 h-4 ml-1" />التقارير
