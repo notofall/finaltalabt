@@ -109,7 +109,7 @@ class BudgetService(BaseService):
         """Delete budget category"""
         return await self.budget_repo.delete_category(category_id)
     
-    async def apply_defaults_to_project(self, project_id: str) -> List[BudgetCategory]:
+    async def apply_defaults_to_project(self, project_id: str, project_name: str = "", created_by: str = "system", created_by_name: str = "النظام") -> List[BudgetCategory]:
         """Apply default categories to a project"""
         # Get all default categories
         defaults = await self.budget_repo.get_all_default_categories()
@@ -121,10 +121,16 @@ class BudgetService(BaseService):
         created = []
         for default in defaults:
             if default.name not in existing_names:
+                # Use the default category code if available
+                category_code = getattr(default, 'code', None)
                 category = await self.create_category(
                     name=default.name,
                     project_id=project_id,
-                    estimated_budget=default.default_budget
+                    estimated_budget=default.default_budget,
+                    code=category_code,
+                    project_name=project_name,
+                    created_by=created_by,
+                    created_by_name=created_by_name
                 )
                 created.append(category)
         
