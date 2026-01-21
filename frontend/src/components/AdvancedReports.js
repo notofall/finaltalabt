@@ -74,20 +74,31 @@ export default function AdvancedReports({ onClose }) {
       
       const queryString = params.toString() ? `?${params.toString()}` : "";
       
+      // Default empty data structure
+      const defaultSummary = { summary: { total_requests: 0, total_orders: 0, total_spending: 0, approved_orders: 0, pending_orders: 0, average_order_value: 0 }, top_projects: [], top_suppliers: [], spending_by_category: [], monthly_spending: [] };
+      const defaultApproval = { summary: { total_requests: 0, approved: 0, rejected: 0, pending: 0, approval_rate: 0, rejection_rate: 0 }, by_engineer: [], by_supervisor: [], by_project: [] };
+      const defaultSupplier = { suppliers: [] };
+      const defaultPriceVariance = { items: [] };
+      
       const [summaryRes, approvalRes, supplierRes, priceVarianceRes] = await Promise.all([
-        axios.get(`${API_V2_URL}/reports/advanced/summary${queryString}`, getAuthHeaders()),
-        axios.get(`${API_V2_URL}/reports/advanced/approval-analytics${queryString}`, getAuthHeaders()),
-        axios.get(`${API_V2_URL}/reports/advanced/supplier-performance${queryString}`, getAuthHeaders()),
-        axios.get(`${API_V2_URL}/reports/advanced/price-variance${queryString}`, getAuthHeaders())
+        axios.get(`${API_V2_URL}/reports/advanced/summary${queryString}`, getAuthHeaders()).catch(() => ({ data: defaultSummary })),
+        axios.get(`${API_V2_URL}/reports/advanced/approval-analytics${queryString}`, getAuthHeaders()).catch(() => ({ data: defaultApproval })),
+        axios.get(`${API_V2_URL}/reports/advanced/supplier-performance${queryString}`, getAuthHeaders()).catch(() => ({ data: defaultSupplier })),
+        axios.get(`${API_V2_URL}/reports/advanced/price-variance${queryString}`, getAuthHeaders()).catch(() => ({ data: defaultPriceVariance }))
       ]);
       
-      setSummaryReport(summaryRes.data);
-      setApprovalReport(approvalRes.data);
-      setSupplierReport(supplierRes.data);
-      setPriceVarianceReport(priceVarianceRes.data);
+      setSummaryReport(summaryRes.data || defaultSummary);
+      setApprovalReport(approvalRes.data || defaultApproval);
+      setSupplierReport(supplierRes.data || defaultSupplier);
+      setPriceVarianceReport(priceVarianceRes.data || defaultPriceVariance);
     } catch (error) {
       console.error("Error fetching reports:", error);
       toast.error("فشل في تحميل التقارير");
+      // Set default values even on error
+      setSummaryReport({ summary: { total_requests: 0, total_orders: 0, total_spending: 0, approved_orders: 0 }, top_projects: [], top_suppliers: [], monthly_spending: [] });
+      setApprovalReport({ summary: { total_requests: 0, approved: 0, rejected: 0, pending: 0, approval_rate: 0, rejection_rate: 0 }, by_engineer: [], by_supervisor: [], by_project: [] });
+      setSupplierReport({ suppliers: [] });
+      setPriceVarianceReport({ items: [] });
     } finally {
       setLoading(false);
     }
