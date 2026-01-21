@@ -20,17 +20,20 @@ router = APIRouter(prefix="/api/v2/budget", tags=["V2 Budget"])
 
 class DefaultCategoryCreate(BaseModel):
     name: str
+    code: Optional[str] = None
     default_budget: float = 0
 
 
 class DefaultCategoryUpdate(BaseModel):
     name: Optional[str] = None
+    code: Optional[str] = None
     default_budget: Optional[float] = None
 
 
 class DefaultCategoryResponse(BaseModel):
     id: str
     name: str
+    code: Optional[str] = None
     default_budget: float
     created_at: Optional[str] = None
     
