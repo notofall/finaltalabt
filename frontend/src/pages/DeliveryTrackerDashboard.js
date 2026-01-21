@@ -527,6 +527,69 @@ const DeliveryTrackerDashboard = () => {
         </Card>
       </div>
 
+      {/* Filters - الفلاتر */}
+      <Card className="mb-4">
+        <CardContent className="p-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <select
+              value={filters.project}
+              onChange={(e) => setFilters({...filters, project: e.target.value})}
+              className="h-9 px-3 rounded-lg border border-slate-300 text-sm bg-white"
+            >
+              <option value="">جميع المشاريع</option>
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+            <select
+              value={filters.supplier}
+              onChange={(e) => setFilters({...filters, supplier: e.target.value})}
+              className="h-9 px-3 rounded-lg border border-slate-300 text-sm bg-white"
+            >
+              <option value="">جميع الموردين</option>
+              {suppliers.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+            <select
+              value={filters.supervisor}
+              onChange={(e) => setFilters({...filters, supervisor: e.target.value})}
+              className="h-9 px-3 rounded-lg border border-slate-300 text-sm bg-white"
+            >
+              <option value="">جميع المشرفين</option>
+              {supervisors.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+            <select
+              value={filters.engineer}
+              onChange={(e) => setFilters({...filters, engineer: e.target.value})}
+              className="h-9 px-3 rounded-lg border border-slate-300 text-sm bg-white"
+            >
+              <option value="">جميع المهندسين</option>
+              {engineers.map(e => (
+                <option key={e.id} value={e.id}>{e.name}</option>
+              ))}
+            </select>
+          </div>
+          {(filters.project || filters.supplier || filters.supervisor || filters.engineer) && (
+            <div className="mt-2 flex items-center justify-between">
+              <span className="text-xs text-slate-500">
+                عرض {filteredOrders.length} من {orders.length} أمر
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setFilters({ project: '', supervisor: '', engineer: '', supplier: '' })}
+                className="text-xs h-7"
+              >
+                مسح الفلاتر
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Pending Orders - بانتظار الاستلام */}
       <Card className="mb-4">
         <CardHeader className="pb-2">
