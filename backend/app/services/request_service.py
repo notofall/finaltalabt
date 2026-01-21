@@ -104,16 +104,18 @@ class RequestService(BaseService[MaterialRequest]):
         expected_delivery_date: Optional[str] = None,
         supervisor_prefix: Optional[str] = None
     ) -> MaterialRequest:
-        """Create a new material request"""
+        """Create a new material request with unique sequential numbering per supervisor prefix"""
         import uuid
         
-        # Get next sequence number for this supervisor
+        # Get next sequence number for this supervisor's prefix
         next_seq = await self.request_repo.get_next_seq_for_supervisor(supervisor_id, supervisor_prefix)
         
-        # Generate request number
+        # Generate request number with format: PREFIX-SEQUENCE (e.g., a1-0001, b2-0003)
         if supervisor_prefix:
-            request_number = f"{supervisor_prefix}{next_seq}"
+            # Format: prefix-sequence (4 digits)
+            request_number = f"{supervisor_prefix}-{next_seq:04d}"
         else:
+            # Fallback format for supervisors without prefix
             request_number = f"REQ-{next_seq:05d}"
         
         request = MaterialRequest(
