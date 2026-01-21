@@ -232,7 +232,7 @@ async def get_all_permissions(
     session: AsyncSession = Depends(get_postgres_session)
 ):
     """Get all building permissions (admin only)"""
-    from database.models import BuildingPermission, User
+    from database.models import BuildingsPermission, User
     
     # Check if table exists
     try:
@@ -267,7 +267,7 @@ async def grant_permission(
     session: AsyncSession = Depends(get_postgres_session)
 ):
     """Grant building permission to user"""
-    from database.models import BuildingPermission, User, Project
+    from database.models import BuildingsPermission, User, Project
     import uuid as uuid_lib
     
     user_id = data.get("user_id")
