@@ -535,7 +535,7 @@ async def validate_items(
         
         # إذا كان الصنف مربوط بالكتالوج مسبقاً
         if catalog_item_id:
-            catalog_item_orm = await catalog_service.get_item(catalog_item_id)
+            catalog_item_orm = await catalog_service.get_item_by_id(catalog_item_id)
             if catalog_item_orm:
                 catalog_item = item_to_response(catalog_item_orm).model_dump()
                 results.append({
