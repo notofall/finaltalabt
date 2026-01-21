@@ -1073,7 +1073,7 @@ const ProcurementDashboard = () => {
     
     setSubmitting(true);
     try {
-      await axios.post(`${API_V2_URL}/orders/from-request`, { 
+      const response = await axios.post(`${API_V2_URL}/orders/from-request`, { 
         request_id: selectedRequest.id, 
         supplier_id: selectedSupplierId || null,
         supplier_name: supplierName, 
@@ -1095,7 +1095,24 @@ const ProcurementDashboard = () => {
       setItemPrices({});
       setSelectedCategoryId("");
       setSelectedRequest(null);
-      fetchData();
+      
+      // Refresh data and open the new order for viewing/approval
+      await fetchData();
+      
+      // Show the newly created order
+      if (response.data.order_id) {
+        // Fetch the full order details
+        try {
+          const orderRes = await axios.get(`${API_V2_URL}/orders/${response.data.order_id}`, getAuthHeaders());
+          if (orderRes.data) {
+            setSelectedOrder(orderRes.data);
+            setViewOrderDialogOpen(true);
+            toast.info("يمكنك الآن مراجعة أمر الشراء واعتماده", { duration: 5000 });
+          }
+        } catch (err) {
+          console.error("Error fetching new order:", err);
+        }
+      }
     } catch (error) {
       toast.error(error.response?.data?.detail || "فشل في إصدار أمر الشراء");
     } finally {
