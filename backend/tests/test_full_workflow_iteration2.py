@@ -591,7 +591,11 @@ class TestQuantityEngineerFeatures:
         )
         assert response.status_code == 200, f"Failed to get alerts: {response.text}"
         alerts = response.json()
-        print(f"✓ Found {len(alerts.get('items', alerts))} quantity alerts")
+        # Handle both list and dict response
+        if isinstance(alerts, list):
+            print(f"✓ Found {len(alerts)} quantity alerts")
+        else:
+            print(f"✓ Found {len(alerts.get('items', []))} quantity alerts")
 
 
 class TestBuildingsSystem:
