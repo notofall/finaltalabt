@@ -331,34 +331,40 @@ async def confirm_receipt(
                 all_fully_delivered = False
             
             # تحديث supply_tracking في نظام كميات العمائر
-            if order.project_id and item.catalog_item_id:
-                supply_result = await session.execute(
-                    select(SupplyTracking).where(
-                        SupplyTracking.project_id == order.project_id,
-                        SupplyTracking.catalog_item_id == item.catalog_item_id
-                    )
-                )
-                supply_item = supply_result.scalar_one_or_none()
-                
-                if supply_item:
-                    supply_item.received_quantity = (supply_item.received_quantity or 0) + quantity_delivered
-                    supply_item.updated_at = now
-                    supply_updated += 1
+            supply_updated_for_item = False
             
-            # أيضاً البحث باسم الصنف إذا لم يكن هناك catalog_item_id
-            if order.project_id and supply_updated == 0:
-                supply_result = await session.execute(
-                    select(SupplyTracking).where(
-                        SupplyTracking.project_id == order.project_id,
-                        SupplyTracking.item_name == item_name
+            if order.project_id:
+                # أولاً: البحث بـ catalog_item_id
+                if item.catalog_item_id:
+                    supply_result = await session.execute(
+                        select(SupplyTracking).where(
+                            SupplyTracking.project_id == order.project_id,
+                            SupplyTracking.catalog_item_id == item.catalog_item_id
+                        )
                     )
-                )
-                supply_item = supply_result.scalar_one_or_none()
+                    supply_items = list(supply_result.scalars().all())
+                    
+                    for supply_item in supply_items:
+                        supply_item.received_quantity = (supply_item.received_quantity or 0) + quantity_delivered
+                        supply_item.updated_at = now
+                        supply_updated += 1
+                        supply_updated_for_item = True
                 
-                if supply_item:
-                    supply_item.received_quantity = (supply_item.received_quantity or 0) + quantity_delivered
-                    supply_item.updated_at = now
-                    supply_updated += 1
+                # ثانياً: البحث باسم الصنف (بحث جزئي) إذا لم يتم التحديث
+                if not supply_updated_for_item:
+                    # البحث عن أصناف تحتوي على اسم الصنف
+                    supply_result = await session.execute(
+                        select(SupplyTracking).where(
+                            SupplyTracking.project_id == order.project_id,
+                            SupplyTracking.item_name.contains(item_name)
+                        )
+                    )
+                    supply_items = list(supply_result.scalars().all())
+                    
+                    for supply_item in supply_items:
+                        supply_item.received_quantity = (supply_item.received_quantity or 0) + quantity_delivered
+                        supply_item.updated_at = now
+                        supply_updated += 1
         else:
             all_fully_delivered = False
     
