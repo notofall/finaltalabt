@@ -1172,6 +1172,15 @@ const SupervisorDashboard = () => {
             <h3 className="font-medium text-sm mb-2">إضافة مشروع جديد</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
+                <Label className="text-xs">كود المشروع *</Label>
+                <Input 
+                  placeholder="مثال: PRJ001" 
+                  value={newProject.code}
+                  onChange={(e) => setNewProject({...newProject, code: e.target.value.toUpperCase()})}
+                  className="h-9 mt-1 font-mono"
+                />
+              </div>
+              <div>
                 <Label className="text-xs">اسم المشروع *</Label>
                 <Input 
                   placeholder="مثال: مشروع برج السلام" 
@@ -1198,7 +1207,7 @@ const SupervisorDashboard = () => {
                   className="h-9 mt-1"
                 />
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <Label className="text-xs">الوصف</Label>
                 <Input 
                   placeholder="وصف مختصر" 
