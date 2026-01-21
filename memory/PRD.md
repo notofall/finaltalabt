@@ -83,6 +83,21 @@
 - **المشكلة**: تحذير "Tabs is changing from controlled to uncontrolled"
 - **الحل**: تحويل Tabs الداخلي من `defaultValue` إلى `value` + `onValueChange` مع state مُتحكم به (`projectTab`)
 
+### 5. نظام ترقيم الطلبات المتسلسل لكل مشرف ✅ (21 يناير 2026)
+- **المشكلة**: عند دخول أكثر من مشرف بنفس الوقت قد يحصلون على نفس رقم الطلب
+- **الحل الجديد**:
+  - كل مشرف له رمز خاص (supervisor_prefix) مثل: a1, b2, c3
+  - أرقام الطلبات تُولد بناءً على رمز المشرف: `a1-0001`, `a1-0002`, `b2-0001`
+  - قفل قاعدة البيانات يمنع التكرار (FOR UPDATE في PostgreSQL)
+  - واجهة مدير النظام تدعم إضافة/تعديل رمز المشرف
+- **الملفات المُعدّلة**:
+  - `backend/app/repositories/request_repository.py` - منطق التسلسل
+  - `backend/app/services/request_service.py` - تنسيق رقم الطلب
+  - `backend/app/services/admin_service.py` - التحقق من تكرار الرمز
+  - `backend/app/repositories/admin_repository.py` - دالة check_prefix_exists
+  - `backend/routes/v2_admin_routes.py` - دعم supervisor_prefix في API
+  - `frontend/src/pages/SystemAdminDashboard.js` - واجهة إضافة رمز المشرف
+
 ---
 
 ## بيانات الاختبار
