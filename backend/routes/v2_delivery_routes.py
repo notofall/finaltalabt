@@ -170,12 +170,16 @@ async def confirm_receipt(
     order_id: UUID,
     request: DeliveryConfirmRequest,
     delivery_service: DeliveryService = Depends(get_delivery_service),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
 ):
     """
     تأكيد استلام العناصر
     يقوم تلقائياً بتحديث تتبع التوريد
     """
+    from database import PurchaseOrder, PurchaseOrderItem
+    from sqlalchemy import select, update
+    
     # التحقق من الصلاحيات
     allowed_roles = ["system_admin", "procurement_manager", "delivery_tracker"]
     if current_user.get("role") not in allowed_roles:
@@ -184,29 +188,80 @@ async def confirm_receipt(
             detail="ليس لديك صلاحية تأكيد الاستلام"
         )
     
-    # تحويل البيانات
-    items = [
-        {"item_id": item.item_id, "quantity_delivered": item.quantity_delivered}
-        for item in request.items
-    ]
-    
-    result = await delivery_service.confirm_receipt(
-        order_id,
-        items,
-        current_user.get("name", "Unknown")
+    # Get the order
+    order_result = await session.execute(
+        select(PurchaseOrder).where(PurchaseOrder.id == str(order_id))
     )
+    order = order_result.scalar_one_or_none()
     
-    if not result.get("success"):
+    if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=result.get("error", "حدث خطأ")
+            detail="أمر الشراء غير موجود"
         )
+    
+    # Update supplier receipt number if provided
+    if request.supplier_receipt_number:
+        order.supplier_receipt_number = request.supplier_receipt_number
+    
+    if request.delivery_notes:
+        order.delivery_notes = request.delivery_notes
+    
+    # Get all order items
+    items_result = await session.execute(
+        select(PurchaseOrderItem).where(PurchaseOrderItem.order_id == str(order_id))
+    )
+    order_items = {item.name: item for item in items_result.scalars().all()}
+    
+    # Update delivered quantities
+    all_fully_delivered = True
+    items_updated = 0
+    
+    for delivery_item in request.items:
+        item_name = delivery_item.name
+        if not item_name and delivery_item.item_id:
+            # Try to find by ID
+            item_result = await session.execute(
+                select(PurchaseOrderItem).where(PurchaseOrderItem.id == delivery_item.item_id)
+            )
+            found_item = item_result.scalar_one_or_none()
+            if found_item:
+                item_name = found_item.name
+        
+        if item_name and item_name in order_items:
+            item = order_items[item_name]
+            new_delivered = (item.delivered_quantity or 0) + delivery_item.quantity_delivered
+            item.delivered_quantity = min(new_delivered, item.quantity)  # Cap at max quantity
+            items_updated += 1
+            
+            if item.delivered_quantity < item.quantity:
+                all_fully_delivered = False
+        else:
+            all_fully_delivered = False
+    
+    # Check if there are items not yet fully delivered
+    for item in order_items.values():
+        if (item.delivered_quantity or 0) < item.quantity:
+            all_fully_delivered = False
+            break
+    
+    # Update order status
+    if all_fully_delivered:
+        order.status = "delivered"
+        order.delivered_at = datetime.now(timezone.utc)
+    else:
+        order.status = "partially_delivered"
+    
+    order.received_by_id = current_user.get("id")
+    order.received_by_name = current_user.get("name", "Unknown")
+    
+    await session.commit()
     
     return {
         "message": "تم تأكيد الاستلام بنجاح",
-        "status": result.get("status"),
-        "fully_delivered": result.get("fully_delivered"),
-        "supply_items_updated": result.get("supply_items_updated", 0)
+        "status": order.status,
+        "fully_delivered": all_fully_delivered,
+        "items_updated": items_updated
     }
 
 
