@@ -122,10 +122,19 @@ def area_material_to_response(material) -> dict:
         "id": str(material.id),
         "project_id": str(material.project_id),
         "catalog_item_id": str(material.catalog_item_id) if material.catalog_item_id else None,
+        "item_code": getattr(material, 'item_code', None),
         "item_name": material.item_name,
         "unit": material.unit,
+        "calculation_method": getattr(material, 'calculation_method', 'factor') or 'factor',
         "factor": material.factor,
+        "direct_quantity": getattr(material, 'direct_quantity', 0) or 0,
         "unit_price": material.unit_price,
+        "calculation_type": getattr(material, 'calculation_type', 'all_floors') or 'all_floors',
+        "selected_floor_id": getattr(material, 'selected_floor_id', None),
+        "tile_width": getattr(material, 'tile_width', 0) or 0,
+        "tile_height": getattr(material, 'tile_height', 0) or 0,
+        "waste_percentage": getattr(material, 'waste_percentage', 0) or 0,
+        "notes": getattr(material, 'notes', None),
         "created_at": material.created_at.isoformat() if material.created_at else None
     }
 
