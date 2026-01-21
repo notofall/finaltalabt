@@ -237,7 +237,7 @@ async def get_all_permissions(
     # Check if table exists
     try:
         result = await session.execute(
-            select(BuildingPermission)
+            select(BuildingsPermission)
         )
         permissions = result.scalars().all()
         
@@ -292,7 +292,7 @@ async def grant_permission(
             project_name = project.name
     
     # Create permission
-    permission = BuildingPermission(
+    permission = BuildingsPermission(
         id=str(uuid_lib.uuid4()),
         user_id=str(user.id),
         user_name=user.name,
@@ -322,7 +322,7 @@ async def revoke_permission(
     from database.models import BuildingsPermission
     
     result = await session.execute(
-        select(BuildingPermission).where(BuildingPermission.id == permission_id)
+        select(BuildingsPermission).where(BuildingsPermission.id == permission_id)
     )
     permission = result.scalar_one_or_none()
     
