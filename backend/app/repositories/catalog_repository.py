@@ -232,6 +232,15 @@ class CatalogRepository:
         )
         return result.scalar_one_or_none()
     
+    async def search_aliases(self, search_term: str, limit: int = 10) -> List[ItemAlias]:
+        """Search aliases by partial name match"""
+        result = await self.session.execute(
+            select(ItemAlias)
+            .where(ItemAlias.alias_name.ilike(f"%{search_term}%"))
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+    
     async def create_alias(self, alias: ItemAlias) -> ItemAlias:
         """Create item alias"""
         self.session.add(alias)
