@@ -699,17 +699,18 @@ class TestDeliveryTracking:
         return None, None
     
     def test_01_get_deliveries(self):
-        """Get deliveries list"""
+        """Get pending deliveries (no GET / endpoint, use /pending)"""
         token, _ = self._login("delivery_tracker")
         assert token, "Failed to login as delivery tracker"
         
+        # Use /pending endpoint instead of /
         response = self.session.get(
-            f"{BASE_URL}/api/v2/delivery/",
+            f"{BASE_URL}/api/v2/delivery/pending",
             headers={"Authorization": f"Bearer {token}"}
         )
         assert response.status_code == 200, f"Failed to get deliveries: {response.text}"
         data = response.json()
-        print(f"✓ Found {data.get('total', len(data.get('items', [])))} deliveries")
+        print(f"✓ Found {len(data)} pending deliveries")
     
     def test_02_get_delivery_stats(self):
         """Get delivery statistics"""
