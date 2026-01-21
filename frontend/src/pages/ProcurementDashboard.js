@@ -4497,9 +4497,18 @@ const ProcurementDashboard = () => {
             </DialogHeader>
             <div className="space-y-3">
               <div>
+                <Label>كود التصنيف</Label>
+                <Input 
+                  placeholder="مثال: 1, 2, 3..."
+                  value={editingDefaultCategory?.code || ""}
+                  onChange={(e) => setEditingDefaultCategory({...editingDefaultCategory, code: e.target.value})}
+                />
+                <p className="text-xs text-slate-500 mt-1">يُستخدم لتوليد أكواد الأصناف تلقائياً</p>
+              </div>
+              <div>
                 <Label>اسم التصنيف</Label>
                 <Input 
-                  value={editingDefaultCategory.name}
+                  value={editingDefaultCategory?.name || ""}
                   onChange={(e) => setEditingDefaultCategory({...editingDefaultCategory, name: e.target.value})}
                 />
               </div>
@@ -4507,7 +4516,7 @@ const ProcurementDashboard = () => {
                 <Label>الميزانية الافتراضية</Label>
                 <Input 
                   type="number"
-                  value={editingDefaultCategory.default_budget || ""}
+                  value={editingDefaultCategory?.default_budget || ""}
                   onChange={(e) => setEditingDefaultCategory({...editingDefaultCategory, default_budget: e.target.value})}
                 />
               </div>
