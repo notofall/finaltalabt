@@ -20,12 +20,15 @@ router = APIRouter(prefix="/api/v2/delivery", tags=["Delivery V2"])
 # ==================== Schemas ====================
 
 class DeliveryItemConfirm(BaseModel):
-    item_id: str
+    item_id: Optional[str] = None
+    name: Optional[str] = None
     quantity_delivered: float
 
 
 class DeliveryConfirmRequest(BaseModel):
     items: List[DeliveryItemConfirm]
+    supplier_receipt_number: Optional[str] = None
+    delivery_notes: Optional[str] = None
 
 
 class DeliveryStatsResponse(BaseModel):
