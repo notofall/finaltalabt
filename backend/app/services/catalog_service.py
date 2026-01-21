@@ -121,17 +121,85 @@ class CatalogService(BaseService):
         """Delete alias"""
         return await self.catalog_repo.delete_alias(alias_id)
     
-    async def suggest_standard_name(self, item_name: str) -> Optional[dict]:
-        """Suggest standard name for an item"""
+    async def suggest_standard_name(self, item_name: str) -> dict:
+        """Suggest standard name for an item - يبحث في الأسماء البديلة والكتالوج"""
+        from sqlalchemy import select, or_
+        from database.models import PriceCatalogItem, ItemAlias
+        
+        result = {
+            "found": False,
+            "match_type": None,
+            "catalog_item": None,
+            "suggestions": []
+        }
+        
+        # 1. البحث في الأسماء البديلة أولاً (تطابق تام)
         alias = await self.catalog_repo.find_alias(item_name)
         if alias:
             item = await self.catalog_repo.get_item_by_id(alias.catalog_item_id)
             if item:
-                return {
-                    "found": True,
-                    "standard_name": item.name,
-                    "standard_code": item.item_code,
+                result["found"] = True
+                result["match_type"] = "alias"
+                result["catalog_item"] = {
+                    "id": str(item.id),
+                    "item_code": item.item_code,
+                    "name": item.name,
                     "unit": item.unit,
-                    "price": item.price
+                    "price": item.price,
+                    "category_name": item.category_name,
+                    "alias_name": alias.alias_name  # الاسم البديل المُستخدم
                 }
-        return {"found": False}
+                return result
+        
+        # 2. البحث في الكتالوج بالاسم
+        items = await self.catalog_repo.search_items(item_name, limit=1)
+        if items:
+            item = items[0]
+            result["found"] = True
+            result["match_type"] = "catalog"
+            result["catalog_item"] = {
+                "id": str(item.id),
+                "item_code": item.item_code,
+                "name": item.name,
+                "unit": item.unit,
+                "price": item.price,
+                "category_name": item.category_name
+            }
+            return result
+        
+        # 3. البحث عن اقتراحات (جزئي) - الكتالوج والأسماء البديلة
+        suggestions = []
+        
+        # بحث في الكتالوج
+        catalog_items = await self.catalog_repo.search_items(item_name, limit=5)
+        for item in catalog_items:
+            suggestions.append({
+                "id": str(item.id),
+                "item_code": item.item_code,
+                "name": item.name,
+                "unit": item.unit,
+                "price": item.price,
+                "category_name": item.category_name,
+                "type": "catalog"
+            })
+        
+        # بحث في الأسماء البديلة
+        aliases = await self.catalog_repo.search_aliases(item_name, limit=5)
+        for alias in aliases:
+            item = await self.catalog_repo.get_item_by_id(alias.catalog_item_id)
+            if item:
+                # تجنب التكرار
+                if not any(s["id"] == str(item.id) for s in suggestions):
+                    suggestions.append({
+                        "id": str(item.id),
+                        "item_code": item.item_code,
+                        "name": item.name,
+                        "alias_name": alias.alias_name,  # الاسم البديل
+                        "unit": item.unit,
+                        "price": item.price,
+                        "category_name": item.category_name,
+                        "type": "alias"
+                    })
+        
+        result["suggestions"] = suggestions
+        return result
