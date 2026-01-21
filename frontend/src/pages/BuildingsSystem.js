@@ -1592,6 +1592,10 @@ const BuildingsSystem = () => {
                         <Download className="w-4 h-4 ml-2" />
                         تصدير Excel
                       </Button>
+                      <Button onClick={exportBOQPDF} variant="outline" className="border-slate-600 text-slate-300">
+                        <FileDown className="w-4 h-4 ml-2" />
+                        تصدير PDF
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent>
