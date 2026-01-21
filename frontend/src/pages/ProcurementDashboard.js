@@ -793,13 +793,18 @@ const ProcurementDashboard = () => {
       toast.error("الرجاء إدخال اسم التصنيف");
       return;
     }
+    if (!newDefaultCategory.code.trim()) {
+      toast.error("الرجاء إدخال كود التصنيف");
+      return;
+    }
     try {
       await axios.post(`${API_V2_URL}/budget/defaults`, {
         name: newDefaultCategory.name,
+        code: newDefaultCategory.code,
         default_budget: parseFloat(newDefaultCategory.default_budget) || 0
       }, getAuthHeaders());
       toast.success("تم إضافة التصنيف الافتراضي بنجاح");
-      setNewDefaultCategory({ name: "", default_budget: "" });
+      setNewDefaultCategory({ name: "", code: "", default_budget: "" });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || "فشل في إضافة التصنيف");
