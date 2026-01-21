@@ -555,13 +555,20 @@ class ProjectAreaMaterial(Base):
     item_name: Mapped[str] = mapped_column(String(255), nullable=False)
     unit: Mapped[str] = mapped_column(String(50), default="طن")
     
-    # معامل الحساب
+    # طريقة الحساب: factor (بالمعامل) أو direct (كمية مباشرة)
+    calculation_method: Mapped[str] = mapped_column(String(50), default="factor")
+    
+    # معامل الحساب (للطريقة factor)
     factor: Mapped[float] = mapped_column(Float, default=0)  # المعامل (كجم/م² للحديد، قطعة/م² للبلاط)
+    
+    # الكمية المباشرة (للطريقة direct)
+    direct_quantity: Mapped[float] = mapped_column(Float, default=0)  # الكمية المدخلة مباشرة
+    
     unit_price: Mapped[float] = mapped_column(Float, default=0)
     
-    # نوع الحساب
-    calculation_type: Mapped[str] = mapped_column(String(50), default="all_floors")  # all_floors أو selected_floors
-    selected_floors: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON array للأدوار المحددة
+    # نوع الحساب: all_floors (جميع الأدوار) أو selected_floor (دور محدد)
+    calculation_type: Mapped[str] = mapped_column(String(50), default="all_floors")
+    selected_floor_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)  # ID الدور المحدد
     
     # للبلاط
     tile_width: Mapped[float] = mapped_column(Float, default=0)  # عرض البلاطة بالسم
