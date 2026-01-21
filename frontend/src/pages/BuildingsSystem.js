@@ -604,22 +604,22 @@ const BuildingsSystem = () => {
 
   // Remove project from buildings system (not delete, just hide)
   const handleRemoveProjectFromBuildings = async (projectId) => {
-    if (!window.confirm("هل أنت متأكد من إزالة هذا المشروع من نظام الكميات؟ (لن يتم حذف المشروع، فقط إخفاؤه من نظام الكميات)")) return;
+    if (!window.confirm("⚠️ هل أنت متأكد من حذف جميع كميات هذا المشروع؟\n\nسيتم حذف:\n• نماذج الوحدات\n• مواد النماذج\n• أدوار المشروع\n• مواد المساحة\n• بيانات تتبع التوريد\n\nهذا الإجراء لا يمكن التراجع عنه!")) return;
     
     try {
-      await axios.delete(`${BUILDINGS_API}/projects/${projectId}`, getAuthHeaders());
-      toast.success("تم إزالة المشروع من نظام الكميات بنجاح");
+      const res = await axios.delete(`${BUILDINGS_API}/projects/${projectId}`, getAuthHeaders());
+      toast.success(res.data.message || "تم حذف كميات المشروع بنجاح");
       
-      // Clear selected project if it was removed
+      // Clear selected project if it was deleted
       if (selectedProject?.id === projectId) {
         setSelectedProject(null);
       }
       
-      // Refresh projects list
+      // Refresh dashboard
       fetchDashboard();
     } catch (error) {
-      console.error("Error removing project from buildings:", error);
-      toast.error("فشل في إزالة المشروع");
+      console.error("Error deleting project quantities:", error);
+      toast.error("فشل في حذف كميات المشروع");
     }
   };
 
