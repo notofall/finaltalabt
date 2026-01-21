@@ -14,7 +14,7 @@ import { Progress } from "../components/ui/progress";
 import { 
   Building2, Layers, Package, Truck, FileSpreadsheet, Plus, Edit, Trash2,
   Calculator, Download, RefreshCw, ChevronRight, Home, ArrowLeft, Upload,
-  LogOut, BarChart3, PieChart, TrendingUp, KeyRound, Menu, X, Shield, Users, FileDown
+  LogOut, BarChart3, PieChart, TrendingUp, KeyRound, Menu, X, Shield, Users, FileDown, AlertCircle
 } from "lucide-react";
 import ChangePasswordDialog from "../components/ChangePasswordDialog";
 import BuildingsPermissions from "../components/BuildingsPermissions";
