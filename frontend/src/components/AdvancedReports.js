@@ -29,7 +29,10 @@ export default function AdvancedReports({ onClose }) {
     by_supervisor: [], 
     by_project: [] 
   });
-  const [supplierReport, setSupplierReport] = useState({ suppliers: [] });
+  const [supplierReport, setSupplierReport] = useState({ 
+    suppliers: [], 
+    summary: { total_suppliers: 0, total_orders: 0, total_spending: 0, avg_on_time_rate: 0 } 
+  });
   const [priceVarianceReport, setPriceVarianceReport] = useState({ items: [] });
   
   // Filter options data
