@@ -997,28 +997,28 @@ export default function AdvancedReports({ onClose }) {
                 <Card className="border-r-4 border-blue-500">
                   <CardContent className="p-4 text-center">
                     <Truck className="h-8 w-8 mx-auto text-blue-500 mb-2" />
-                    <p className="text-3xl font-bold">{supplierReport.summary.total_suppliers}</p>
+                    <p className="text-3xl font-bold">{supplierReport?.summary?.total_suppliers ?? 0}</p>
                     <p className="text-sm text-slate-500">عدد الموردين</p>
                   </CardContent>
                 </Card>
                 <Card className="border-r-4 border-green-500">
                   <CardContent className="p-4 text-center">
                     <Package className="h-8 w-8 mx-auto text-green-500 mb-2" />
-                    <p className="text-3xl font-bold">{supplierReport.summary.total_orders}</p>
+                    <p className="text-3xl font-bold">{supplierReport?.summary?.total_orders ?? 0}</p>
                     <p className="text-sm text-slate-500">إجمالي الطلبات</p>
                   </CardContent>
                 </Card>
                 <Card className="border-r-4 border-orange-500">
                   <CardContent className="p-4 text-center">
                     <DollarSign className="h-8 w-8 mx-auto text-orange-500 mb-2" />
-                    <p className="text-xl font-bold">{formatCurrency(supplierReport.summary.total_spending)}</p>
+                    <p className="text-xl font-bold">{formatCurrency(supplierReport?.summary?.total_spending ?? 0)}</p>
                     <p className="text-sm text-slate-500">إجمالي المشتريات</p>
                   </CardContent>
                 </Card>
                 <Card className="border-r-4 border-purple-500">
                   <CardContent className="p-4 text-center">
                     <Clock className="h-8 w-8 mx-auto text-purple-500 mb-2" />
-                    <p className="text-3xl font-bold">{supplierReport.summary.avg_on_time_rate || 0}%</p>
+                    <p className="text-3xl font-bold">{supplierReport?.summary?.avg_on_time_rate ?? 0}%</p>
                     <p className="text-sm text-slate-500">متوسط الالتزام</p>
                   </CardContent>
                 </Card>
