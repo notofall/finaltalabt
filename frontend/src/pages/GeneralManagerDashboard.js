@@ -86,7 +86,7 @@ export default function GeneralManagerDashboard() {
         axios.get(`${API_URL}/api/v2/gm/all-orders?approval_type=gm_approved`, { headers }),
         axios.get(`${API_URL}/api/v2/gm/all-orders?approval_type=manager_approved`, { headers }),
         axios.get(`${API_URL}/api/v2/requests/?limit=1000`, { headers }).catch(() => ({ data: { items: [] } })),
-        axios.get(`${API_URL}/api/v2/auth/users`, { headers }).catch(() => ({ data: { items: [] } })),
+        axios.get(`${API_URL}/api/v2/auth/users/`, { headers }).catch(() => ({ data: { items: [] } })),
         axios.get(`${API_URL}/api/v2/projects/`, { headers }).catch(() => ({ data: { items: [] } }))
       ]);
       
