@@ -761,7 +761,7 @@ export default function SystemAdminDashboard() {
                   <CardTitle>إدارة المستخدمين</CardTitle>
                   <CardDescription>إضافة وتعديل وحذف المستخدمين</CardDescription>
                 </div>
-                <Button onClick={() => { setEditingUser(null); setUserForm({ name: "", email: "", password: "", role: "supervisor" }); setShowUserDialog(true); }}>
+                <Button onClick={() => { setEditingUser(null); setUserForm({ name: "", email: "", password: "", role: "supervisor", supervisor_prefix: "" }); setShowUserDialog(true); }}>
                   <Plus className="ml-2 h-4 w-4" /> إضافة مستخدم
                 </Button>
               </CardHeader>
@@ -773,6 +773,7 @@ export default function SystemAdminDashboard() {
                         <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">الاسم</th>
                         <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">البريد الإلكتروني</th>
                         <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">الدور</th>
+                        <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">رمز المشرف</th>
                         <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">الحالة</th>
                         <th className="px-4 py-3 text-right text-sm font-medium text-gray-600">الإجراءات</th>
                       </tr>
@@ -787,6 +788,15 @@ export default function SystemAdminDashboard() {
                               {roleLabels[u.role] || u.role}
                             </Badge>
                           </td>
+                          <td className="px-4 py-3 text-sm font-mono">
+                            {u.role === 'supervisor' && u.supervisor_prefix ? (
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                {u.supervisor_prefix}
+                              </Badge>
+                            ) : u.role === 'supervisor' ? (
+                              <span className="text-gray-400 text-xs">غير محدد</span>
+                            ) : '-'}
+                          </td>
                           <td className="px-4 py-3">
                             <Badge variant={u.is_active ? 'success' : 'outline'}>
                               {u.is_active ? 'مفعل' : 'معطل'}
@@ -796,7 +806,7 @@ export default function SystemAdminDashboard() {
                             <div className="flex gap-1">
                               <Button size="sm" variant="ghost" onClick={() => {
                                 setEditingUser(u);
-                                setUserForm({ name: u.name, email: u.email, password: "", role: u.role });
+                                setUserForm({ name: u.name, email: u.email, password: "", role: u.role, supervisor_prefix: u.supervisor_prefix || "" });
                                 setShowUserDialog(true);
                               }}>
                                 <Edit className="h-4 w-4" />
