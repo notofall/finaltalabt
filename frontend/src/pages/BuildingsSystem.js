@@ -1285,6 +1285,8 @@ const BuildingsSystem = () => {
                                   onClick={() => {
                                     setSelectedTemplateForMaterial(template);
                                     setCatalogSelectionTarget("templateMaterial");
+                                    // Reset the form when opening dialog to fix UI bug
+                                    setNewTemplateMaterial({ catalog_item_id: "", item_code: "", item_name: "", unit: "قطعة", quantity_per_unit: 0, unit_price: 0 });
                                     setTemplateMaterialDialogOpen(true);
                                   }}
                                 >
