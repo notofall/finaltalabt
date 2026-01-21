@@ -72,6 +72,17 @@
 - إضافة زر "تصدير PDF" في تبويب جدول الكميات
 - جميع الأزرار متصلة بـ APIs الجديدة
 
+### 3. إضافة حقل actual_spent للميزانية ✅
+- **المشكلة**: حقل `actual_spent` غير موجود في نموذج BudgetCategory
+- **الحل**: 
+  - إضافة حقل `actual_spent` و `updated_at` في `database/models.py`
+  - تحديث `budget_service.py` لاستخدام الحقل الجديد
+  - إضافة migration تلقائي في `database/connection.py`
+
+### 4. إصلاح تحذير React Tabs ✅
+- **المشكلة**: تحذير "Tabs is changing from controlled to uncontrolled"
+- **الحل**: تحويل Tabs الداخلي من `defaultValue` إلى `value` + `onValueChange` مع state مُتحكم به (`projectTab`)
+
 ---
 
 ## بيانات الاختبار
