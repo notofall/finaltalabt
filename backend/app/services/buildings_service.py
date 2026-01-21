@@ -114,8 +114,7 @@ class BuildingsService(BaseService):
             item_name=item_name,
             unit=unit,
             quantity_per_unit=quantity_per_unit,
-            unit_price=unit_price,
-            created_at=datetime.now(timezone.utc)
+            unit_price=unit_price
         )
         return await self.buildings_repo.add_template_material(material)
     
