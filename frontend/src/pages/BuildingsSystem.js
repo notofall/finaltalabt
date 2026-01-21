@@ -96,6 +96,11 @@ const BuildingsSystem = () => {
   // Supply Advanced Report
   const [showSupplyReport, setShowSupplyReport] = useState(false);
 
+  // Add project to buildings dialog
+  const [addProjectDialogOpen, setAddProjectDialogOpen] = useState(false);
+  const [availableProjects, setAvailableProjects] = useState([]);
+  const [loadingAvailableProjects, setLoadingAvailableProjects] = useState(false);
+
   // Fetch dashboard data
   const fetchDashboard = useCallback(async () => {
     try {
