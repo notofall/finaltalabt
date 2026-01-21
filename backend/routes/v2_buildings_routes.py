@@ -1242,10 +1242,18 @@ async def export_boq_excel(
     wb.save(buffer)
     buffer.seek(0)
     
+    from urllib.parse import quote
+    
+    # Use URL encoding for Arabic filename
+    safe_filename = f"BOQ_{project_id[:8]}.xlsx"
+    encoded_filename = quote(f"BOQ_{project.name}.xlsx")
+    
     return StreamingResponse(
         buffer,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename=BOQ_{project.name}.xlsx"}
+        headers={
+            "Content-Disposition": f"attachment; filename=\"{safe_filename}\"; filename*=UTF-8''{encoded_filename}"
+        }
     )
 
 
