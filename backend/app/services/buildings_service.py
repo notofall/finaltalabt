@@ -169,20 +169,36 @@ class BuildingsService(BaseService):
         catalog_item_id: str,
         item_name: str,
         unit: str,
-        factor: float,
+        calculation_method: str = "factor",
+        factor: float = 0,
+        direct_quantity: float = 0,
         unit_price: float = 0,
+        calculation_type: str = "all_floors",
+        selected_floor_id: Optional[str] = None,
+        tile_width: float = 0,
+        tile_height: float = 0,
+        waste_percentage: float = 0,
+        notes: Optional[str] = None,
         created_by: Optional[str] = None,
         created_by_name: Optional[str] = None
     ) -> ProjectAreaMaterial:
-        """Create area material"""
+        """Create area material with advanced options"""
         material = ProjectAreaMaterial(
             id=str(uuid4()),
             project_id=project_id,
             catalog_item_id=catalog_item_id,
             item_name=item_name,
             unit=unit,
+            calculation_method=calculation_method,
             factor=factor,
+            direct_quantity=direct_quantity,
             unit_price=unit_price,
+            calculation_type=calculation_type,
+            selected_floor_id=selected_floor_id,
+            tile_width=tile_width,
+            tile_height=tile_height,
+            waste_percentage=waste_percentage,
+            notes=notes,
             created_at=datetime.now(timezone.utc)
         )
         return await self.buildings_repo.create_area_material(material)
