@@ -145,6 +145,7 @@ async def create_default_category(
     """
     category = await budget_service.create_default_category(
         name=data.name,
+        code=data.code,
         default_budget=data.default_budget,
         created_by=str(admin_user.id),
         created_by_name=admin_user.name
