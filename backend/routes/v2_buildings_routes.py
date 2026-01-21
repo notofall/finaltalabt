@@ -1611,3 +1611,75 @@ async def download_project_template(current_user = Depends(get_current_user)):
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": "attachment; filename=project_template.xlsx"}
     )
+
+
+
+@router.post("/supply/sync-from-delivery")
+async def sync_supply_from_deliveries(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """
+    مزامنة الكميات المستلمة من أوامر الشراء إلى نظام تتبع التوريد
+    """
+    from database.models import SupplyTracking, PurchaseOrder, PurchaseOrderItem
+    
+    # Get project
+    result = await session.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Get all delivered order items for this project
+    delivered_result = await session.execute(
+        select(PurchaseOrderItem, PurchaseOrder)
+        .join(PurchaseOrder, PurchaseOrderItem.order_id == PurchaseOrder.id)
+        .where(
+            PurchaseOrder.project_id == project_id,
+            PurchaseOrder.status.in_(['delivered', 'partially_delivered']),
+            PurchaseOrderItem.delivered_quantity > 0
+        )
+    )
+    delivered_items = delivered_result.all()
+    
+    # Get all supply tracking items for this project
+    supply_result = await session.execute(
+        select(SupplyTracking).where(SupplyTracking.project_id == project_id)
+    )
+    supply_items = {item.item_name: item for item in supply_result.scalars().all()}
+    
+    # Reset all received quantities first
+    for supply_item in supply_items.values():
+        supply_item.received_quantity = 0
+    
+    # Update supply tracking based on delivered items
+    updated_count = 0
+    for poi, po in delivered_items:
+        item_name = poi.name
+        delivered_qty = poi.delivered_quantity or 0
+        
+        # Try exact match first
+        if item_name in supply_items:
+            supply_items[item_name].received_quantity += delivered_qty
+            updated_count += 1
+        else:
+            # Try partial match
+            for supply_name, supply_item in supply_items.items():
+                if item_name in supply_name or supply_name in item_name:
+                    supply_item.received_quantity += delivered_qty
+                    updated_count += 1
+                    break
+    
+    await session.commit()
+    
+    return {
+        "message": "تمت المزامنة بنجاح",
+        "project_id": project_id,
+        "project_name": project.name,
+        "items_synced": updated_count,
+        "delivered_orders_count": len(delivered_items)
+    }
