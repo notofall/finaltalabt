@@ -36,7 +36,7 @@ const BuildingsCalculations = ({ calculations, onCalculate, onExportBOQ }) => {
       <CardContent>
         {!calculations ? (
           <div className="text-center py-8 text-slate-400">
-            اضغط على "حساب الكميات" لعرض جدول الكميات
+            اضغط على &quot;حساب الكميات&quot; لعرض جدول الكميات
           </div>
         ) : (
           <div className="space-y-6">
