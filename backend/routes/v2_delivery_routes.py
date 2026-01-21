@@ -64,7 +64,7 @@ async def get_pending_deliveries(
     session: AsyncSession = Depends(get_session)
 ):
     """الحصول على أوامر الشراء بانتظار التسليم"""
-    from database import Project, Supplier, MaterialRequest
+    from database import Project, Supplier, MaterialRequest, PurchaseOrderItem
     from sqlalchemy import select
     
     orders = await delivery_service.get_pending_deliveries()
@@ -72,28 +72,34 @@ async def get_pending_deliveries(
     
     for o in orders:
         # Get project name
-        project_name = None
-        if o.project_id:
+        project_name = o.project_name
+        if not project_name and o.project_id:
             project_result = await session.execute(
                 select(Project.name).where(Project.id == o.project_id)
             )
             project_name = project_result.scalar_one_or_none()
         
         # Get supplier name
-        supplier_name = None
-        if o.supplier_id:
+        supplier_name = o.supplier_name
+        if not supplier_name and o.supplier_id:
             supplier_result = await session.execute(
                 select(Supplier.name).where(Supplier.id == o.supplier_id)
             )
             supplier_name = supplier_result.scalar_one_or_none()
         
         # Get request number
-        request_number = None
-        if o.request_id:
+        request_number = o.request_number
+        if not request_number and o.request_id:
             request_result = await session.execute(
                 select(MaterialRequest.request_number).where(MaterialRequest.id == o.request_id)
             )
             request_number = request_result.scalar_one_or_none()
+        
+        # Get order items from PurchaseOrderItem table
+        items_result = await session.execute(
+            select(PurchaseOrderItem).where(PurchaseOrderItem.order_id == o.id)
+        )
+        items = list(items_result.scalars().all())
         
         result.append({
             "id": str(o.id),
@@ -105,17 +111,19 @@ async def get_pending_deliveries(
             "supplier_name": supplier_name,
             "status": o.status,
             "total_amount": o.total_amount or 0,
-            "items_count": len(o.items) if hasattr(o, 'items') and o.items else 0,
+            "items_count": len(items),
             "items": [
                 {
-                    "id": str(item.id) if hasattr(item, 'id') else None,
-                    "name": item.name if hasattr(item, 'name') else item.get('name', ''),
-                    "quantity": item.quantity if hasattr(item, 'quantity') else item.get('quantity', 0),
-                    "unit": item.unit if hasattr(item, 'unit') else item.get('unit', 'قطعة'),
-                    "unit_price": item.unit_price if hasattr(item, 'unit_price') else item.get('unit_price', 0),
-                    "delivered_quantity": item.delivered_quantity if hasattr(item, 'delivered_quantity') else item.get('delivered_quantity', 0)
+                    "id": str(item.id),
+                    "name": item.name,
+                    "quantity": item.quantity,
+                    "unit": item.unit or "قطعة",
+                    "unit_price": item.unit_price or 0,
+                    "total_price": item.total_price or 0,
+                    "delivered_quantity": item.delivered_quantity or 0,
+                    "remaining_quantity": item.quantity - (item.delivered_quantity or 0)
                 }
-                for item in (o.items if hasattr(o, 'items') and o.items else [])
+                for item in items
             ],
             "created_at": o.created_at.isoformat() if o.created_at else None,
             "supplier_receipt_number": o.supplier_receipt_number if hasattr(o, 'supplier_receipt_number') else None,
