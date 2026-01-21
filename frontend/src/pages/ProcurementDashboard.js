@@ -298,12 +298,29 @@ const ProcurementDashboard = () => {
     }
   };
 
-  // Handle category change - fetch suggested code
+  // Handle category change - fetch suggested code based on category code
   const handleCategoryChange = async (categoryName) => {
-    setNewCatalogItem(prev => ({ ...prev, category_id: categoryName }));
+    // Find the category to get its code
+    const selectedCategory = defaultCategories.find(cat => cat.name === categoryName);
+    const categoryCode = selectedCategory?.code || null;
     
-    // Only fetch suggested code if item_code is empty
-    if (!newCatalogItem.item_code) {
+    setNewCatalogItem(prev => ({ ...prev, category_id: categoryName, category_code: categoryCode }));
+    
+    // Generate code based on category code
+    if (!newCatalogItem.item_code && categoryCode) {
+      // Fetch count of items with this category code prefix
+      try {
+        const response = await axios.get(
+          `${API_V2_URL}/catalog/suggest-code?category_code=${encodeURIComponent(categoryCode)}`,
+          getAuthHeaders()
+        );
+        if (response.data.suggested_code) {
+          setNewCatalogItem(prev => ({ ...prev, item_code: response.data.suggested_code }));
+        }
+      } catch (error) {
+        console.error("Error fetching suggested code:", error);
+      }
+    } else if (!newCatalogItem.item_code) {
       const suggestedCode = await fetchSuggestedCode(categoryName);
       if (suggestedCode) {
         setNewCatalogItem(prev => ({ ...prev, item_code: suggestedCode }));
