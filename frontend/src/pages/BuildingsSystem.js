@@ -507,8 +507,20 @@ const BuildingsSystem = () => {
       toast.success("تم إضافة المادة بنجاح");
       setAreaMaterialDialogOpen(false);
       setNewAreaMaterial({
-        catalog_item_id: "", item_name: "", unit: "طن", factor: 0, calculation_type: "all_floors",
-        tile_width: 0, tile_height: 0, waste_percentage: 0
+        catalog_item_id: "", 
+        item_code: "",
+        item_name: "", 
+        unit: "طن", 
+        calculation_method: "factor",
+        factor: 0, 
+        direct_quantity: 0,
+        unit_price: 0,
+        calculation_type: "all_floors",
+        selected_floor_id: "",
+        tile_width: 0, 
+        tile_height: 0, 
+        waste_percentage: 0,
+        notes: ""
       });
       fetchProjectDetails(selectedProject.id);
     } catch (error) {
