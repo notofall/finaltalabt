@@ -169,11 +169,26 @@ class RequestRepository(BaseRepository[MaterialRequest]):
         return items_map
     
     async def get_next_seq_for_supervisor(self, supervisor_id: str, prefix: Optional[str] = None) -> int:
-        """Get next sequence number for a supervisor"""
-        result = await self.session.execute(
-            select(func.max(MaterialRequest.request_seq))
-            .where(MaterialRequest.supervisor_id == supervisor_id)
-        )
+        """
+        Get next sequence number for a supervisor based on their prefix.
+        Uses database-level locking to prevent race conditions.
+        """
+        if prefix:
+            # Get max sequence for this prefix (prefix-based numbering)
+            # Use FOR UPDATE to lock rows and prevent race conditions
+            result = await self.session.execute(
+                select(func.max(MaterialRequest.request_seq))
+                .where(MaterialRequest.request_number.like(f"{prefix}%"))
+                .with_for_update()
+            )
+        else:
+            # Fallback to supervisor_id based numbering
+            result = await self.session.execute(
+                select(func.max(MaterialRequest.request_seq))
+                .where(MaterialRequest.supervisor_id == supervisor_id)
+                .with_for_update()
+            )
+        
         current_max = result.scalar_one_or_none() or 0
         return current_max + 1
     
