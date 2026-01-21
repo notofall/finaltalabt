@@ -465,13 +465,24 @@ export default function SystemAdminDashboard() {
       return;
     }
 
+    // Validate supervisor_prefix for supervisors
+    if (userForm.role === 'supervisor' && !userForm.supervisor_prefix) {
+      toast.error("يرجى إدخال رمز المشرف لترقيم الطلبات");
+      return;
+    }
+
     try {
       if (editingUser) {
-        await axios.put(`${API_V2}/admin/users/${editingUser.id}`, {
+        const updateData = {
           name: userForm.name,
           email: userForm.email,
           role: userForm.role
-        }, getAuthHeaders());
+        };
+        // Include supervisor_prefix for supervisors
+        if (userForm.role === 'supervisor') {
+          updateData.supervisor_prefix = userForm.supervisor_prefix;
+        }
+        await axios.put(`${API_V2}/admin/users/${editingUser.id}`, updateData, getAuthHeaders());
         toast.success("تم تحديث المستخدم بنجاح");
       } else {
         await axios.post(`${API_V2}/admin/users`, userForm, getAuthHeaders());
