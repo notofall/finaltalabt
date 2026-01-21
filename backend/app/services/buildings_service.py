@@ -183,8 +183,6 @@ class BuildingsService(BaseService):
             unit=unit,
             factor=factor,
             unit_price=unit_price,
-            created_by=created_by,
-            created_by_name=created_by_name,
             created_at=datetime.now(timezone.utc)
         )
         return await self.buildings_repo.create_area_material(material)
