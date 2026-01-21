@@ -737,6 +737,57 @@ const ProcurementDashboard = () => {
     }
   };
 
+  // ==================== Project Management Functions ====================
+  const handleCreateProject = async () => {
+    if (!newProject.name || !newProject.code || !newProject.owner_name) {
+      toast.error("الرجاء إدخال كود المشروع واسم المشروع واسم المالك");
+      return;
+    }
+    
+    try {
+      await axios.post(`${API_V2_URL}/projects/`, newProject, getAuthHeaders());
+      toast.success("تم إنشاء المشروع بنجاح");
+      setNewProject({ name: "", code: "", owner_name: "", description: "", location: "", supervisor_id: "", engineer_id: "" });
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "فشل في إنشاء المشروع");
+    }
+  };
+
+  const handleUpdateProject = async () => {
+    if (!editingProject) return;
+    
+    try {
+      await axios.put(`${API_V2_URL}/projects/${editingProject.id}`, {
+        name: editingProject.name,
+        code: editingProject.code,
+        owner_name: editingProject.owner_name,
+        description: editingProject.description,
+        location: editingProject.location,
+        status: editingProject.status,
+        supervisor_id: editingProject.supervisor_id,
+        engineer_id: editingProject.engineer_id
+      }, getAuthHeaders());
+      toast.success("تم تحديث المشروع بنجاح");
+      setEditingProject(null);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "فشل في تحديث المشروع");
+    }
+  };
+
+  const handleDeleteProject = async (projectId) => {
+    if (!window.confirm("هل أنت متأكد من حذف هذا المشروع؟")) return;
+    
+    try {
+      await axios.delete(`${API_V2_URL}/projects/${projectId}`, getAuthHeaders());
+      toast.success("تم حذف المشروع بنجاح");
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "فشل في حذف المشروع");
+    }
+  };
+
   // Calculate total amount
   const calculateTotal = () => {
     return selectedItemIndices.reduce((total, idx) => {
