@@ -575,14 +575,25 @@ async def create_template(
     project_id: str,
     data: TemplateCreate,
     current_user = Depends(get_current_user),
-    buildings_service: BuildingsService = Depends(get_buildings_service)
+    buildings_service: BuildingsService = Depends(get_buildings_service),
+    session: AsyncSession = Depends(get_postgres_session)
 ):
     """
     Create unit template
     Uses: BuildingsService -> BuildingsRepository
     """
+    # Get project name
+    result = await session.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
     template = await buildings_service.create_template(
         project_id=project_id,
+        project_name=project.name,
         code=data.code,
         name=data.name,
         area=data.area,
