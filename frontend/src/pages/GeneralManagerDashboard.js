@@ -543,6 +543,73 @@ export default function GeneralManagerDashboard() {
                 </>
               )}
             </div>
+          ) : activeTab === 'all_requests' ? (
+            /* عرض جميع الطلبات مع تفاصيل مختلفة */
+            <>
+              {/* Mobile Cards View for Requests */}
+              <div className="block sm:hidden divide-y divide-slate-100">
+                {currentOrders.map((req) => (
+                  <div key={req.id} className="p-3 hover:bg-slate-50">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-medium text-slate-800">{req.request_number || req.id.slice(0, 8)}</p>
+                        <p className="text-xs text-slate-500">{req.project_name}</p>
+                      </div>
+                      <div className="text-left">
+                        {getRequestStatusBadge(req.status)}
+                      </div>
+                    </div>
+                    <div className="text-xs text-slate-500 space-y-1">
+                      <p>المشرف: {req.supervisor_name}</p>
+                      <p>المهندس: {req.engineer_name}</p>
+                      <p>التاريخ: {formatDate(req.created_at)}</p>
+                      {req.items && req.items.length > 0 && (
+                        <p>الأصناف: {req.items.map(i => i.item_name).join('، ')}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Desktop Table for Requests */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50 text-slate-600">
+                    <tr>
+                      <th className="text-right px-4 py-3 text-xs font-medium">رقم الطلب</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium">المشروع</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium">المشرف</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium">المهندس</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium">الأصناف</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium">الحالة</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium">التاريخ</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {currentOrders.map((req) => (
+                      <tr key={req.id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3">
+                          <span className="font-medium text-slate-800">{req.request_number || req.id.slice(0, 8)}</span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600">{req.project_name}</td>
+                        <td className="px-4 py-3 text-sm text-slate-600">{req.supervisor_name}</td>
+                        <td className="px-4 py-3 text-sm text-slate-600">{req.engineer_name}</td>
+                        <td className="px-4 py-3 text-xs text-slate-500 max-w-xs truncate">
+                          {req.items?.map(i => i.item_name).join('، ') || '-'}
+                        </td>
+                        <td className="px-4 py-3">{getRequestStatusBadge(req.status)}</td>
+                        <td className="px-4 py-3 text-sm text-slate-500">{formatDate(req.created_at)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* عداد النتائج */}
+              <div className="p-3 border-t border-slate-100 text-center text-xs text-slate-500">
+                عرض {currentOrders.length} طلب من أصل {allRequests.length}
+              </div>
+            </>
           ) : (
             <>
               {/* Mobile Cards View */}
