@@ -98,6 +98,22 @@ const DeliveryTrackerDashboard = () => {
     return <Badge className={`${info.color} text-xs`}>{info.label}</Badge>;
   };
 
+  // تطبيق الفلاتر على الأوامر
+  const getFilteredOrders = () => {
+    return orders.filter(order => {
+      if (filters.project && order.project_id !== filters.project) return false;
+      if (filters.supervisor && order.supervisor_id !== filters.supervisor) return false;
+      if (filters.engineer && order.engineer_id !== filters.engineer) return false;
+      if (filters.supplier && order.supplier_id !== filters.supplier) return false;
+      return true;
+    });
+  };
+
+  // الأوامر المفلترة
+  const filteredOrders = getFilteredOrders();
+  const pendingOrders = filteredOrders.filter(o => o.status !== 'delivered');
+  const deliveredOrders = filteredOrders.filter(o => o.status === 'delivered');
+
   const openReceiptDialog = (order) => {
     setSelectedOrder(order);
     setSupplierReceiptNumber(order.supplier_receipt_number || "");
