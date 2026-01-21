@@ -2349,9 +2349,25 @@ const ProcurementDashboard = () => {
               </div>
               <div><span className="text-slate-500 text-sm">الحالة:</span> {getOrderStatusBadge(selectedOrder.status)}</div>
               {selectedOrder.notes && <div><span className="text-slate-500 text-sm">ملاحظات:</span><p className="text-sm">{selectedOrder.notes}</p></div>}
-              <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => exportPurchaseOrderToPDF(selectedOrder)}>
-                <Download className="w-4 h-4 ml-2" />تصدير PDF
-              </Button>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-2 flex-wrap">
+                {selectedOrder.status === "pending" && (
+                  <Button 
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700" 
+                    onClick={() => {
+                      handleApproveOrderWithValidation(selectedOrder);
+                      setViewOrderDialogOpen(false);
+                    }}
+                  >
+                    <CheckCircle className="w-4 h-4 ml-2" />
+                    اعتماد أمر الشراء
+                  </Button>
+                )}
+                <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => exportPurchaseOrderToPDF(selectedOrder)}>
+                  <Download className="w-4 h-4 ml-2" />تصدير PDF
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
