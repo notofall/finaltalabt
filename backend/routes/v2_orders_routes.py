@@ -327,6 +327,136 @@ class OrderCreate(BaseModel):
     expected_delivery_date: Optional[str] = None
     items: ListType[OrderItemCreate] = []
 
+class OrderFromRequestCreate(BaseModel):
+    """إنشاء أمر شراء من طلب موجود"""
+    request_id: str
+    supplier_id: Optional[str] = None
+    supplier_name: Optional[str] = None
+    selected_items: ListType[int] = []  # Item indices
+    item_prices: ListType[dict] = []  # [{"index": 0, "unit_price": 10}, ...]
+    category_id: Optional[str] = None
+    notes: Optional[str] = None
+    terms_conditions: Optional[str] = None
+    expected_delivery_date: Optional[str] = None
+
+
+@router.post("/from-request", status_code=status.HTTP_201_CREATED)
+async def create_order_from_request(
+    data: OrderFromRequestCreate,
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """إنشاء أمر شراء من طلب موجود"""
+    from datetime import datetime, timezone
+    from database import PurchaseOrder, PurchaseOrderItem, MaterialRequest, RequestItem, Project, Supplier
+    from sqlalchemy import select
+    import uuid as uuid_lib
+    
+    session = order_service.repository.session
+    
+    # Get request
+    request_result = await session.execute(
+        select(MaterialRequest).where(MaterialRequest.id == data.request_id)
+    )
+    request = request_result.scalar_one_or_none()
+    if not request:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # Get request items
+    items_result = await session.execute(
+        select(RequestItem).where(RequestItem.request_id == data.request_id)
+    )
+    request_items = list(items_result.scalars().all())
+    
+    # If no items selected, use all items
+    selected_indices = data.selected_items if data.selected_items else list(range(len(request_items)))
+    
+    # Create price map from item_prices
+    price_map = {}
+    for price_item in data.item_prices:
+        if isinstance(price_item, dict):
+            price_map[price_item.get("index", 0)] = price_item.get("unit_price", 0)
+    
+    # Get supplier info
+    supplier_name = data.supplier_name or ""
+    if data.supplier_id:
+        supplier_result = await session.execute(
+            select(Supplier).where(Supplier.id == data.supplier_id)
+        )
+        supplier = supplier_result.scalar_one_or_none()
+        if supplier:
+            supplier_name = supplier.name
+    
+    # Generate order number
+    count_result = await session.execute(
+        select(func.count()).select_from(PurchaseOrder)
+    )
+    count = count_result.scalar_one() or 0
+    po_number = f"PO-{count + 1:05d}"
+    
+    # Create order
+    order = PurchaseOrder(
+        id=str(uuid_lib.uuid4()),
+        po_number=po_number,
+        request_id=data.request_id,
+        project_id=request.project_id,
+        project_name=request.project_name,
+        supplier_id=data.supplier_id,
+        supplier_name=supplier_name,
+        category_id=data.category_id,
+        manager_id=str(current_user.id) if hasattr(current_user, 'id') else None,
+        manager_name=current_user.name if hasattr(current_user, 'name') else "النظام",
+        supervisor_name=request.supervisor_name,
+        engineer_name=request.engineer_name,
+        status="pending",
+        total_amount=0,
+        notes=data.notes,
+        terms_conditions=data.terms_conditions,
+        expected_delivery_date=data.expected_delivery_date,
+        created_at=datetime.now(timezone.utc)
+    )
+    
+    session.add(order)
+    await session.flush()
+    
+    # Create order items from selected request items
+    total_amount = 0
+    for idx in selected_indices:
+        if idx < len(request_items):
+            req_item = request_items[idx]
+            unit_price = price_map.get(idx, 0)
+            total_price = unit_price * req_item.quantity
+            total_amount += total_price
+            
+            order_item = PurchaseOrderItem(
+                id=str(uuid_lib.uuid4()),
+                order_id=order.id,
+                name=req_item.name,
+                quantity=req_item.quantity,
+                unit=req_item.unit,
+                unit_price=unit_price,
+                total_price=total_price,
+                delivered_quantity=0,
+                created_at=datetime.now(timezone.utc)
+            )
+            session.add(order_item)
+    
+    # Update order total
+    order.total_amount = total_amount
+    
+    # Update request status
+    request.status = "po_issued"
+    request.updated_at = datetime.now(timezone.utc)
+    
+    await session.commit()
+    
+    return {
+        "message": "تم إنشاء أمر الشراء بنجاح",
+        "order_id": order.id,
+        "po_number": po_number,
+        "total_amount": total_amount
+    }
+
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_order(
