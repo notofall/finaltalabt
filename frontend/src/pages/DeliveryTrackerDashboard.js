@@ -846,11 +846,39 @@ const DeliveryTrackerDashboard = () => {
 
               <div className="bg-slate-50 p-3 rounded-lg">
                 <p className="text-sm font-medium mb-2">الأصناف المستلمة:</p>
+                <div className="text-xs text-slate-500 mb-2 p-2 bg-white rounded border">
+                  <div className="flex justify-between">
+                    <span>إجمالي الأصناف:</span>
+                    <span className="font-bold">{deliveryItems.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>تم استلامها بالكامل:</span>
+                    <span className="text-emerald-600 font-bold">{deliveryItems.filter(i => (i.delivered_before || 0) >= i.quantity).length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>استلام جزئي:</span>
+                    <span className="text-orange-600 font-bold">{deliveryItems.filter(i => (i.delivered_before || 0) > 0 && (i.delivered_before || 0) < i.quantity).length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>لم تُستلم بعد:</span>
+                    <span className="text-red-600 font-bold">{deliveryItems.filter(i => (i.delivered_before || 0) === 0).length}</span>
+                  </div>
+                </div>
                 {deliveryItems.map((item, idx) => (
                   <div key={idx} className="flex items-center justify-between py-2 border-b last:border-0">
                     <div className="flex-1">
                       <p className="font-medium text-sm">{item.name}</p>
-                      <p className="text-xs text-slate-500">المطلوب: {item.quantity} | المُستلم سابقاً: {item.delivered_before} | المتبقي: {item.remaining}</p>
+                      <div className="text-xs mt-1">
+                        <span className="text-slate-500">المطلوب: <span className="font-bold text-slate-700">{item.quantity}</span></span>
+                        <span className="mx-2">|</span>
+                        <span className={item.delivered_before > 0 ? 'text-emerald-600' : 'text-slate-400'}>
+                          المُستلم: <span className="font-bold">{item.delivered_before || 0}</span>
+                        </span>
+                        <span className="mx-2">|</span>
+                        <span className={item.remaining > 0 ? 'text-orange-600' : 'text-emerald-600'}>
+                          المتبقي: <span className="font-bold">{item.remaining}</span>
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Input 
@@ -866,6 +894,7 @@ const DeliveryTrackerDashboard = () => {
                         }}
                         className="w-20 h-9 text-center"
                         placeholder="0"
+                        disabled={item.remaining === 0}
                       />
                       <Button 
                         size="sm" 
@@ -876,6 +905,7 @@ const DeliveryTrackerDashboard = () => {
                           setDeliveryItems(newItems);
                         }}
                         className="h-9"
+                        disabled={item.remaining === 0}
                       >
                         الكل
                       </Button>
