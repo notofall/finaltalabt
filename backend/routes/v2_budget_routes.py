@@ -304,7 +304,17 @@ async def apply_defaults_to_project(
     Apply default categories to a project
     Uses: BudgetService -> BudgetRepository
     """
-    created = await budget_service.apply_defaults_to_project(project_id)
+    # Get project name (if project service available)
+    project_name = ""
+    user_id = str(current_user.id) if hasattr(current_user, 'id') else "system"
+    user_name = current_user.name if hasattr(current_user, 'name') else "النظام"
+    
+    created = await budget_service.apply_defaults_to_project(
+        project_id=project_id,
+        project_name=project_name,
+        created_by=user_id,
+        created_by_name=user_name
+    )
     return {
         "message": f"تم إنشاء {len(created)} تصنيفات",
         "created_count": len(created),
@@ -336,5 +346,17 @@ async def apply_defaults_to_project_alt(
     Apply default categories to a project (alternative endpoint)
     Uses: BudgetService -> BudgetRepository
     """
-    result = await budget_service.apply_defaults_to_project(project_id)
-    return {"message": f"تم تطبيق {result['applied_count']} فئة على المشروع", **result}
+    user_id = str(current_user.id) if hasattr(current_user, 'id') else "system"
+    user_name = current_user.name if hasattr(current_user, 'name') else "النظام"
+    
+    created = await budget_service.apply_defaults_to_project(
+        project_id=project_id,
+        project_name="",
+        created_by=user_id,
+        created_by_name=user_name
+    )
+    return {
+        "message": f"تم تطبيق {len(created)} تصنيف على المشروع",
+        "applied_count": len(created),
+        "categories": [category_to_response(c) for c in created]
+    }
