@@ -484,6 +484,10 @@ async def import_catalog(
     updated = 0
     errors = []
     
+    # Get user info for created_by
+    user_id = current_user.get("id")
+    user_name = current_user.get("name", "")
+    
     try:
         # Handle Excel files
         if filename.endswith('.xlsx') or filename.endswith('.xls'):
@@ -510,7 +514,9 @@ async def import_catalog(
                         item_code=str(row_dict.get('item_code', '') or '').strip() or None,
                         description=str(row_dict.get('description', '') or '').strip() or None,
                         supplier_id=None,
-                        supplier_name=str(row_dict.get('supplier_name', '') or '').strip() or None
+                        supplier_name=str(row_dict.get('supplier_name', '') or '').strip() or None,
+                        created_by=user_id,
+                        created_by_name=user_name
                     )
                     imported += 1
                 except Exception as e:
@@ -538,7 +544,9 @@ async def import_catalog(
                         item_code=row.get('item_code', '').strip() or None,
                         description=row.get('description', '').strip() or None,
                         supplier_id=None,
-                        supplier_name=row.get('supplier_name', '').strip() or None
+                        supplier_name=row.get('supplier_name', '').strip() or None,
+                        created_by=user_id,
+                        created_by_name=user_name
                     )
                     imported += 1
                 except Exception as e:
