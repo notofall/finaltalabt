@@ -96,8 +96,8 @@ export default function AdvancedReports({ onClose }) {
       // Default empty data structure
       const defaultSummary = { summary: { total_requests: 0, total_orders: 0, total_spending: 0, approved_orders: 0, pending_orders: 0, average_order_value: 0 }, top_projects: [], top_suppliers: [], spending_by_category: [], monthly_spending: [] };
       const defaultApproval = { summary: { total_requests: 0, approved: 0, rejected: 0, pending: 0, approval_rate: 0, rejection_rate: 0 }, by_engineer: [], by_supervisor: [], by_project: [] };
-      const defaultSupplier = { suppliers: [] };
-      const defaultPriceVariance = { items: [] };
+      const defaultSupplier = { suppliers: [], summary: { total_suppliers: 0, total_orders: 0, total_spending: 0, avg_on_time_rate: 0 } };
+      const defaultPriceVariance = { items: [], increased: [], decreased: [], summary: { total_items_analyzed: 0, items_with_changes: 0, increased_items: 0, decreased_items: 0 } };
       
       const [summaryRes, approvalRes, supplierRes, priceVarianceRes] = await Promise.all([
         axios.get(`${API_V2_URL}/reports/advanced/summary${queryString}`, getAuthHeaders()).catch(() => ({ data: defaultSummary })),
