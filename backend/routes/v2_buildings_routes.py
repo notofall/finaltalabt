@@ -912,6 +912,129 @@ async def get_supply(
     return [supply_to_response(item) for item in items]
 
 
+@router.post("/projects/{project_id}/sync-supply")
+async def sync_supply_tracking(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    buildings_service: BuildingsService = Depends(get_buildings_service),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """
+    Sync supply tracking with calculated quantities
+    Creates supply items for all calculated materials
+    """
+    from database.models import SupplyTracking, UnitTemplate, UnitTemplateMaterial, ProjectFloor, ProjectAreaMaterial
+    
+    # Get project
+    result = await session.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Delete existing supply items for this project
+    await session.execute(
+        delete(SupplyTracking).where(SupplyTracking.project_id == project_id)
+    )
+    
+    # Get templates with materials
+    templates_result = await session.execute(
+        select(UnitTemplate).where(UnitTemplate.project_id == project_id)
+    )
+    templates = templates_result.scalars().all()
+    
+    # Get floors for total area
+    floors_result = await session.execute(
+        select(ProjectFloor).where(ProjectFloor.project_id == project_id)
+    )
+    floors = floors_result.scalars().all()
+    total_area = sum(f.area for f in floors)
+    
+    # Get area materials
+    area_materials_result = await session.execute(
+        select(ProjectAreaMaterial).where(ProjectAreaMaterial.project_id == project_id)
+    )
+    area_materials = area_materials_result.scalars().all()
+    
+    created_items = []
+    
+    # Create supply items from template materials
+    for template in templates:
+        materials_result = await session.execute(
+            select(UnitTemplateMaterial).where(UnitTemplateMaterial.template_id == template.id)
+        )
+        materials = materials_result.scalars().all()
+        
+        for m in materials:
+            quantity = m.quantity_per_unit * template.count
+            supply_item = SupplyTracking(
+                id=str(uuid4()),
+                project_id=project_id,
+                catalog_item_id=m.catalog_item_id,
+                item_code=m.item_code,
+                item_name=m.item_name,
+                unit=m.unit,
+                required_quantity=quantity,
+                received_quantity=0,
+                unit_price=m.unit_price,
+                source_type="template",
+                source_name=template.name
+            )
+            session.add(supply_item)
+            created_items.append(supply_item)
+    
+    # Create supply items from area materials
+    for m in area_materials:
+        calc_method = getattr(m, 'calculation_method', 'factor') or 'factor'
+        
+        if calc_method == 'direct':
+            base_quantity = getattr(m, 'direct_quantity', 0) or 0
+        else:
+            # Get floor area
+            if getattr(m, 'calculation_type', 'all_floors') == 'selected_floor' and getattr(m, 'selected_floor_id', None):
+                floor_area = next((f.area for f in floors if str(f.id) == m.selected_floor_id), 0)
+            else:
+                floor_area = total_area
+            base_quantity = floor_area * m.factor
+        
+        # Handle tile calculation
+        tile_width = getattr(m, 'tile_width', 0) or 0
+        tile_height = getattr(m, 'tile_height', 0) or 0
+        if tile_width > 0 and tile_height > 0:
+            tile_area_m2 = (tile_width / 100) * (tile_height / 100)
+            if tile_area_m2 > 0:
+                base_quantity = floor_area / tile_area_m2
+        
+        # Apply waste percentage
+        waste_pct = getattr(m, 'waste_percentage', 0) or 0
+        quantity = base_quantity * (1 + waste_pct / 100)
+        
+        supply_item = SupplyTracking(
+            id=str(uuid4()),
+            project_id=project_id,
+            catalog_item_id=m.catalog_item_id,
+            item_code=getattr(m, 'item_code', None),
+            item_name=m.item_name,
+            unit=m.unit,
+            required_quantity=round(quantity, 2),
+            received_quantity=0,
+            unit_price=m.unit_price,
+            source_type="area",
+            source_name="مواد المساحة"
+        )
+        session.add(supply_item)
+        created_items.append(supply_item)
+    
+    await session.commit()
+    
+    return {
+        "message": f"تم مزامنة التوريد بنجاح ({len(created_items)} عنصر)",
+        "items_count": len(created_items)
+    }
+
+
 @router.put("/projects/{project_id}/supply/{item_id}")
 async def update_supply_item(
     project_id: str,
