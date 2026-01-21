@@ -165,6 +165,8 @@ async def get_supply_details_report(
     session: AsyncSession = Depends(get_postgres_session)
 ):
     """Get detailed supply report for a project"""
+    from database.models import SupplyTracking
+    
     # Get project
     result = await session.execute(
         select(Project).where(Project.id == project_id)
@@ -174,16 +176,75 @@ async def get_supply_details_report(
     if not project:
         raise HTTPException(status_code=404, detail="المشروع غير موجود")
     
-    # Return report data structure
+    # Get supply tracking items for this project
+    supply_result = await session.execute(
+        select(SupplyTracking).where(SupplyTracking.project_id == project_id)
+    )
+    supply_items = supply_result.scalars().all()
+    
+    # Categorize items
+    completed_items = []
+    in_progress_items = []
+    not_started_items = []
+    
+    total_required = 0
+    total_received = 0
+    total_required_value = 0
+    total_received_value = 0
+    
+    for item in supply_items:
+        required_qty = item.required_quantity or 0
+        received_qty = item.received_quantity or 0
+        unit_price = item.unit_price if hasattr(item, 'unit_price') else 0
+        remaining = required_qty - received_qty
+        completion = round((received_qty / required_qty * 100), 1) if required_qty > 0 else 0
+        
+        total_required += required_qty
+        total_received += received_qty
+        total_required_value += required_qty * unit_price
+        total_received_value += received_qty * unit_price
+        
+        item_data = {
+            "id": str(item.id),
+            "item_code": getattr(item, 'item_code', None),
+            "item_name": item.item_name,
+            "unit": item.unit,
+            "required_quantity": required_qty,
+            "received_quantity": received_qty,
+            "remaining_quantity": remaining,
+            "completion_percentage": completion,
+            "remaining_value": remaining * unit_price
+        }
+        
+        if completion >= 100:
+            completed_items.append(item_data)
+        elif received_qty > 0:
+            in_progress_items.append(item_data)
+        else:
+            not_started_items.append(item_data)
+    
+    total_items = len(supply_items)
+    overall_completion = round((total_received / total_required * 100), 1) if total_required > 0 else 0
+    
+    # Return report data structure matching frontend expectations
     return {
         "project_id": project_id,
         "project_name": project.name,
         "summary": {
-            "total_materials": 0,
-            "total_delivered": 0,
-            "total_pending": 0,
-            "completion_percentage": 0
+            "total_items": total_items,
+            "completed_count": len(completed_items),
+            "in_progress_count": len(in_progress_items),
+            "not_started_count": len(not_started_items),
+            "overall_completion": overall_completion,
+            "total_required": total_required,
+            "total_received": total_received,
+            "total_remaining": total_required - total_received,
+            "total_required_value": total_required_value,
+            "total_received_value": total_received_value
         },
+        "completed_items": completed_items,
+        "in_progress_items": in_progress_items,
+        "not_started_items": not_started_items,
         "materials": [],
         "delivery_timeline": [],
         "suppliers": []
