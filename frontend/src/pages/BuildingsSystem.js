@@ -75,7 +75,7 @@ const BuildingsSystem = () => {
   const [templateMaterialDialogOpen, setTemplateMaterialDialogOpen] = useState(false);
   const [selectedTemplateForMaterial, setSelectedTemplateForMaterial] = useState(null);
   const [newTemplateMaterial, setNewTemplateMaterial] = useState({
-    catalog_item_id: "", item_name: "", unit: "قطعة", quantity_per_unit: 0
+    catalog_item_id: "", item_code: "", item_name: "", unit: "قطعة", quantity_per_unit: 0, unit_price: 0
   });
   
   // Import/Export
