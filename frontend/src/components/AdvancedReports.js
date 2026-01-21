@@ -621,7 +621,7 @@ export default function AdvancedReports({ onClose }) {
                       <Package className="h-8 w-8 text-blue-500" />
                       <div>
                         <p className="text-xs text-slate-500">إجمالي الطلبات</p>
-                        <p className="text-2xl font-bold">{summaryReport.summary.total_requests}</p>
+                        <p className="text-2xl font-bold">{summaryReport?.summary?.total_requests ?? 0}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -633,7 +633,7 @@ export default function AdvancedReports({ onClose }) {
                       <CheckCircle2 className="h-8 w-8 text-green-500" />
                       <div>
                         <p className="text-xs text-slate-500">أوامر الشراء</p>
-                        <p className="text-2xl font-bold">{summaryReport.summary.total_orders}</p>
+                        <p className="text-2xl font-bold">{summaryReport?.summary?.total_orders ?? 0}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -645,7 +645,7 @@ export default function AdvancedReports({ onClose }) {
                       <DollarSign className="h-8 w-8 text-orange-500" />
                       <div>
                         <p className="text-xs text-slate-500">إجمالي المصروفات</p>
-                        <p className="text-xl font-bold">{formatCurrency(summaryReport.summary.total_spending)}</p>
+                        <p className="text-xl font-bold">{formatCurrency(summaryReport?.summary?.total_spending ?? 0)}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -657,7 +657,7 @@ export default function AdvancedReports({ onClose }) {
                       <TrendingUp className="h-8 w-8 text-purple-500" />
                       <div>
                         <p className="text-xs text-slate-500">معتمدة</p>
-                        <p className="text-2xl font-bold text-green-600">{summaryReport.summary.approved_orders}</p>
+                        <p className="text-2xl font-bold text-green-600">{summaryReport?.summary?.approved_orders ?? 0}</p>
                       </div>
                     </div>
                   </CardContent>
