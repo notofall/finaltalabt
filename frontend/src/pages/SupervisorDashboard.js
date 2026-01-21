@@ -330,14 +330,14 @@ const SupervisorDashboard = () => {
 
   // Project management functions
   const handleCreateProject = async () => {
-    if (!newProject.name || !newProject.owner_name) {
-      toast.error("الرجاء إدخال اسم المشروع واسم المالك");
+    if (!newProject.name || !newProject.owner_name || !newProject.code) {
+      toast.error("الرجاء إدخال اسم المشروع وكود المشروع واسم المالك");
       return;
     }
     try {
       await axios.post(`${API_V2_URL}/projects/`, newProject, getAuthHeaders());
       toast.success("تم إنشاء المشروع بنجاح");
-      setNewProject({ name: "", owner_name: "", description: "", location: "" });
+      setNewProject({ name: "", code: "", owner_name: "", description: "", location: "" });
       fetchData();
     } catch (error) {
       toast.error(getErrorMessage(error, "فشل في إنشاء المشروع"));
