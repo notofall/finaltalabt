@@ -203,6 +203,8 @@ async def create_request(
     """
     إنشاء طلب مواد جديد
     Create a new material request
+    - المهندس يتم تعيينه أوتوماتيكياً من المشروع إذا كان محدداً
+    - رقم الطلب: PREFIX-PROJECT_CODE-SEQUENCE
     """
     # Get user info
     user_id = current_user.get("id") if isinstance(current_user, dict) else str(current_user.id)
@@ -220,28 +222,46 @@ async def create_request(
             detail="المشروع غير موجود"
         )
     
-    # Get engineer info
-    engineer_result = await session.execute(
-        select(User).where(User.id == data.engineer_id)
-    )
-    engineer = engineer_result.scalar_one_or_none()
-    if not engineer:
+    # تحديد المهندس: من المشروع أو من البيانات المرسلة
+    engineer_id = data.engineer_id
+    engineer_name = None
+    
+    # إذا كان المشروع له مهندس معين، استخدمه تلقائياً
+    if hasattr(project, 'engineer_id') and project.engineer_id:
+        engineer_id = project.engineer_id
+        engineer_name = getattr(project, 'engineer_name', None)
+    
+    # Get engineer info if not already set from project
+    if not engineer_name and engineer_id:
+        engineer_result = await session.execute(
+            select(User).where(User.id == engineer_id)
+        )
+        engineer = engineer_result.scalar_one_or_none()
+        if not engineer:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="المهندس غير موجود"
+            )
+        engineer_name = engineer.name
+    
+    if not engineer_id:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="المهندس غير موجود"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="يجب تحديد المهندس للمشروع"
         )
     
-    # Create request
+    # Create request with project code
     request = await request_service.create_request(
         project_id=data.project_id,
         project_name=project.name,
         reason=data.reason,
         supervisor_id=user_id,
         supervisor_name=user_name,
-        engineer_id=data.engineer_id,
-        engineer_name=engineer.name,
+        engineer_id=engineer_id,
+        engineer_name=engineer_name,
         expected_delivery_date=data.expected_delivery_date,
-        supervisor_prefix=supervisor_prefix
+        supervisor_prefix=supervisor_prefix,
+        project_code=project.code  # إضافة كود المشروع لرقم الطلب
     )
     
     # Add items
