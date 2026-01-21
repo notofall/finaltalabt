@@ -891,10 +891,21 @@ const BuildingsSystem = () => {
               <TabsContent value="dashboard" className="mt-4">
                 <Card className="bg-slate-800/50 border-slate-700">
                   <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <Building2 className="w-5 h-5 text-emerald-400" />
-                      اختر مشروعاً للإدارة
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <Building2 className="w-5 h-5 text-emerald-400" />
+                        اختر مشروعاً للإدارة
+                      </CardTitle>
+                      <Button
+                        onClick={openAddProjectDialog}
+                        className="bg-emerald-600 hover:bg-emerald-700"
+                        size="sm"
+                        data-testid="add-project-to-buildings-btn"
+                      >
+                        <Plus className="w-4 h-4 ml-1" />
+                        إضافة مشروع
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
