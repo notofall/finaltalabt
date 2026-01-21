@@ -326,6 +326,26 @@ export default function GeneralManagerDashboard() {
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={() => navigate('/buildings')}
+                className="text-white hover:bg-white/20 h-8 px-2"
+                title="نظام كميات العمائر"
+              >
+                <Building2 className="w-4 h-4" />
+                <span className="hidden sm:inline mr-1">العمائر</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/rfq')}
+                className="text-white hover:bg-white/20 h-8 px-2"
+                title="عروض الأسعار"
+              >
+                <FileQuestion className="w-4 h-4" />
+                <span className="hidden sm:inline mr-1">العروض</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setPasswordDialogOpen(true)}
                 className="text-white hover:bg-white/20 h-8 px-2"
               >
