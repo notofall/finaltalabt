@@ -474,45 +474,84 @@ async def import_catalog(
     current_user = Depends(get_current_user),
     catalog_service: CatalogService = Depends(get_catalog_service)
 ):
-    """Import catalog items from CSV file"""
+    """Import catalog items from CSV or Excel file"""
     require_admin(current_user)
     
     content = await file.read()
-    
-    try:
-        decoded = content.decode('utf-8-sig')
-    except:
-        decoded = content.decode('utf-8')
-    
-    reader = csv.DictReader(io.StringIO(decoded))
+    filename = file.filename.lower() if file.filename else ""
     
     imported = 0
+    updated = 0
     errors = []
     
-    for row_num, row in enumerate(reader, start=2):
-        try:
-            name = row.get('name', '').strip()
-            if not name:
-                continue
+    try:
+        # Handle Excel files
+        if filename.endswith('.xlsx') or filename.endswith('.xls'):
+            from openpyxl import load_workbook
             
-            await catalog_service.create_item(
-                name=name,
-                unit=row.get('unit', 'قطعة').strip(),
-                price=float(row.get('price', 0)),
-                category_name=row.get('category_name', '').strip() or None,
-                item_code=row.get('item_code', '').strip() or None,
-                description=row.get('description', '').strip() or None,
-                supplier_id=None,
-                supplier_name=row.get('supplier_name', '').strip() or None
-            )
-            imported += 1
-        except Exception as e:
-            errors.append(f"Row {row_num}: {str(e)}")
+            wb = load_workbook(io.BytesIO(content))
+            ws = wb.active
+            
+            # Get headers from first row
+            headers = [cell.value for cell in ws[1]]
+            
+            for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+                try:
+                    row_dict = dict(zip(headers, row))
+                    name = str(row_dict.get('name', '') or '').strip()
+                    if not name:
+                        continue
+                    
+                    await catalog_service.create_item(
+                        name=name,
+                        unit=str(row_dict.get('unit', 'قطعة') or 'قطعة').strip(),
+                        price=float(row_dict.get('price', 0) or 0),
+                        category_name=str(row_dict.get('category_name', '') or '').strip() or None,
+                        item_code=str(row_dict.get('item_code', '') or '').strip() or None,
+                        description=str(row_dict.get('description', '') or '').strip() or None,
+                        supplier_id=None,
+                        supplier_name=str(row_dict.get('supplier_name', '') or '').strip() or None
+                    )
+                    imported += 1
+                except Exception as e:
+                    errors.append(f"Row {row_idx}: {str(e)}")
+        else:
+            # Handle CSV files
+            try:
+                decoded = content.decode('utf-8-sig')
+            except:
+                decoded = content.decode('utf-8')
+            
+            reader = csv.DictReader(io.StringIO(decoded))
+            
+            for row_num, row in enumerate(reader, start=2):
+                try:
+                    name = row.get('name', '').strip()
+                    if not name:
+                        continue
+                    
+                    await catalog_service.create_item(
+                        name=name,
+                        unit=row.get('unit', 'قطعة').strip(),
+                        price=float(row.get('price', 0)),
+                        category_name=row.get('category_name', '').strip() or None,
+                        item_code=row.get('item_code', '').strip() or None,
+                        description=row.get('description', '').strip() or None,
+                        supplier_id=None,
+                        supplier_name=row.get('supplier_name', '').strip() or None
+                    )
+                    imported += 1
+                except Exception as e:
+                    errors.append(f"Row {row_num}: {str(e)}")
+    
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error reading file: {str(e)}")
     
     return {
         "message": f"تم استيراد {imported} صنف",
         "imported": imported,
-        "errors": errors[:10]  # Return first 10 errors
+        "updated": updated,
+        "errors": errors[:10]
     }
 
 
