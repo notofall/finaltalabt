@@ -9,7 +9,7 @@ import uuid
 
 from tests.test_config import get_credentials
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://rfq-refactor.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://procure-flow-18.preview.emergentagent.com').rstrip('/')
 
 # Test credentials from the request
 TEST_CREDENTIALS = {
