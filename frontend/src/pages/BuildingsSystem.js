@@ -590,15 +590,19 @@ const BuildingsSystem = () => {
       setNewAreaMaterial({
         ...newAreaMaterial,
         catalog_item_id: item.id,
+        item_code: item.item_code || "",
         item_name: item.name,
-        unit: item.unit || "طن"
+        unit: item.unit || "طن",
+        unit_price: item.price || 0
       });
     } else if (catalogSelectionTarget === "templateMaterial") {
       setNewTemplateMaterial({
         ...newTemplateMaterial,
         catalog_item_id: item.id,
+        item_code: item.item_code || "",
         item_name: item.name,
-        unit: item.unit || "قطعة"
+        unit: item.unit || "قطعة",
+        unit_price: item.price || 0
       });
     }
     setSelectCatalogDialogOpen(false);
