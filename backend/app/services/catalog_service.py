@@ -58,6 +58,12 @@ class CatalogService(BaseService):
         if not item_code:
             item_code = await self.catalog_repo.get_next_code_by_category(category_code, category_name)
         
+        # التحقق من عدم تكرار الكود
+        if item_code:
+            existing = await self.catalog_repo.get_item_by_code(item_code)
+            if existing:
+                raise ValueError(f"كود الصنف '{item_code}' مستخدم بالفعل")
+        
         item = PriceCatalog(
             id=str(uuid4()),
             item_code=item_code,
