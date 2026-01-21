@@ -843,3 +843,31 @@ class SupplierQuotationItem(Base):
         Index('idx_sq_items_quotation', 'quotation_id'),
     )
 
+
+
+class BuildingPermission(Base):
+    """صلاحيات نظام إدارة كميات العمائر"""
+    __tablename__ = "building_permissions"
+    
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid_lib.uuid4()))
+    user_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
+    user_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    project_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)  # None = all projects
+    project_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    
+    # Permissions
+    can_view: Mapped[bool] = mapped_column(Boolean, default=True)
+    can_edit: Mapped[bool] = mapped_column(Boolean, default=False)
+    can_delete: Mapped[bool] = mapped_column(Boolean, default=False)
+    can_export: Mapped[bool] = mapped_column(Boolean, default=True)
+    
+    # Audit
+    granted_by: Mapped[str] = mapped_column(String(36), nullable=False)
+    granted_by_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    
+    __table_args__ = (
+        Index('idx_building_perm_user', 'user_id'),
+        Index('idx_building_perm_project', 'project_id'),
+    )
+
