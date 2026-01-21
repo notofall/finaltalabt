@@ -84,12 +84,19 @@ class Project(Base):
     __tablename__ = "projects"
     
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid_lib.uuid4()))
-    code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, unique=True, index=True)  # كود المشروع
+    code: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, index=True)  # كود المشروع (إلزامي وفريد)
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     owner_name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     location: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(50), default="active", index=True)
+    
+    # المشرف والمهندس المعينين للمشروع
+    supervisor_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("users.id"), nullable=True, index=True)
+    supervisor_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    engineer_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("users.id"), nullable=True, index=True)
+    engineer_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    
     created_by: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False)
     created_by_name: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -104,6 +111,8 @@ class Project(Base):
     __table_args__ = (
         Index('idx_projects_status_created_at', 'status', 'created_at'),
         Index('idx_projects_code', 'code'),
+        Index('idx_projects_supervisor', 'supervisor_id'),
+        Index('idx_projects_engineer', 'engineer_id'),
     )
 
 
