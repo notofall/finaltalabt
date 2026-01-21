@@ -438,6 +438,44 @@ async def reject_request(
     return {"message": "تم رفض الطلب", "status": request.status}
 
 
+@router.post("/{request_id}/reject-by-manager")
+async def reject_request_by_manager(
+    request_id: UUID,
+    data: dict,
+    request_service: RequestService = Depends(get_request_service),
+    current_user = Depends(get_current_user)
+):
+    """رفض طلب من مدير المشتريات وإعادته للمهندس"""
+    user_id = current_user.get("id") if isinstance(current_user, dict) else str(current_user.id)
+    user_role = current_user.get("role") if isinstance(current_user, dict) else current_user.role
+    
+    # Only procurement_manager or general_manager can reject
+    if user_role not in ["procurement_manager", "general_manager", "system_admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="غير مصرح لك برفض الطلبات"
+        )
+    
+    reason = data.get("reason", "")
+    
+    request = await request_service.update_request(
+        request_id,
+        {
+            "status": "rejected_by_manager",
+            "manager_rejection_reason": reason,
+            "rejected_by_manager_id": user_id
+        }
+    )
+    
+    if not request:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="الطلب غير موجود"
+        )
+    
+    return {"message": "تم رفض الطلب وإعادته للمهندس", "status": request.status}
+
+
 @router.post("/{request_id}/resubmit")
 async def resubmit_request(
     request_id: UUID,
