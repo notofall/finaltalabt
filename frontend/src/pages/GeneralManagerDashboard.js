@@ -81,10 +81,13 @@ export default function GeneralManagerDashboard() {
       }
       
       // Using V2 APIs for GM Dashboard
-      const [pendingRes, gmApprovedRes, procurementApprovedRes] = await Promise.all([
+      const [pendingRes, gmApprovedRes, procurementApprovedRes, requestsRes, usersRes, projectsRes] = await Promise.all([
         axios.get(`${API_URL}/api/v2/gm/pending-orders`, { headers }),
         axios.get(`${API_URL}/api/v2/gm/all-orders?approval_type=gm_approved`, { headers }),
-        axios.get(`${API_URL}/api/v2/gm/all-orders?approval_type=manager_approved`, { headers })
+        axios.get(`${API_URL}/api/v2/gm/all-orders?approval_type=manager_approved`, { headers }),
+        axios.get(`${API_URL}/api/v2/requests/?limit=1000`, { headers }).catch(() => ({ data: { items: [] } })),
+        axios.get(`${API_URL}/api/v2/auth/users`, { headers }).catch(() => ({ data: { items: [] } })),
+        axios.get(`${API_URL}/api/v2/projects/`, { headers }).catch(() => ({ data: { items: [] } }))
       ]);
       
       setPendingOrders(pendingRes.data || []);
@@ -93,6 +96,19 @@ export default function GeneralManagerDashboard() {
       setGmApprovedTotalPages(1);
       setProcurementApprovedOrders(procurementApprovedRes.data || []);
       setProcurementApprovedTotalPages(1);
+      
+      // Set all requests
+      const requests = requestsRes.data?.items || requestsRes.data || [];
+      setAllRequests(requests);
+      
+      // Set users for filters
+      const users = usersRes.data?.items || usersRes.data || [];
+      setSupervisors(users.filter(u => u.role === 'supervisor'));
+      setEngineers(users.filter(u => u.role === 'engineer'));
+      
+      // Set projects
+      const projectsList = projectsRes.data?.items || projectsRes.data || [];
+      setProjects(projectsList);
       
       // Calculate stats from data
       setStats({
