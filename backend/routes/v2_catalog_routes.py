@@ -197,20 +197,23 @@ async def create_catalog_item(
     Create catalog item
     Uses: CatalogService -> CatalogRepository
     """
-    item = await catalog_service.create_item(
-        name=data.name,
-        unit=data.unit,
-        price=data.price,
-        category_name=data.category_name,
-        category_code=data.category_code,
-        item_code=data.item_code,
-        description=data.description,
-        supplier_id=data.supplier_id,
-        supplier_name=data.supplier_name,
-        created_by=str(current_user.id),
-        created_by_name=current_user.name
-    )
-    return item_to_response(item)
+    try:
+        item = await catalog_service.create_item(
+            name=data.name,
+            unit=data.unit,
+            price=data.price,
+            category_name=data.category_name,
+            category_code=data.category_code,
+            item_code=data.item_code,
+            description=data.description,
+            supplier_id=data.supplier_id,
+            supplier_name=data.supplier_name,
+            created_by=str(current_user.id),
+            created_by_name=current_user.name
+        )
+        return item_to_response(item)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.put("/items/{item_id}", response_model=CatalogItemResponse)
