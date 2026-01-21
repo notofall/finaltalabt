@@ -162,6 +162,9 @@ async def init_postgres_db() -> None:
         # Run migrations for budget system
         await run_budget_migrations()
         
+        # Run migrations for project system
+        await run_project_migrations()
+        
         logger.info("✅ PostgreSQL tables initialized successfully")
     except Exception as e:
         logger.error(f"❌ Failed to initialize PostgreSQL tables: {e}")
