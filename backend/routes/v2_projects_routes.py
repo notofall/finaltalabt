@@ -314,16 +314,47 @@ async def update_project(
     project_id: UUID,
     project_data: ProjectUpdate,
     project_service: ProjectService = Depends(get_project_service),
+    session: AsyncSession = Depends(get_postgres_session),
     current_user = Depends(get_current_user)
 ):
-    """تحديث مشروع"""
+    """
+    تحديث مشروع
+    - يستطيع المهندس والمدير العام ومدير المشتريات تعديل المشرف
+    """
+    # التحقق من الصلاحيات لتغيير المشرف
+    allowed_roles_for_supervisor_change = ['system_admin', 'engineer', 'procurement_manager', 'general_manager']
+    user_role = current_user.role if hasattr(current_user, 'role') else current_user.get('role')
+    
     update_data = {k: v for k, v in project_data.model_dump().items() if v is not None}
+    
+    # التحقق من صلاحية تغيير المشرف
+    if 'supervisor_id' in update_data and user_role not in allowed_roles_for_supervisor_change:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="ليس لديك صلاحية لتغيير مشرف المشروع"
+        )
     
     if not update_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="لا توجد بيانات للتحديث"
         )
+    
+    # جلب اسم المشرف الجديد إذا تم تغييره
+    if 'supervisor_id' in update_data and update_data['supervisor_id']:
+        from database import User
+        result = await session.execute(select(User).where(User.id == update_data['supervisor_id']))
+        supervisor = result.scalar_one_or_none()
+        if supervisor:
+            update_data['supervisor_name'] = supervisor.name
+    
+    # جلب اسم المهندس الجديد إذا تم تغييره
+    if 'engineer_id' in update_data and update_data['engineer_id']:
+        from database import User
+        result = await session.execute(select(User).where(User.id == update_data['engineer_id']))
+        engineer = result.scalar_one_or_none()
+        if engineer:
+            update_data['engineer_name'] = engineer.name
     
     project = await project_service.update_project(project_id, update_data)
     
