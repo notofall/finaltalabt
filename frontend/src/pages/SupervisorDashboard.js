@@ -57,7 +57,7 @@ const SupervisorDashboard = () => {
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("");
 
   // Project form state
-  const [newProject, setNewProject] = useState({ name: "", owner_name: "", description: "", location: "" });
+  const [newProject, setNewProject] = useState({ name: "", code: "", owner_name: "", description: "", location: "" });
   const [editingProject, setEditingProject] = useState(null);
 
   // Catalog suggestions state - اقتراحات الكتالوج
