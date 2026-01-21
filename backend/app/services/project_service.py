@@ -50,10 +50,21 @@ class ProjectService(BaseService[Project]):
         owner_name: str = "",
         location: str = None,
         created_by: str = "",
-        created_by_name: str = ""
+        created_by_name: str = "",
+        supervisor_id: str = None,
+        supervisor_name: str = None,
+        engineer_id: str = None,
+        engineer_name: str = None
     ) -> Project:
         """Create new project"""
         from datetime import datetime, timezone
+        
+        # التحقق من عدم تكرار كود المشروع
+        if code:
+            existing = await self.project_repo.get_by_code(code)
+            if existing:
+                raise ValueError(f"كود المشروع '{code}' مستخدم بالفعل")
+        
         project = Project(
             name=name,
             code=code,
@@ -63,6 +74,10 @@ class ProjectService(BaseService[Project]):
             total_area=total_area,
             floors_count=floors_count,
             status="active",
+            supervisor_id=supervisor_id,
+            supervisor_name=supervisor_name,
+            engineer_id=engineer_id,
+            engineer_name=engineer_name,
             created_by=created_by or "system",
             created_by_name=created_by_name or "النظام",
             created_at=datetime.now(timezone.utc),
