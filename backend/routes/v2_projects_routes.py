@@ -43,7 +43,10 @@ class ProjectCreate(BaseModel):
 class ProjectUpdate(BaseModel):
     name: Optional[str] = None
     code: Optional[str] = None
+    owner_name: Optional[str] = None
     description: Optional[str] = None
+    location: Optional[str] = None
+    status: Optional[str] = None
     total_area: Optional[float] = None
     floors_count: Optional[int] = None
 
