@@ -362,7 +362,7 @@ const SupervisorDashboard = () => {
       toast.success("تم حذف المشروع بنجاح");
       fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || "فشل في حذف المشروع");
+      toast.error(getErrorMessage(error, "فشل في حذف المشروع"));
     }
   };
 
