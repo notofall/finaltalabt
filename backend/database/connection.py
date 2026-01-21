@@ -283,6 +283,50 @@ async def run_rfq_migrations() -> None:
         logger.warning(f"RFQ migrations warning: {e}")
 
 
+async def run_budget_migrations() -> None:
+    """Run migrations for budget system - add actual_spent column"""
+    global engine
+    
+    if engine is None:
+        return
+    
+    try:
+        database_url = get_database_url()
+        is_sqlite = 'sqlite' in database_url
+        
+        async with engine.begin() as conn:
+            if is_sqlite:
+                # Check if column exists in SQLite
+                try:
+                    result = await conn.execute(text("PRAGMA table_info(budget_categories)"))
+                    columns = [row[1] for row in result.fetchall()]
+                    
+                    if 'actual_spent' not in columns:
+                        await conn.execute(text("ALTER TABLE budget_categories ADD COLUMN actual_spent FLOAT DEFAULT 0"))
+                    if 'updated_at' not in columns:
+                        await conn.execute(text("ALTER TABLE budget_categories ADD COLUMN updated_at DATETIME"))
+                except Exception as e:
+                    # Table might not exist yet
+                    pass
+                
+                logger.info("✅ Budget migrations applied for SQLite")
+            else:
+                # PostgreSQL
+                pg_migrations = [
+                    "ALTER TABLE budget_categories ADD COLUMN IF NOT EXISTS actual_spent FLOAT DEFAULT 0",
+                    "ALTER TABLE budget_categories ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP",
+                ]
+                for migration in pg_migrations:
+                    try:
+                        await conn.execute(text(migration))
+                    except:
+                        pass
+                
+                logger.info("✅ Budget migrations applied for PostgreSQL")
+    except Exception as e:
+        logger.warning(f"Budget migrations warning: {e}")
+
+
 async def get_postgres_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency function that provides a database session to routes.
