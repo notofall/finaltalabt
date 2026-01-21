@@ -646,12 +646,13 @@ const BuildingsSystem = () => {
         unit_price: item.price || 0
       });
     } else if (catalogSelectionTarget === "templateMaterial") {
+      // Replace entire object to ensure clean state
       setNewTemplateMaterial({
-        ...newTemplateMaterial,
         catalog_item_id: item.id,
         item_code: item.item_code || "",
         item_name: item.name,
         unit: item.unit || "قطعة",
+        quantity_per_unit: 0,
         unit_price: item.price || 0
       });
     }
