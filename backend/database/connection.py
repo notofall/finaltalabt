@@ -330,6 +330,55 @@ async def run_budget_migrations() -> None:
         logger.warning(f"Budget migrations warning: {e}")
 
 
+async def run_project_migrations() -> None:
+    """Run migrations for project system - add supervisor_id and engineer_id columns"""
+    global engine
+    
+    if engine is None:
+        return
+    
+    try:
+        database_url = get_database_url()
+        is_sqlite = 'sqlite' in database_url
+        
+        async with engine.begin() as conn:
+            if is_sqlite:
+                # Check if columns exist in SQLite
+                try:
+                    result = await conn.execute(text("PRAGMA table_info(projects)"))
+                    columns = [row[1] for row in result.fetchall()]
+                    
+                    if 'supervisor_id' not in columns:
+                        await conn.execute(text("ALTER TABLE projects ADD COLUMN supervisor_id VARCHAR(36)"))
+                    if 'supervisor_name' not in columns:
+                        await conn.execute(text("ALTER TABLE projects ADD COLUMN supervisor_name VARCHAR(255)"))
+                    if 'engineer_id' not in columns:
+                        await conn.execute(text("ALTER TABLE projects ADD COLUMN engineer_id VARCHAR(36)"))
+                    if 'engineer_name' not in columns:
+                        await conn.execute(text("ALTER TABLE projects ADD COLUMN engineer_name VARCHAR(255)"))
+                except Exception as e:
+                    pass
+                
+                logger.info("✅ Project migrations applied for SQLite")
+            else:
+                # PostgreSQL
+                pg_migrations = [
+                    "ALTER TABLE projects ADD COLUMN IF NOT EXISTS supervisor_id VARCHAR(36)",
+                    "ALTER TABLE projects ADD COLUMN IF NOT EXISTS supervisor_name VARCHAR(255)",
+                    "ALTER TABLE projects ADD COLUMN IF NOT EXISTS engineer_id VARCHAR(36)",
+                    "ALTER TABLE projects ADD COLUMN IF NOT EXISTS engineer_name VARCHAR(255)",
+                ]
+                for migration in pg_migrations:
+                    try:
+                        await conn.execute(text(migration))
+                    except:
+                        pass
+                
+                logger.info("✅ Project migrations applied for PostgreSQL")
+    except Exception as e:
+        logger.warning(f"Project migrations warning: {e}")
+
+
 async def get_postgres_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency function that provides a database session to routes.
