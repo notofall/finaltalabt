@@ -202,6 +202,139 @@ async def get_my_permissions(
     return permissions
 
 
+@router.get("/users/available")
+async def get_available_users(
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """Get all users available for permission assignment"""
+    from database.models import User
+    
+    result = await session.execute(
+        select(User).where(User.is_active == True)
+    )
+    users = result.scalars().all()
+    
+    return [
+        {
+            "id": str(u.id),
+            "name": u.name,
+            "email": u.email,
+            "role": u.role
+        }
+        for u in users
+    ]
+
+
+@router.get("/permissions")
+async def get_all_permissions(
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """Get all building permissions (admin only)"""
+    from database.models import BuildingPermission, User
+    
+    # Check if table exists
+    try:
+        result = await session.execute(
+            select(BuildingPermission)
+        )
+        permissions = result.scalars().all()
+        
+        return [
+            {
+                "id": str(p.id),
+                "user_id": p.user_id,
+                "user_name": p.user_name,
+                "project_id": p.project_id,
+                "project_name": getattr(p, 'project_name', 'جميع المشاريع'),
+                "can_view": p.can_view,
+                "can_edit": p.can_edit,
+                "can_delete": p.can_delete,
+                "can_export": p.can_export
+            }
+            for p in permissions
+        ]
+    except Exception as e:
+        print(f"Error fetching permissions: {e}")
+        return []
+
+
+@router.post("/permissions", status_code=status.HTTP_201_CREATED)
+async def grant_permission(
+    data: dict,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """Grant building permission to user"""
+    from database.models import BuildingPermission, User, Project
+    import uuid as uuid_lib
+    
+    user_id = data.get("user_id")
+    
+    # Get user info
+    user_result = await session.execute(
+        select(User).where(User.id == user_id)
+    )
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="المستخدم غير موجود")
+    
+    # Get project info if specified
+    project_id = data.get("project_id") or None
+    project_name = "جميع المشاريع"
+    if project_id:
+        proj_result = await session.execute(
+            select(Project).where(Project.id == project_id)
+        )
+        project = proj_result.scalar_one_or_none()
+        if project:
+            project_name = project.name
+    
+    # Create permission
+    permission = BuildingPermission(
+        id=str(uuid_lib.uuid4()),
+        user_id=str(user.id),
+        user_name=user.name,
+        project_id=project_id,
+        project_name=project_name,
+        can_view=data.get("can_view", True),
+        can_edit=data.get("can_edit", False),
+        can_delete=data.get("can_delete", False),
+        can_export=data.get("can_export", True),
+        granted_by=str(current_user.id),
+        granted_by_name=current_user.name
+    )
+    
+    session.add(permission)
+    await session.commit()
+    
+    return {"message": "تم إعطاء الصلاحية بنجاح", "id": permission.id}
+
+
+@router.delete("/permissions/{permission_id}")
+async def revoke_permission(
+    permission_id: str,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """Revoke building permission"""
+    from database.models import BuildingPermission
+    
+    result = await session.execute(
+        select(BuildingPermission).where(BuildingPermission.id == permission_id)
+    )
+    permission = result.scalar_one_or_none()
+    
+    if not permission:
+        raise HTTPException(status_code=404, detail="الصلاحية غير موجودة")
+    
+    await session.delete(permission)
+    await session.commit()
+    
+    return {"message": "تم إلغاء الصلاحية"}
+
+
 # ==================== TEMPLATES ====================
 
 @router.get("/projects/{project_id}/templates")
