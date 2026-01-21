@@ -113,7 +113,7 @@ const ProcurementDashboard = () => {
   
   // Default Budget Categories - التصنيفات الافتراضية
   const [defaultCategories, setDefaultCategories] = useState([]);
-  const [newDefaultCategory, setNewDefaultCategory] = useState({ name: "", default_budget: "" });
+  const [newDefaultCategory, setNewDefaultCategory] = useState({ name: "", code: "", default_budget: "" });
   const [editingDefaultCategory, setEditingDefaultCategory] = useState(null);
   const [budgetViewMode, setBudgetViewMode] = useState("default"); // "default" or "projects"
   
