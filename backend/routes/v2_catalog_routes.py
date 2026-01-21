@@ -265,15 +265,20 @@ async def get_categories(
 @router.get("/suggest-code")
 async def suggest_item_code(
     category: Optional[str] = Query(None, description="Category name"),
+    category_code: Optional[str] = Query(None, description="Category code for generating item code"),
     current_user = Depends(get_current_user),
     catalog_service: CatalogService = Depends(get_catalog_service)
 ):
     """
-    Suggest next item code based on category
+    Suggest next item code based on category code or category name
+    If category_code provided (e.g., "1"), returns codes like "1-0001", "1-0002"
     Returns suggested code that can be modified by user
     """
-    suggested_code = await catalog_service.catalog_repo.get_next_code(category)
-    return {"suggested_code": suggested_code, "category": category}
+    if category_code:
+        suggested_code = await catalog_service.catalog_repo.get_next_code_by_category(category_code, category)
+    else:
+        suggested_code = await catalog_service.catalog_repo.get_next_code(category)
+    return {"suggested_code": suggested_code, "category": category, "category_code": category_code}
 
 
 @router.get("/search", response_model=List[CatalogItemResponse])
