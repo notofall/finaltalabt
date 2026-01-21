@@ -22,6 +22,7 @@ import SupplyAdvancedReport from "../components/SupplyAdvancedReport";
 
 const BuildingsSystem = () => {
   const { user, logout, API_URL, API_V2_URL, getAuthHeaders } = useAuth();
+  const navigate = useNavigate();
   
   // Use buildings API URL
   const BUILDINGS_API = `${API_V2_URL}/buildings`;
