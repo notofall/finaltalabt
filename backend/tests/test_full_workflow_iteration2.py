@@ -447,7 +447,11 @@ class TestBudgetFeature:
         )
         assert response.status_code == 200, f"Failed to get budget categories: {response.text}"
         data = response.json()
-        print(f"✓ Found {len(data.get('items', data))} budget categories")
+        # Handle both list and paginated response
+        if isinstance(data, list):
+            print(f"✓ Found {len(data)} budget categories")
+        else:
+            print(f"✓ Found {len(data.get('items', []))} budget categories")
     
     def test_02_get_budget_summary(self):
         """Get budget summary for project"""
