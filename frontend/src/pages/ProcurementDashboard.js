@@ -1140,7 +1140,9 @@ const ProcurementDashboard = () => {
       const items = order.items?.map(item => ({
         name: item.name,
         quantity: item.quantity,
-        unit: item.unit
+        unit: item.unit,
+        unit_price: item.unit_price,
+        catalog_item_id: item.catalog_item_id  // إضافة معرف الكتالوج للتحقق
       })) || [];
       
       const response = await axios.post(`${API_V2_URL}/catalog/validate-items`, {
