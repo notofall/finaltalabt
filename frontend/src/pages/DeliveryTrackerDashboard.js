@@ -61,7 +61,8 @@ const DeliveryTrackerDashboard = () => {
       setProjects(projectsList);
       
       // Set suppliers
-      setSuppliers(suppliersRes.data || []);
+      const suppliersList = suppliersRes.data?.items || suppliersRes.data || [];
+      setSuppliers(Array.isArray(suppliersList) ? suppliersList : []);
       
       // Extract supervisors and engineers from orders
       const supMap = new Map();
