@@ -108,6 +108,8 @@ def alias_to_response(alias) -> AliasResponse:
         id=str(alias.id),
         alias_name=alias.alias_name,
         catalog_item_id=str(alias.catalog_item_id),
+        catalog_item_name=getattr(alias, 'catalog_item_name', None),
+        usage_count=getattr(alias, 'usage_count', 0),
         created_at=alias.created_at.isoformat() if alias.created_at else None
     )
 
