@@ -16,10 +16,21 @@ import {
 export default function AdvancedReports({ onClose }) {
   const { API_V2_URL, getAuthHeaders } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [summaryReport, setSummaryReport] = useState(null);
-  const [approvalReport, setApprovalReport] = useState(null);
-  const [supplierReport, setSupplierReport] = useState(null);
-  const [priceVarianceReport, setPriceVarianceReport] = useState(null);  // New state for price variance
+  const [summaryReport, setSummaryReport] = useState({ 
+    summary: { total_requests: 0, total_orders: 0, total_spending: 0, approved_orders: 0, pending_orders: 0, average_order_value: 0 }, 
+    top_projects: [], 
+    top_suppliers: [], 
+    spending_by_category: [], 
+    monthly_spending: [] 
+  });
+  const [approvalReport, setApprovalReport] = useState({ 
+    summary: { total_requests: 0, approved: 0, rejected: 0, pending: 0, approval_rate: 0, rejection_rate: 0 }, 
+    by_engineer: [], 
+    by_supervisor: [], 
+    by_project: [] 
+  });
+  const [supplierReport, setSupplierReport] = useState({ suppliers: [] });
+  const [priceVarianceReport, setPriceVarianceReport] = useState({ items: [] });
   
   // Filter options data
   const [projects, setProjects] = useState([]);
