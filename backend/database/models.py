@@ -191,6 +191,8 @@ class MaterialRequest(Base):
     engineer_name: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="pending_engineer", index=True)
     rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    manager_rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # سبب رفض مدير المشتريات
+    rejected_by_manager_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)  # معرف مدير المشتريات الذي رفض
     expected_delivery_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
