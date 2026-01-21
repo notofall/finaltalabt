@@ -1,0 +1,118 @@
+# ===========================================
+# نظام إدارة طلبات المواد - .gitignore
+# ===========================================
+
+# ==================== Python ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# ==================== Node.js ====================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ==================== IDE ====================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ==================== Environment ====================
+.env
+.env.local
+.env.*.local
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+
+# ==================== Logs ====================
+*.log
+logs/
+backend/logs/
+backend/logs/*.log
+
+# ==================== Database ====================
+*.db
+*.sqlite
+*.sqlite3
+data/*.db
+backend/data/*.db
+
+# ==================== Test & Coverage ====================
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+
+# ==================== Build ====================
+/build/
+/dist/
+frontend/build/
+
+# ==================== OS ====================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ==================== Git Config (local) ====================
+.gitconfig
+
+# ==================== Secrets ====================
+*.pem
+*.key
+secrets/
+credentials/
+
+# ==================== Temporary ====================
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# ==================== Screenshots ====================
+.screenshots/
+
+# ==================== Cache ====================
+frontend/node_modules/.cache/
+frontend/node_modules/.cache/default-development/13.pack
+frontend/node_modules/.cache/default-development/14.pack
+frontend/node_modules/.cache/default-development/0.pack
+-e 
+# Environment files
+*.env
+*.env.*
+-e 
+# Environment files
+*.env
+*.env.*

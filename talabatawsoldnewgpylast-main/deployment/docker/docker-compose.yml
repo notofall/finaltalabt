@@ -1,0 +1,78 @@
+# ============================================
+# نظام إدارة طلبات المواد - Docker Compose
+# Material Requests Management System
+# ============================================
+#
+# 📋 التعليمات:
+# 1. انسخ .env.example إلى .env وعدّل القيم
+# 2. شغّل: docker-compose up -d --build
+# 3. للتحديث: ./deploy.sh
+#
+# ============================================
+
+services:
+  # قاعدة البيانات PostgreSQL
+  postgres:
+    image: postgres:14-alpine
+    container_name: talabat_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin123}
+      POSTGRES_DB: ${POSTGRES_DB:-talabat_db}
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-talabat_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - talabat_network
+
+  # الخادم الخلفي Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: talabat_backend
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-talabat_db}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-admin123}
+      - POSTGRES_SSLMODE=disable
+      - SECRET_KEY=${SECRET_KEY:-my-super-secret-key-for-jwt-tokens}
+    volumes:
+      - ./backend/data:/app/data
+    ports:
+      - "${BACKEND_PORT:-8001}:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - talabat_network
+
+  # الواجهة الأمامية Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: talabat_frontend
+    environment:
+      - REACT_APP_BACKEND_URL=${BACKEND_URL:-http://localhost:8001}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - talabat_network
+
+networks:
+  talabat_network:
+    driver: bridge

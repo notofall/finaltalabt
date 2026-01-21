@@ -1,0 +1,591 @@
+"""
+Orders API v2 - Using Service Layer (Clean)
+API أوامر الشراء V2 - باستخدام طبقة الخدمات (نظيف)
+
+Architecture: Route -> Service -> Repository
+- Routes: HTTP handling, auth, response formatting
+- Services: Business logic
+- Repositories: Data access
+
+NO direct SQL in routes.
+"""
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import List, Optional
+from uuid import UUID
+from datetime import datetime, timezone
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database import PurchaseOrder
+from database.connection import get_postgres_session
+
+# Import Services via DI
+from app.services import OrderService
+from app.dependencies import get_order_service
+from app.config import PaginationConfig, to_iso_string
+from routes.v2_auth_routes import get_current_user
+
+
+router = APIRouter(prefix="/api/v2/orders", tags=["Orders V2"])
+
+# Pagination
+MAX_LIMIT = PaginationConfig.MAX_PAGE_SIZE
+DEFAULT_LIMIT = PaginationConfig.DEFAULT_PAGE_SIZE
+
+
+# ==================== Schemas ====================
+
+class OrderItemResponse(BaseModel):
+    id: str
+    name: str
+    quantity: float
+    unit: str
+    unit_price: float
+    total_price: float
+    delivered_quantity: float
+    catalog_item_id: Optional[str]
+    item_code: Optional[str]
+
+
+class OrderResponse(BaseModel):
+    id: str
+    order_number: Optional[str]
+    order_seq: Optional[int]
+    request_id: Optional[str]
+    request_number: Optional[str]
+    items: List[OrderItemResponse]
+    project_id: Optional[str]
+    project_name: Optional[str]
+    supplier_id: Optional[str]
+    supplier_name: Optional[str]
+    category_id: Optional[str]
+    category_name: Optional[str]
+    manager_id: Optional[str]
+    manager_name: Optional[str]
+    supervisor_name: Optional[str]
+    engineer_name: Optional[str]
+    status: str
+    needs_gm_approval: bool
+    approved_by_name: Optional[str]
+    gm_approved_by_name: Optional[str]
+    total_amount: float
+    notes: Optional[str]
+    supplier_invoice_number: Optional[str]
+    expected_delivery_date: Optional[str]
+    created_at: Optional[str]
+    approved_at: Optional[str]
+    printed_at: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
+class OrderStatsResponse(BaseModel):
+    total: int
+    pending: int
+    approved: int
+    delivered: int
+    rejected: int
+
+
+class OrdersListResponse(BaseModel):
+    """Paginated orders response"""
+    items: List[OrderResponse]
+    total: int
+    skip: int
+    limit: int
+    has_more: bool
+
+
+# ==================== Helper ====================
+
+def order_to_response(order: PurchaseOrder, items: List[dict]) -> dict:
+    """Convert Order model to response dict"""
+    return {
+        "id": str(order.id),
+        "order_number": order.order_number,
+        "order_seq": order.order_seq,
+        "request_id": order.request_id,
+        "request_number": order.request_number,
+        "items": items,
+        "project_id": order.project_id,
+        "project_name": order.project_name,
+        "supplier_id": order.supplier_id,
+        "supplier_name": order.supplier_name,
+        "category_id": order.category_id,
+        "category_name": order.category_name,
+        "manager_id": order.manager_id,
+        "manager_name": order.manager_name,
+        "supervisor_name": getattr(order, 'supervisor_name', None),
+        "engineer_name": getattr(order, 'engineer_name', None),
+        "status": order.status or "pending_approval",
+        "needs_gm_approval": order.needs_gm_approval or False,
+        "approved_by_name": order.approved_by_name,
+        "gm_approved_by_name": order.gm_approved_by_name,
+        "total_amount": order.total_amount or 0,
+        "notes": order.notes,
+        "supplier_invoice_number": order.supplier_invoice_number,
+        "expected_delivery_date": order.expected_delivery_date,
+        "created_at": to_iso_string(order.created_at),
+        "approved_at": to_iso_string(order.approved_at),
+        "printed_at": to_iso_string(order.printed_at)
+    }
+
+
+async def get_orders_with_items_via_service(
+    order_service: OrderService,
+    orders: List[PurchaseOrder]
+) -> List[dict]:
+    """Get orders with their items via Service layer"""
+    if not orders:
+        return []
+    
+    order_ids = [str(o.id) for o in orders]
+    items_map = await order_service.get_orders_items_batch(order_ids)
+    
+    return [
+        order_to_response(order, items_map.get(str(order.id), []))
+        for order in orders
+    ]
+
+
+# ==================== Routes ====================
+
+@router.get("/", response_model=OrdersListResponse)
+async def get_all_orders(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
+    status_filter: Optional[str] = None,
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """
+    الحصول على جميع أوامر الشراء مع الأصناف
+    Uses: OrderService -> OrderRepository
+    Real pagination with total count
+    """
+    limit = min(limit, MAX_LIMIT)
+    
+    # Get total count
+    total = await order_service.count_orders(status_filter)
+    
+    if status_filter:
+        orders = await order_service.get_orders_by_status(status_filter)
+        orders = orders[skip:skip + limit]
+    else:
+        orders = await order_service.get_all_orders(skip, limit)
+    
+    items = await get_orders_with_items_via_service(order_service, orders)
+    
+    return OrdersListResponse(
+        items=items,
+        total=total,
+        skip=skip,
+        limit=limit,
+        has_more=(skip + len(items)) < total
+    )
+
+
+@router.get("/stats", response_model=OrderStatsResponse)
+async def get_order_stats(
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """الحصول على إحصائيات أوامر الشراء"""
+    return await order_service.get_order_stats()
+
+
+@router.get("/pending", response_model=List[OrderResponse])
+async def get_pending_orders(
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """الحصول على أوامر الشراء المعلقة"""
+    orders = await order_service.get_orders_by_status("pending_approval")
+    gm_pending = await order_service.get_orders_by_status("pending_gm_approval")
+    
+    return await get_orders_with_items_via_service(order_service, orders + gm_pending)
+
+
+@router.get("/approved", response_model=List[OrderResponse])
+async def get_approved_orders(
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """الحصول على أوامر الشراء المعتمدة"""
+    approved = await order_service.get_orders_by_status("approved")
+    printed = await order_service.get_orders_by_status("printed")
+    shipped = await order_service.get_orders_by_status("shipped")
+    
+    return await get_orders_with_items_via_service(order_service, approved + printed + shipped)
+
+
+@router.get("/pending-delivery", response_model=List[OrderResponse])
+async def get_pending_delivery_orders(
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """الحصول على أوامر الشراء بانتظار التسليم"""
+    orders = await order_service.get_pending_delivery_orders()
+    return await get_orders_with_items_via_service(order_service, orders)
+
+
+@router.get("/by-project/{project_id}", response_model=List[OrderResponse])
+async def get_orders_by_project(
+    project_id: UUID,
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """الحصول على أوامر الشراء لمشروع محدد"""
+    orders = await order_service.get_orders_by_project(project_id)
+    return await get_orders_with_items_via_service(order_service, orders)
+
+
+@router.get("/{order_id}", response_model=OrderResponse)
+async def get_order(
+    order_id: UUID,
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """الحصول على أمر شراء محدد مع الأصناف"""
+    order = await order_service.get_order(order_id)
+    
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="أمر الشراء غير موجود"
+        )
+    
+    items = await order_service.get_order_items(str(order.id))
+    return order_to_response(order, items)
+
+
+@router.post("/{order_id}/approve")
+async def approve_order(
+    order_id: UUID,
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """اعتماد أمر شراء"""
+    user_id = current_user.get("id") if isinstance(current_user, dict) else str(current_user.id)
+    
+    order = await order_service.approve_order(order_id, approved_by=user_id)
+    
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="أمر الشراء غير موجود"
+        )
+    
+    return {"message": "تم اعتماد أمر الشراء بنجاح", "status": order.status}
+
+
+@router.post("/{order_id}/reject")
+async def reject_order(
+    order_id: UUID,
+    reason: str = "",
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """رفض أمر شراء"""
+    user_id = current_user.get("id") if isinstance(current_user, dict) else str(current_user.id)
+    
+    order = await order_service.reject_order(
+        order_id,
+        rejected_by=user_id,
+        rejection_reason=reason
+    )
+    
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="أمر الشراء غير موجود"
+        )
+    
+    return {"message": "تم رفض أمر الشراء", "status": order.status}
+
+
+# ==================== Additional Order Endpoints ====================
+
+from pydantic import BaseModel
+from typing import List as ListType
+
+class OrderItemCreate(BaseModel):
+    name: str
+    quantity: float
+    unit: str
+    unit_price: float = 0
+    catalog_item_id: Optional[str] = None
+
+class OrderCreate(BaseModel):
+    project_id: str
+    supplier_id: str
+    request_id: Optional[str] = None
+    category_id: Optional[str] = None
+    notes: Optional[str] = None
+    terms_conditions: Optional[str] = None
+    expected_delivery_date: Optional[str] = None
+    items: ListType[OrderItemCreate] = []
+
+
+@router.post("/", status_code=status.HTTP_201_CREATED)
+async def create_order(
+    data: OrderCreate,
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """إنشاء أمر شراء جديد"""
+    from datetime import datetime
+    from database import get_postgres_session, PurchaseOrder, PurchaseOrderItem, Project, Supplier
+    from sqlalchemy import select
+    import uuid as uuid_lib
+    
+    session = order_service.repository.session
+    
+    # Get project
+    project_result = await session.execute(
+        select(Project).where(Project.id == data.project_id)
+    )
+    project = project_result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Get supplier
+    supplier_result = await session.execute(
+        select(Supplier).where(Supplier.id == data.supplier_id)
+    )
+    supplier = supplier_result.scalar_one_or_none()
+    if not supplier:
+        raise HTTPException(status_code=404, detail="المورد غير موجود")
+    
+    # Generate order number
+    now = datetime.now(timezone.utc)
+    order_number = f"PO-{now.strftime('%Y%m%d')}-{str(uuid_lib.uuid4())[:8].upper()}"
+    
+    # Calculate total
+    total_amount = sum(item.quantity * item.unit_price for item in data.items)
+    
+    # Parse delivery date
+    delivery_date = None
+    if data.expected_delivery_date:
+        try:
+            delivery_date = datetime.fromisoformat(data.expected_delivery_date.replace('Z', '+00:00'))
+        except:
+            pass
+    
+    # Create order
+    order = PurchaseOrder(
+        id=str(uuid_lib.uuid4()),
+        order_number=order_number,
+        request_id=data.request_id,
+        project_id=data.project_id,
+        project_name=project.name,
+        supplier_id=data.supplier_id,
+        supplier_name=supplier.name,
+        category_id=data.category_id,
+        total_amount=total_amount,
+        status="pending_approval",
+        notes=data.notes,
+        terms_conditions=data.terms_conditions,
+        expected_delivery_date=delivery_date,
+        created_by=str(current_user.id),
+        manager_name=current_user.name,
+        created_at=now,
+        updated_at=now
+    )
+    session.add(order)
+    
+    # Create items
+    for idx, item in enumerate(data.items):
+        order_item = PurchaseOrderItem(
+            id=str(uuid_lib.uuid4()),
+            order_id=order.id,
+            name=item.name,
+            quantity=item.quantity,
+            unit=item.unit,
+            unit_price=item.unit_price,
+            total_price=item.quantity * item.unit_price,
+            catalog_item_id=item.catalog_item_id,
+            item_index=idx
+        )
+        session.add(order_item)
+    
+    await session.commit()
+    
+    return {
+        "message": "تم إنشاء أمر الشراء بنجاح",
+        "order_id": order.id,
+        "order_number": order_number
+    }
+
+
+@router.put("/{order_id}")
+async def update_order(
+    order_id: UUID,
+    data: dict,
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """تحديث أمر شراء"""
+    from database import PurchaseOrder
+    from sqlalchemy import select
+    
+    session = order_service.repository.session
+    
+    result = await session.execute(
+        select(PurchaseOrder).where(PurchaseOrder.id == str(order_id))
+    )
+    order = result.scalar_one_or_none()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="أمر الشراء غير موجود")
+    
+    # Update allowed fields
+    allowed_fields = ["notes", "terms_conditions", "expected_delivery_date"]
+    for field in allowed_fields:
+        if field in data and data[field] is not None:
+            setattr(order, field, data[field])
+    
+    from datetime import datetime, timezone
+    order.updated_at = datetime.now(timezone.utc)
+    await session.commit()
+    
+    return {"message": "تم تحديث أمر الشراء بنجاح"}
+
+
+@router.put("/{order_id}/items/{item_id}/catalog-link")
+async def link_item_to_catalog(
+    order_id: UUID,
+    item_id: str,
+    data: dict,
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """ربط عنصر بالكتالوج"""
+    from database import PurchaseOrderItem
+    from sqlalchemy import select
+    
+    session = order_service.repository.session
+    
+    result = await session.execute(
+        select(PurchaseOrderItem).where(PurchaseOrderItem.id == item_id)
+    )
+    item = result.scalar_one_or_none()
+    
+    if not item:
+        raise HTTPException(status_code=404, detail="العنصر غير موجود")
+    
+    item.catalog_item_id = data.get("catalog_item_id")
+    
+    from datetime import datetime
+    await session.commit()
+    
+    return {"message": "تم ربط العنصر بالكتالوج"}
+
+
+@router.post("/{order_id}/sync-prices")
+async def sync_order_prices(
+    order_id: UUID,
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """مزامنة أسعار أمر الشراء مع الكتالوج"""
+    from database import PurchaseOrder, PurchaseOrderItem, PriceCatalogItem
+    from sqlalchemy import select
+    
+    session = order_service.repository.session
+    
+    # Get order
+    result = await session.execute(
+        select(PurchaseOrder).where(PurchaseOrder.id == str(order_id))
+    )
+    order = result.scalar_one_or_none()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="أمر الشراء غير موجود")
+    
+    # Get items
+    items_result = await session.execute(
+        select(PurchaseOrderItem).where(PurchaseOrderItem.order_id == str(order_id))
+    )
+    items = items_result.scalars().all()
+    
+    updated_count = 0
+    for item in items:
+        if item.catalog_item_id:
+            catalog_result = await session.execute(
+                select(PriceCatalogItem).where(PriceCatalogItem.id == item.catalog_item_id)
+            )
+            catalog_item = catalog_result.scalar_one_or_none()
+            
+            if catalog_item:
+                item.unit_price = catalog_item.price
+                item.total_price = item.quantity * catalog_item.price
+                updated_count += 1
+    
+    # Update order total
+    order.total_amount = sum(item.total_price or 0 for item in items)
+    
+    from datetime import datetime, timezone
+    order.updated_at = datetime.now(timezone.utc)
+    await session.commit()
+    
+    return {
+        "message": f"تم تحديث أسعار {updated_count} عنصر",
+        "updated_items": updated_count,
+        "new_total": order.total_amount
+    }
+
+
+
+# ==================== Print & Invoice ====================
+
+@router.put("/{order_id}/print")
+async def mark_order_printed(
+    order_id: UUID,
+    session: AsyncSession = Depends(get_postgres_session),
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """تسجيل طباعة أمر الشراء"""
+    order = await order_service.get_order(order_id)
+    
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="أمر الشراء غير موجود"
+        )
+    
+    # Update print status
+    from datetime import datetime, timezone
+    order.is_printed = True
+    order.printed_at = datetime.now(timezone.utc)
+    order.updated_at = datetime.now(timezone.utc)
+    await session.commit()
+    
+    return {"message": "تم تسجيل الطباعة بنجاح"}
+
+
+@router.put("/{order_id}/supplier-invoice")
+async def update_supplier_invoice(
+    order_id: UUID,
+    supplier_invoice_number: str,
+    session: AsyncSession = Depends(get_postgres_session),
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """تحديث رقم فاتورة المورد"""
+    order = await order_service.get_order(order_id)
+    
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="أمر الشراء غير موجود"
+        )
+    
+    from datetime import datetime, timezone
+    order.supplier_invoice_number = supplier_invoice_number
+    order.updated_at = datetime.now(timezone.utc)
+    await session.commit()
+    
+    return {"message": "تم تحديث رقم الفاتورة بنجاح"}
