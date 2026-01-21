@@ -198,6 +198,7 @@ async def create_catalog_item(
         unit=data.unit,
         price=data.price,
         category_name=data.category_name,
+        category_code=data.category_code,
         item_code=data.item_code,
         description=data.description,
         supplier_id=data.supplier_id,
