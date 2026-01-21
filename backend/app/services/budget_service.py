@@ -140,12 +140,15 @@ class BudgetService(BaseService):
         """Get budget summary for a project"""
         categories = await self.budget_repo.get_categories_by_project(project_id)
         
-        total_estimated = sum(c.estimated_budget for c in categories)
-        total_spent = sum(c.actual_spent or 0 for c in categories)
+        total_estimated = sum(c.estimated_budget or 0 for c in categories)
+        # Note: actual_spent field doesn't exist in model, using 0 as placeholder
+        # This should be calculated from actual orders/deliveries
+        total_spent = 0
         
         return {
             "project_id": project_id,
             "categories_count": len(categories),
+            "total_budget": total_estimated,
             "total_estimated": total_estimated,
             "total_spent": total_spent,
             "remaining": total_estimated - total_spent,
