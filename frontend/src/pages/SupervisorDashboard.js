@@ -609,16 +609,16 @@ const SupervisorDashboard = () => {
                         />
                         {/* Catalog Suggestions Dropdown */}
                         {showSuggestions && (catalogSuggestions.length > 0 || suggestionsLoading) && (
-                          <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                             {suggestionsLoading ? (
                               <div className="p-3 text-center text-slate-500">
                                 <Loader2 className="w-4 h-4 animate-spin inline ml-2" />
-                                جاري البحث...
+                                جاري البحث في الكتالوج والأسماء البديلة...
                               </div>
                             ) : (
                               <>
                                 <div className="p-2 bg-green-50 text-xs text-green-700 border-b">
-                                  💡 اختر من الكتالوج للحصول على السعر المعتمد
+                                  💡 اختر من الكتالوج أو الأسماء البديلة للربط التلقائي
                                 </div>
                                 {catalogSuggestions.map((item, idx) => (
                                   <div 
@@ -627,26 +627,43 @@ const SupervisorDashboard = () => {
                                     className="p-3 hover:bg-orange-50 cursor-pointer border-b last:border-0 transition-colors"
                                   >
                                     <div className="flex justify-between items-center">
-                                      <div>
-                                        <span className="font-medium text-slate-800">{item.name}</span>
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2">
+                                          <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-xs font-mono">
+                                            {item.item_code || '-'}
+                                          </span>
+                                          <span className="font-medium text-slate-800">{item.name}</span>
+                                        </div>
+                                        {item.alias_name && item.type === 'alias' && (
+                                          <div className="text-xs text-orange-600 mt-1">
+                                            🔗 اسم بديل: "{item.alias_name}" → {item.name}
+                                          </div>
+                                        )}
                                         {item.match_type === 'alias' && (
-                                          <Badge variant="secondary" className="mr-2 text-xs">مطابقة</Badge>
+                                          <div className="text-xs text-orange-600 mt-1">
+                                            🔗 مربوط بـ: {item.name}
+                                          </div>
                                         )}
                                       </div>
-                                      <span className="text-green-600 font-bold text-sm">
-                                        {item.price?.toLocaleString()} ريال
-                                      </span>
+                                      <div className="text-left">
+                                        <span className="text-green-600 font-bold text-sm">
+                                          {item.price?.toLocaleString()} ريال
+                                        </span>
+                                        <div className="text-xs text-slate-400">{item.unit}</div>
+                                      </div>
                                     </div>
-                                    <div className="text-xs text-slate-500 mt-1">
-                                      {item.unit} {item.supplier_name && `• ${item.supplier_name}`}
-                                    </div>
+                                    {item.category_name && (
+                                      <div className="text-xs text-slate-500 mt-1">
+                                        التصنيف: {item.category_name}
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                                 <div 
                                   onClick={() => setShowSuggestions(false)}
-                                  className="p-2 text-center text-xs text-slate-500 hover:bg-slate-50 cursor-pointer"
+                                  className="p-2 text-center text-xs text-orange-600 hover:bg-orange-50 cursor-pointer border-t"
                                 >
-                                  استخدام "{newItemName}" كصنف جديد
+                                  ➕ استخدام "{newItemName}" كصنف جديد (سيُضاف للكتالوج لاحقاً)
                                 </div>
                               </>
                             )}
@@ -655,7 +672,7 @@ const SupervisorDashboard = () => {
                         {selectedCatalogItem && (
                           <div className="mt-1 text-xs text-green-600 flex items-center gap-1">
                             <CheckCircle className="w-3 h-3" />
-                            صنف من الكتالوج - المورد: {selectedCatalogItem.supplier_name || 'غير محدد'}
+                            مربوط بالكتالوج: {selectedCatalogItem.item_code} - {selectedCatalogItem.name}
                           </div>
                         )}
                       </div>
