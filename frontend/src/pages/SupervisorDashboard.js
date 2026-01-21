@@ -390,7 +390,7 @@ const SupervisorDashboard = () => {
       resetForm();
       fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || "فشل في إنشاء الطلب");
+      toast.error(getErrorMessage(error, "فشل في إنشاء الطلب"));
     } finally {
       setSubmitting(false);
     }
@@ -411,7 +411,7 @@ const SupervisorDashboard = () => {
       setEditDialogOpen(false);
       fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || "فشل في تعديل الطلب");
+      toast.error(getErrorMessage(error, "فشل في تعديل الطلب"));
     } finally {
       setSubmitting(false);
     }
