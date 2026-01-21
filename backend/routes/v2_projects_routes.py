@@ -232,7 +232,9 @@ async def create_project(
     project = await project_service.create_project(
         name=project_data.name,
         code=project_data.code,
+        owner_name=project_data.owner_name,
         description=project_data.description or "",
+        location=project_data.location,
         total_area=project_data.total_area,
         floors_count=project_data.floors_count,
         created_by=user_id or "system",
