@@ -229,8 +229,37 @@ export default function GeneralManagerDashboard() {
       case 'pending': return pendingOrders;
       case 'gm_approved': return gmApprovedOrders;
       case 'procurement_approved': return procurementApprovedOrders;
+      case 'all_requests': {
+        // تطبيق الفلاتر على الطلبات
+        return allRequests.filter(req => {
+          if (requestFilters.project && req.project_id !== requestFilters.project) return false;
+          if (requestFilters.supervisor && req.supervisor_id !== requestFilters.supervisor) return false;
+          if (requestFilters.engineer && req.engineer_id !== requestFilters.engineer) return false;
+          if (requestFilters.status && req.status !== requestFilters.status) return false;
+          return true;
+        });
+      }
       default: return pendingOrders;
     }
+  };
+  
+  // دالة للحصول على لون ونص حالة الطلب
+  const getRequestStatusBadge = (status) => {
+    const statusMap = {
+      'pending_engineer': { label: 'بانتظار المهندس', color: 'bg-amber-100 text-amber-800' },
+      'approved_by_engineer': { label: 'معتمد من المهندس', color: 'bg-blue-100 text-blue-800' },
+      'rejected_by_engineer': { label: 'مرفوض من المهندس', color: 'bg-red-100 text-red-800' },
+      'rejected_by_manager': { label: 'مرفوض من المشتريات', color: 'bg-orange-100 text-orange-800' },
+      'po_created': { label: 'تم إصدار أمر شراء', color: 'bg-green-100 text-green-800' },
+      'partially_delivered': { label: 'تسليم جزئي', color: 'bg-cyan-100 text-cyan-800' },
+      'delivered': { label: 'تم التسليم', color: 'bg-emerald-100 text-emerald-800' },
+    };
+    const statusInfo = statusMap[status] || { label: status, color: 'bg-slate-100 text-slate-800' };
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
+        {statusInfo.label}
+      </span>
+    );
   };
   
   const currentOrders = getCurrentOrders();
