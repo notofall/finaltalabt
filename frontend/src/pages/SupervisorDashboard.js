@@ -158,11 +158,18 @@ const SupervisorDashboard = () => {
   // Handle selecting a catalog item
   const selectCatalogItem = (item) => {
     setSelectedCatalogItem(item);
-    setNewItemName(item.name);
+    // إذا كان اسم بديل، استخدم الاسم البديل وليس اسم الكتالوج
+    const displayName = item.alias_name || item.name;
+    setNewItemName(displayName);
     setNewItemUnit(item.unit || "قطعة");
     setNewItemEstPrice(item.price?.toString() || "");
     setShowSuggestions(false);
-    toast.success(`تم اختيار "${item.name}" من الكتالوج - السعر: ${item.price?.toLocaleString()} ريال`);
+    
+    if (item.alias_name) {
+      toast.success(`تم اختيار "${item.alias_name}" → مربوط بـ "${item.name}" (${item.item_code}) - السعر: ${item.price?.toLocaleString()} ريال`);
+    } else {
+      toast.success(`تم اختيار "${item.name}" (${item.item_code}) - السعر: ${item.price?.toLocaleString()} ريال`);
+    }
   };
 
   // Debounced search
