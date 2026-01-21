@@ -259,9 +259,9 @@ async def confirm_receipt(
 ):
     """
     تأكيد استلام العناصر
-    يقوم تلقائياً بتحديث تتبع التوريد
+    يقوم تلقائياً بتحديث تتبع التوريد في نظام كميات العمائر
     """
-    from database import PurchaseOrder, PurchaseOrderItem
+    from database import PurchaseOrder, PurchaseOrderItem, SupplyTracking
     from sqlalchemy import select, update
     
     # Get user attributes safely
@@ -302,12 +302,16 @@ async def confirm_receipt(
     )
     order_items = {item.name: item for item in items_result.scalars().all()}
     
-    # Update delivered quantities
+    # Update delivered quantities and supply tracking
     all_fully_delivered = True
     items_updated = 0
+    supply_updated = 0
+    now = datetime.now(timezone.utc)
     
     for delivery_item in request.items:
         item_name = delivery_item.name
+        quantity_delivered = delivery_item.quantity_delivered
+        
         if not item_name and delivery_item.item_id:
             # Try to find by ID
             item_result = await session.execute(
@@ -319,12 +323,42 @@ async def confirm_receipt(
         
         if item_name and item_name in order_items:
             item = order_items[item_name]
-            new_delivered = (item.delivered_quantity or 0) + delivery_item.quantity_delivered
+            new_delivered = (item.delivered_quantity or 0) + quantity_delivered
             item.delivered_quantity = min(int(new_delivered), item.quantity)  # Cap at max quantity
             items_updated += 1
             
             if item.delivered_quantity < item.quantity:
                 all_fully_delivered = False
+            
+            # تحديث supply_tracking في نظام كميات العمائر
+            if order.project_id and item.catalog_item_id:
+                supply_result = await session.execute(
+                    select(SupplyTracking).where(
+                        SupplyTracking.project_id == order.project_id,
+                        SupplyTracking.catalog_item_id == item.catalog_item_id
+                    )
+                )
+                supply_item = supply_result.scalar_one_or_none()
+                
+                if supply_item:
+                    supply_item.received_quantity = (supply_item.received_quantity or 0) + quantity_delivered
+                    supply_item.updated_at = now
+                    supply_updated += 1
+            
+            # أيضاً البحث باسم الصنف إذا لم يكن هناك catalog_item_id
+            if order.project_id and supply_updated == 0:
+                supply_result = await session.execute(
+                    select(SupplyTracking).where(
+                        SupplyTracking.project_id == order.project_id,
+                        SupplyTracking.item_name == item_name
+                    )
+                )
+                supply_item = supply_result.scalar_one_or_none()
+                
+                if supply_item:
+                    supply_item.received_quantity = (supply_item.received_quantity or 0) + quantity_delivered
+                    supply_item.updated_at = now
+                    supply_updated += 1
         else:
             all_fully_delivered = False
     
@@ -337,7 +371,7 @@ async def confirm_receipt(
     # Update order status
     if all_fully_delivered:
         order.status = "delivered"
-        order.delivered_at = datetime.now(timezone.utc)
+        order.delivered_at = now
     else:
         order.status = "partially_delivered"
     
@@ -350,7 +384,8 @@ async def confirm_receipt(
         "message": "تم تأكيد الاستلام بنجاح",
         "status": order.status,
         "fully_delivered": all_fully_delivered,
-        "items_updated": items_updated
+        "items_updated": items_updated,
+        "supply_tracking_updated": supply_updated
     }
 
 
