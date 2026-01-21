@@ -30,6 +30,7 @@ class BudgetService(BaseService):
     async def create_default_category(
         self, 
         name: str, 
+        code: str = None,
         default_budget: float = 0,
         created_by: str = None,
         created_by_name: str = None
@@ -38,6 +39,7 @@ class BudgetService(BaseService):
         category = DefaultBudgetCategory(
             id=str(uuid4()),
             name=name,
+            code=code,
             default_budget=default_budget,
             created_by=created_by,
             created_by_name=created_by_name,
