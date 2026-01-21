@@ -173,9 +173,14 @@ class AuthService(BaseService[User]):
         assigned_engineers: list = None
     ) -> Optional[User]:
         """Create user (admin function)"""
+        import json
         existing = await self.user_repo.get_by_email(email)
         if existing:
             return None
+        
+        # Convert lists to JSON strings for SQLite compatibility
+        projects_json = json.dumps(assigned_projects or [])
+        engineers_json = json.dumps(assigned_engineers or [])
         
         user = User(
             email=email,
@@ -183,8 +188,8 @@ class AuthService(BaseService[User]):
             name=name,
             role=role,
             is_active=True,
-            assigned_projects=assigned_projects or [],
-            assigned_engineers=assigned_engineers or []
+            assigned_projects=projects_json,
+            assigned_engineers=engineers_json
         )
         
         return await self.user_repo.create(user)
