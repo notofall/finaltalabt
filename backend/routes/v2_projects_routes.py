@@ -32,12 +32,14 @@ DEFAULT_LIMIT = PaginationConfig.DEFAULT_PAGE_SIZE
 
 class ProjectCreate(BaseModel):
     name: str
-    code: Optional[str] = None
+    code: str  # كود المشروع إلزامي وفريد
     owner_name: Optional[str] = None
     description: Optional[str] = ""
     location: Optional[str] = None
     total_area: float = 0
     floors_count: int = 0
+    supervisor_id: Optional[str] = None  # المشرف المعين للمشروع
+    engineer_id: Optional[str] = None  # المهندس المعين للمشروع
 
 
 class ProjectUpdate(BaseModel):
@@ -49,6 +51,8 @@ class ProjectUpdate(BaseModel):
     status: Optional[str] = None
     total_area: Optional[float] = None
     floors_count: Optional[int] = None
+    supervisor_id: Optional[str] = None
+    engineer_id: Optional[str] = None
 
 
 class ProjectResponse(BaseModel):
@@ -61,6 +65,10 @@ class ProjectResponse(BaseModel):
     total_area: float
     floors_count: int
     status: str
+    supervisor_id: Optional[str] = None
+    supervisor_name: Optional[str] = None
+    engineer_id: Optional[str] = None
+    engineer_name: Optional[str] = None
     created_by: Optional[str]
     created_by_name: Optional[str]
     created_at: Optional[str]
