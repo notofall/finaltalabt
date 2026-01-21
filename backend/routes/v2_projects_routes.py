@@ -132,18 +132,22 @@ async def get_all_projects(
     - Real pagination with total count
     - N+1 fix: batch stats query
     - Filterable by status
+    - المشرفين يرون فقط مشاريعهم
     """
     limit = min(limit, MAX_LIMIT)
     
-    # Get total count for pagination
-    total = await project_service.count_projects(status_filter)
-    
-    # Get projects
+    # Get all projects
     all_projects = await project_service.get_all_projects()
     
     # Filter by status if provided
     if status_filter:
         all_projects = [p for p in all_projects if p.status == status_filter]
+    
+    # المشرف يرى فقط المشاريع المرتبطة به
+    if current_user.role == 'supervisor':
+        all_projects = [p for p in all_projects if getattr(p, 'supervisor_id', None) == current_user.id]
+    
+    total = len(all_projects)
     
     # Apply pagination
     paginated_projects = all_projects[skip:skip + limit]
@@ -172,8 +176,12 @@ async def get_active_projects(
     project_service: ProjectService = Depends(get_project_service),
     current_user = Depends(get_current_user)
 ):
-    """الحصول على المشاريع النشطة فقط"""
+    """الحصول على المشاريع النشطة فقط - المشرفين يرون فقط مشاريعهم"""
     projects = await project_service.get_active_projects()
+    
+    # المشرف يرى فقط المشاريع المرتبطة به
+    if current_user.role == 'supervisor':
+        projects = [p for p in projects if getattr(p, 'supervisor_id', None) == current_user.id]
     
     # Batch stats (N+1 fix)
     project_ids = [str(p.id) for p in projects]
