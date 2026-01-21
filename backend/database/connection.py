@@ -362,6 +362,18 @@ async def run_project_migrations() -> None:
                 except Exception as e:
                     pass
                 
+                # Migration for manager rejection reason
+                try:
+                    result = await conn.execute(text("PRAGMA table_info(material_requests)"))
+                    columns = [row[1] for row in result.fetchall()]
+                    
+                    if 'manager_rejection_reason' not in columns:
+                        await conn.execute(text("ALTER TABLE material_requests ADD COLUMN manager_rejection_reason TEXT"))
+                    if 'rejected_by_manager_id' not in columns:
+                        await conn.execute(text("ALTER TABLE material_requests ADD COLUMN rejected_by_manager_id VARCHAR(36)"))
+                except Exception as e:
+                    pass
+                
                 logger.info("✅ Project migrations applied for SQLite")
             else:
                 # PostgreSQL
