@@ -351,7 +351,7 @@ const SupervisorDashboard = () => {
       setEditingProject(null);
       fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || "فشل في تحديث المشروع");
+      toast.error(getErrorMessage(error, "فشل في تحديث المشروع"));
     }
   };
 
