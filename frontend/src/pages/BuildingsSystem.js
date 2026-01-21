@@ -1225,7 +1225,7 @@ const BuildingsSystem = () => {
             </Card>
 
             {/* Tabs */}
-            <Tabs defaultValue="templates" className="w-full">
+            <Tabs value={projectTab} onValueChange={setProjectTab} className="w-full">
               <TabsList className="bg-slate-800 border border-slate-700 w-full justify-start overflow-x-auto flex-wrap">
                 <TabsTrigger value="templates" className="data-[state=active]:bg-emerald-600">
                   <Home className="w-4 h-4 ml-1" />
