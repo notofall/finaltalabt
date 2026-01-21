@@ -168,9 +168,9 @@ class RequestRepository(BaseRepository[MaterialRequest]):
         
         return items_map
     
-    async def get_next_seq_for_supervisor(self, supervisor_id: str, prefix: Optional[str] = None) -> int:
+    async def get_next_seq_for_supervisor(self, supervisor_id: str, prefix: Optional[str] = None, project_code: Optional[str] = None) -> int:
         """
-        Get next sequence number for a supervisor based on their prefix.
+        Get next sequence number for a supervisor based on their prefix and project code.
         Uses database-level locking to prevent race conditions.
         For SQLite: Uses IMMEDIATE transaction mode
         For PostgreSQL: Uses FOR UPDATE row locking
@@ -180,8 +180,14 @@ class RequestRepository(BaseRepository[MaterialRequest]):
         database_url = get_database_url()
         is_sqlite = 'sqlite' in database_url
         
-        if prefix:
-            # Get max sequence for this prefix (prefix-based numbering)
+        if prefix and project_code:
+            # Get max sequence for this prefix and project (e.g., a1-PRJ001-%)
+            pattern = f"{prefix}-{project_code}-%"
+            query = select(func.max(MaterialRequest.request_seq)).where(
+                MaterialRequest.request_number.like(pattern)
+            )
+        elif prefix:
+            # Get max sequence for this prefix (e.g., a1-%)
             query = select(func.max(MaterialRequest.request_seq)).where(
                 MaterialRequest.request_number.like(f"{prefix}-%")
             )
