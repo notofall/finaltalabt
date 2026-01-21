@@ -132,6 +132,83 @@ def supply_to_response(item) -> dict:
 
 # ==================== DASHBOARD & REPORTS ====================
 
+@router.get("/projects")
+async def get_buildings_projects(
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """Get projects enabled for buildings system"""
+    # Get only projects with is_building_project = True
+    result = await session.execute(
+        select(Project).where(
+            Project.status == "active"
+        ).order_by(Project.created_at.desc())
+    )
+    projects = result.scalars().all()
+    
+    # Filter projects that have is_building_project = True (default is True for new ones)
+    building_projects = []
+    for p in projects:
+        # Check if is_building_project exists and is True (or default to True if field is new)
+        is_building = getattr(p, 'is_building_project', True)
+        if is_building is None or is_building:
+            building_projects.append({
+                "id": str(p.id),
+                "name": p.name,
+                "code": p.code,
+                "owner_name": p.owner_name,
+                "status": p.status,
+                "total_area": p.total_area or 0,
+                "floors_count": p.floors_count or 0
+            })
+    
+    return building_projects
+
+
+@router.delete("/projects/{project_id}")
+async def remove_project_from_buildings(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """Remove project from buildings system (not delete, just hide)"""
+    result = await session.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Set is_building_project to False
+    project.is_building_project = False
+    await session.commit()
+    
+    return {"message": "تم إزالة المشروع من نظام الكميات بنجاح"}
+
+
+@router.post("/projects/{project_id}/enable")
+async def enable_project_for_buildings(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """Enable project for buildings system"""
+    result = await session.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Set is_building_project to True
+    project.is_building_project = True
+    await session.commit()
+    
+    return {"message": "تم تفعيل المشروع في نظام الكميات بنجاح"}
+
+
 @router.get("/dashboard")
 async def get_buildings_dashboard(
     current_user = Depends(get_current_user),
