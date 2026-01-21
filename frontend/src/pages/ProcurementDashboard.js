@@ -4698,6 +4698,53 @@ const ProcurementDashboard = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Reject Request Dialog - نافذة رفض الطلب */}
+      <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-center text-red-600">رفض الطلب</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600 text-center">
+              سيتم إعادة الطلب للمهندس مع سبب الرفض
+            </p>
+            {rejectingRequest && (
+              <div className="bg-slate-50 p-3 rounded text-sm">
+                <p><strong>رقم الطلب:</strong> {rejectingRequest.request_number}</p>
+                <p><strong>المشروع:</strong> {rejectingRequest.project_name}</p>
+              </div>
+            )}
+            <div>
+              <Label>سبب الرفض *</Label>
+              <Textarea 
+                placeholder="اذكر سبب رفض هذا الطلب..."
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                rows={3}
+                className="mt-1"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                className="flex-1" 
+                onClick={() => { setRejectDialogOpen(false); setRejectingRequest(null); }}
+              >
+                إلغاء
+              </Button>
+              <Button 
+                variant="destructive" 
+                className="flex-1" 
+                onClick={handleRejectRequest}
+                disabled={rejectLoading}
+              >
+                {rejectLoading ? "جاري..." : "تأكيد الرفض"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
