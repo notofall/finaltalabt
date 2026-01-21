@@ -75,6 +75,17 @@ class AdminService(BaseService):
                 bcrypt.gensalt()
             ).decode()
         
+        # Validate prefix uniqueness if being updated
+        if 'supervisor_prefix' in updates and updates['supervisor_prefix']:
+            user = await self.repository.get_user_by_id(user_id)
+            if user and user.role == 'supervisor':
+                prefix_exists = await self.repository.check_prefix_exists(
+                    updates['supervisor_prefix'], 
+                    exclude_user_id=user_id
+                )
+                if prefix_exists:
+                    raise ValueError(f"رمز المشرف '{updates['supervisor_prefix']}' مستخدم بالفعل")
+        
         user = await self.repository.update_user(user_id, updates)
         if user:
             return self._format_user(user)
