@@ -274,10 +274,11 @@ const ProcurementDashboard = () => {
         price: parseFloat(newCatalogItem.price),
         item_code: newCatalogItem.item_code || null,  // Let backend generate if empty
         category_name: newCatalogItem.category_id,
+        category_code: newCatalogItem.category_code || null,  // Pass category code for code generation
         description: newCatalogItem.description
       }, getAuthHeaders());
       toast.success("تم إضافة الصنف بنجاح");
-      setNewCatalogItem({ item_code: "", name: "", description: "", unit: "قطعة", price: "", supplier_name: "", category_id: "" });
+      setNewCatalogItem({ item_code: "", name: "", description: "", unit: "قطعة", price: "", supplier_name: "", category_id: "", category_code: "" });
       fetchCatalog(catalogSearch, catalogPage);
     } catch (error) {
       toast.error(error.response?.data?.detail || "فشل في إضافة الصنف");
