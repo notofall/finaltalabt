@@ -78,7 +78,10 @@ class BudgetService(BaseService):
         name: str, 
         project_id: str, 
         estimated_budget: float,
-        code: Optional[str] = None
+        code: Optional[str] = None,
+        project_name: str = "",
+        created_by: str = "system",
+        created_by_name: str = "النظام"
     ) -> BudgetCategory:
         """Create a new budget category for a project"""
         # Generate code if not provided
@@ -89,9 +92,11 @@ class BudgetService(BaseService):
             id=str(uuid4()),
             name=name,
             project_id=project_id,
+            project_name=project_name,
             estimated_budget=estimated_budget,
-            actual_spent=0,
             code=code,
+            created_by=created_by,
+            created_by_name=created_by_name,
             created_at=datetime.now(timezone.utc)
         )
         return await self.budget_repo.create_category(category)
