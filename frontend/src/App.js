@@ -1,53 +1,207 @@
-import { useEffect } from "react";
-import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "sonner";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import SupervisorDashboard from "./pages/SupervisorDashboard";
+import EngineerDashboard from "./pages/EngineerDashboard";
+import ProcurementDashboard from "./pages/ProcurementDashboard";
+import PrinterDashboard from "./pages/PrinterDashboard";
+import DeliveryTrackerDashboard from "./pages/DeliveryTrackerDashboard";
+import GeneralManagerDashboard from "./pages/GeneralManagerDashboard";
+import SystemAdminDashboard from "./pages/SystemAdminDashboard";
+import QuantityEngineerDashboard from "./pages/QuantityEngineerDashboard";
+import BuildingsSystem from "./pages/BuildingsSystem";
+import RFQManagement from "./pages/RFQManagement";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import "./App.css";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// First Run Check Component - تم إلغاؤه
+const FirstRunCheck = ({ children }) => {
+  return children;
+};
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const { user, loading } = useAuth();
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600 font-medium">جاري التحميل...</p>
+        </div>
+      </div>
+    );
+  }
 
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    // Redirect to appropriate dashboard based on role
+    if (user.role === "system_admin") return <Navigate to="/system-admin" replace />;
+    if (user.role === "supervisor") return <Navigate to="/supervisor" replace />;
+    if (user.role === "engineer") return <Navigate to="/engineer" replace />;
+    if (user.role === "procurement_manager") return <Navigate to="/procurement" replace />;
+    if (user.role === "printer") return <Navigate to="/printer" replace />;
+    if (user.role === "delivery_tracker") return <Navigate to="/delivery-tracker" replace />;
+    if (user.role === "general_manager") return <Navigate to="/general-manager" replace />;
+    if (user.role === "quantity_engineer") return <Navigate to="/buildings" replace />;
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
+const PublicRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="w-12 h-12 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (user) {
+    if (user.role === "system_admin") return <Navigate to="/system-admin" replace />;
+    if (user.role === "supervisor") return <Navigate to="/supervisor" replace />;
+    if (user.role === "engineer") return <Navigate to="/engineer" replace />;
+    if (user.role === "procurement_manager") return <Navigate to="/procurement" replace />;
+    if (user.role === "printer") return <Navigate to="/printer" replace />;
+    if (user.role === "delivery_tracker") return <Navigate to="/delivery-tracker" replace />;
+    if (user.role === "general_manager") return <Navigate to="/general-manager" replace />;
+    if (user.role === "quantity_engineer") return <Navigate to="/buildings" replace />;
+  }
+
+  return children;
 };
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <AuthProvider>
+      <div className="App" dir="rtl" lang="ar">
+        <Toaster 
+          position="top-center" 
+          richColors 
+          closeButton
+          toastOptions={{
+            style: {
+              fontFamily: 'Cairo, sans-serif',
+              direction: 'rtl'
+            }
+          }}
+        />
+        <BrowserRouter>
+          <FirstRunCheck>
+            <Routes>
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <LoginPage />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/register"
+                element={
+                  <PublicRoute>
+                    <RegisterPage />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/supervisor"
+                element={
+                  <ProtectedRoute allowedRoles={["supervisor"]}>
+                    <SupervisorDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/engineer"
+                element={
+                  <ProtectedRoute allowedRoles={["engineer"]}>
+                    <EngineerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/procurement"
+                element={
+                  <ProtectedRoute allowedRoles={["procurement_manager"]}>
+                    <ProcurementDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/printer"
+                element={
+                  <ProtectedRoute allowedRoles={["printer"]}>
+                    <PrinterDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/delivery-tracker"
+                element={
+                  <ProtectedRoute allowedRoles={["delivery_tracker"]}>
+                    <DeliveryTrackerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/general-manager"
+                element={
+                  <ProtectedRoute allowedRoles={["general_manager"]}>
+                    <GeneralManagerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/system-admin"
+                element={
+                  <ProtectedRoute allowedRoles={["system_admin"]}>
+                    <SystemAdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/quantity-engineer"
+                element={
+                  <ProtectedRoute allowedRoles={["quantity_engineer", "procurement_manager"]}>
+                    <QuantityEngineerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/buildings"
+                element={
+                  <ProtectedRoute allowedRoles={["quantity_engineer", "procurement_manager", "engineer", "system_admin"]}>
+                    <BuildingsSystem />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/rfq"
+                element={
+                  <ProtectedRoute allowedRoles={["procurement_manager", "general_manager", "system_admin"]}>
+                    <RFQManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </FirstRunCheck>
+          <PWAInstallPrompt />
+        </BrowserRouter>
+      </div>
+    </AuthProvider>
   );
 }
 
