@@ -17,7 +17,7 @@ import uuid
 from datetime import datetime, timedelta
 
 # Base URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://boq-export-import.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://projectsmaster.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 TEST_ACCOUNTS = {
