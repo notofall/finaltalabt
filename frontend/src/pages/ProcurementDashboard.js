@@ -2854,6 +2854,175 @@ const ProcurementDashboard = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Projects Management Dialog */}
+      <Dialog open={projectDialogOpen} onOpenChange={setProjectDialogOpen}>
+        <DialogContent className="w-[95vw] max-w-3xl max-h-[85vh] overflow-y-auto p-4" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex justify-between items-center">
+              <span>إدارة المشاريع</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {/* Add New Project Form */}
+          <div className="bg-slate-50 p-4 rounded-lg space-y-3 mt-4">
+            <h3 className="font-medium text-sm">إضافة مشروع جديد</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <Label className="text-xs">كود المشروع *</Label>
+                <Input 
+                  placeholder="مثال: PRJ001" 
+                  value={newProject.code}
+                  onChange={(e) => setNewProject({...newProject, code: e.target.value.toUpperCase()})}
+                  className="h-9 mt-1 font-mono"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">اسم المشروع *</Label>
+                <Input 
+                  placeholder="مثال: برج السلام" 
+                  value={newProject.name}
+                  onChange={(e) => setNewProject({...newProject, name: e.target.value})}
+                  className="h-9 mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">اسم المالك *</Label>
+                <Input 
+                  placeholder="اسم مالك المشروع" 
+                  value={newProject.owner_name}
+                  onChange={(e) => setNewProject({...newProject, owner_name: e.target.value})}
+                  className="h-9 mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">المشرف</Label>
+                <select 
+                  value={newProject.supervisor_id}
+                  onChange={(e) => setNewProject({...newProject, supervisor_id: e.target.value})}
+                  className="w-full h-9 mt-1 px-3 rounded-md border border-slate-300 text-sm"
+                >
+                  <option value="">-- اختر المشرف --</option>
+                  {supervisors.map(s => (
+                    <option key={s.id} value={s.id}>{s.name} ({s.supervisor_prefix || '-'})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label className="text-xs">المهندس</Label>
+                <select 
+                  value={newProject.engineer_id}
+                  onChange={(e) => setNewProject({...newProject, engineer_id: e.target.value})}
+                  className="w-full h-9 mt-1 px-3 rounded-md border border-slate-300 text-sm"
+                >
+                  <option value="">-- اختر المهندس --</option>
+                  {engineers.map(e => (
+                    <option key={e.id} value={e.id}>{e.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label className="text-xs">الموقع</Label>
+                <Input 
+                  placeholder="موقع المشروع" 
+                  value={newProject.location}
+                  onChange={(e) => setNewProject({...newProject, location: e.target.value})}
+                  className="h-9 mt-1"
+                />
+              </div>
+            </div>
+            <Button onClick={handleCreateProject} className="bg-orange-600 hover:bg-orange-700">
+              <Plus className="w-4 h-4 ml-1" /> إضافة المشروع
+            </Button>
+          </div>
+
+          {/* Projects List */}
+          <div className="mt-4">
+            <h3 className="font-medium text-sm mb-2">المشاريع ({projects.length})</h3>
+            {projects.length === 0 ? (
+              <p className="text-center text-slate-500 py-4">لا توجد مشاريع</p>
+            ) : (
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {projects.map(proj => (
+                  <div key={proj.id} className={`bg-white border rounded-lg p-3 ${proj.status !== 'active' ? 'opacity-60' : ''}`}>
+                    {editingProject?.id === proj.id ? (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-3 gap-2">
+                          <Input 
+                            placeholder="كود المشروع"
+                            value={editingProject.code}
+                            onChange={(e) => setEditingProject({...editingProject, code: e.target.value.toUpperCase()})}
+                            className="h-8 font-mono"
+                          />
+                          <Input 
+                            placeholder="اسم المشروع"
+                            value={editingProject.name}
+                            onChange={(e) => setEditingProject({...editingProject, name: e.target.value})}
+                            className="h-8"
+                          />
+                          <Input 
+                            placeholder="اسم المالك"
+                            value={editingProject.owner_name}
+                            onChange={(e) => setEditingProject({...editingProject, owner_name: e.target.value})}
+                            className="h-8"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <select 
+                            value={editingProject.supervisor_id || ''}
+                            onChange={(e) => setEditingProject({...editingProject, supervisor_id: e.target.value})}
+                            className="h-8 px-2 rounded border text-sm"
+                          >
+                            <option value="">-- المشرف --</option>
+                            {supervisors.map(s => (
+                              <option key={s.id} value={s.id}>{s.name}</option>
+                            ))}
+                          </select>
+                          <select 
+                            value={editingProject.engineer_id || ''}
+                            onChange={(e) => setEditingProject({...editingProject, engineer_id: e.target.value})}
+                            className="h-8 px-2 rounded border text-sm"
+                          >
+                            <option value="">-- المهندس --</option>
+                            {engineers.map(eng => (
+                              <option key={eng.id} value={eng.id}>{eng.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={handleUpdateProject} className="bg-green-600">حفظ</Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditingProject(null)}>إلغاء</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="font-mono">{proj.code || '-'}</Badge>
+                            <span className="font-medium">{proj.name}</span>
+                            {proj.status !== 'active' && <Badge variant="secondary">غير نشط</Badge>}
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1">
+                            المالك: {proj.owner_name} | المشرف: {proj.supervisor_name || '-'} | المهندس: {proj.engineer_name || '-'}
+                          </p>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" onClick={() => setEditingProject({...proj})} className="h-8 w-8 p-0">
+                            <Edit className="w-4 h-4 text-blue-600" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => handleDeleteProject(proj.id)} className="h-8 w-8 p-0">
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Suppliers List Dialog */}
       <Dialog open={suppliersListDialogOpen} onOpenChange={setSuppliersListDialogOpen}>
         <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto p-4" dir="rtl">
