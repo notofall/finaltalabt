@@ -18,6 +18,7 @@ import ChangePasswordDialog from "../components/ChangePasswordDialog";
 import SearchableSelect from "../components/SearchableSelect";
 import AdvancedReports from "../components/AdvancedReports";
 import QuantityAlertsReportsManager from "../components/QuantityAlertsReportsManager";
+import { ProjectManagement, CatalogManagement, SupplierManagement } from "../components/procurement";
 
 // Skeleton loader component for better UX during loading
 const SkeletonLoader = ({ rows = 5 }) => (
