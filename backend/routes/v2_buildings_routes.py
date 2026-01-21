@@ -68,14 +68,33 @@ class AreaMaterialCreate(BaseModel):
     catalog_item_id: str
     item_name: str
     unit: str
-    factor: float
+    # طريقة الحساب: factor (بالمعامل) أو direct (كمية مباشرة)
+    calculation_method: str = "factor"
+    factor: float = 0  # المعامل (للطريقة factor)
+    direct_quantity: float = 0  # الكمية المباشرة (للطريقة direct)
     unit_price: float = 0
+    # نوع الحساب: all_floors أو selected_floor
+    calculation_type: str = "all_floors"
+    selected_floor_id: Optional[str] = None  # ID الدور المحدد
+    # للبلاط
+    tile_width: float = 0  # عرض البلاطة بالسم
+    tile_height: float = 0  # طول البلاطة بالسم
+    waste_percentage: float = 0  # نسبة الهالك %
+    notes: Optional[str] = None
 
 
 class AreaMaterialUpdate(BaseModel):
     item_name: Optional[str] = None
+    calculation_method: Optional[str] = None
     factor: Optional[float] = None
+    direct_quantity: Optional[float] = None
     unit_price: Optional[float] = None
+    calculation_type: Optional[str] = None
+    selected_floor_id: Optional[str] = None
+    tile_width: Optional[float] = None
+    tile_height: Optional[float] = None
+    waste_percentage: Optional[float] = None
+    notes: Optional[str] = None
 
 
 class SupplyUpdate(BaseModel):
