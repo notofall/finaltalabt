@@ -455,7 +455,7 @@ async def create_order_from_request(
     return {
         "message": "تم إنشاء أمر الشراء بنجاح",
         "order_id": order.id,
-        "po_number": po_number,
+        "order_number": order_number,
         "total_amount": total_amount
     }
 
