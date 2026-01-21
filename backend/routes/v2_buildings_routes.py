@@ -1218,18 +1218,24 @@ async def export_boq_excel(
     ws4.cell(row=total_row, column=7, value="الإجمالي:").font = Font(bold=True)
     ws4.cell(row=total_row, column=8, value=calc_data['total_area_materials_cost']).font = Font(bold=True)
     
-    # Adjust column widths
+    # Adjust column widths - use column index to avoid MergedCell issues
+    from openpyxl.utils import get_column_letter
+    
     for ws in [wb.active, ws2, ws3, ws4]:
-        for col in ws.columns:
+        for col_idx in range(1, ws.max_column + 1):
             max_length = 0
-            column = col[0].column_letter
-            for cell in col:
-                try:
-                    if len(str(cell.value)) > max_length:
-                        max_length = len(str(cell.value))
-                except:
-                    pass
-            ws.column_dimensions[column].width = max_length + 5
+            column_letter = get_column_letter(col_idx)
+            for row_idx in range(1, ws.max_row + 1):
+                cell = ws.cell(row=row_idx, column=col_idx)
+                # Skip merged cells
+                if hasattr(cell, 'value') and cell.value is not None:
+                    try:
+                        cell_length = len(str(cell.value))
+                        if cell_length > max_length:
+                            max_length = cell_length
+                    except:
+                        pass
+            ws.column_dimensions[column_letter].width = max(max_length + 5, 12)
     
     # Save to buffer
     buffer = BytesIO()
