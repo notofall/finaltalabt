@@ -661,7 +661,7 @@ const ProcurementDashboard = () => {
     }
     
     try {
-      const res = await axios.post(`${API_V2_URL}/suppliers`, newSupplier, getAuthHeaders());
+      const res = await axios.post(`${API_V2_URL}/suppliers/`, newSupplier, getAuthHeaders());
       setSuppliers([...suppliers, res.data]);
       setNewSupplier({ name: "", contact_person: "", phone: "", email: "", address: "", notes: "" });
       setSupplierDialogOpen(false);
