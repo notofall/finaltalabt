@@ -744,6 +744,12 @@ class RFQService(BaseService):
         from app.utils.sequence_generator import generate_po_number
         order_number = await generate_po_number(self.session)
         
+        # Get order count for sequence
+        count_result = await self.session.execute(
+            select(func.count()).select_from(PurchaseOrder)
+        )
+        order_count = count_result.scalar_one() or 0
+        
         # Calculate order total
         total_amount = quotation.final_amount
         
