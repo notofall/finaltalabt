@@ -166,12 +166,14 @@ async def get_buildings_projects(
 
 
 @router.delete("/projects/{project_id}")
-async def remove_project_from_buildings(
+async def delete_project_quantities(
     project_id: str,
     current_user = Depends(get_current_user),
     session: AsyncSession = Depends(get_postgres_session)
 ):
-    """Remove project from buildings system (not delete, just hide)"""
+    """Delete all quantities data for a project (BOQ, templates, floors, supply tracking)"""
+    from database.models import UnitTemplate, UnitTemplateMaterial, ProjectFloor, ProjectAreaMaterial, SupplyTracking
+    
     result = await session.execute(
         select(Project).where(Project.id == project_id)
     )
@@ -180,11 +182,59 @@ async def remove_project_from_buildings(
     if not project:
         raise HTTPException(status_code=404, detail="المشروع غير موجود")
     
-    # Set is_building_project to False
-    project.is_building_project = False
+    # Get template IDs for this project to delete their materials
+    templates_result = await session.execute(
+        select(UnitTemplate.id).where(UnitTemplate.project_id == project_id)
+    )
+    template_ids = [t[0] for t in templates_result.fetchall()]
+    
+    deleted_counts = {
+        "template_materials": 0,
+        "templates": 0,
+        "floors": 0,
+        "area_materials": 0,
+        "supply_tracking": 0
+    }
+    
+    # Delete template materials first (foreign key constraint)
+    if template_ids:
+        del_materials = await session.execute(
+            delete(UnitTemplateMaterial).where(UnitTemplateMaterial.template_id.in_(template_ids))
+        )
+        deleted_counts["template_materials"] = del_materials.rowcount
+    
+    # Delete unit templates
+    del_templates = await session.execute(
+        delete(UnitTemplate).where(UnitTemplate.project_id == project_id)
+    )
+    deleted_counts["templates"] = del_templates.rowcount
+    
+    # Delete project floors
+    del_floors = await session.execute(
+        delete(ProjectFloor).where(ProjectFloor.project_id == project_id)
+    )
+    deleted_counts["floors"] = del_floors.rowcount
+    
+    # Delete area materials
+    del_area = await session.execute(
+        delete(ProjectAreaMaterial).where(ProjectAreaMaterial.project_id == project_id)
+    )
+    deleted_counts["area_materials"] = del_area.rowcount
+    
+    # Delete supply tracking
+    del_supply = await session.execute(
+        delete(SupplyTracking).where(SupplyTracking.project_id == project_id)
+    )
+    deleted_counts["supply_tracking"] = del_supply.rowcount
+    
     await session.commit()
     
-    return {"message": "تم إزالة المشروع من نظام الكميات بنجاح"}
+    total_deleted = sum(deleted_counts.values())
+    
+    return {
+        "message": f"تم حذف كميات المشروع بنجاح ({total_deleted} سجل)",
+        "details": deleted_counts
+    }
 
 
 @router.post("/projects/{project_id}/enable")
