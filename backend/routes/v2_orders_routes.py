@@ -394,12 +394,12 @@ async def create_order_from_request(
         select(func.count()).select_from(PurchaseOrder)
     )
     count = count_result.scalar_one() or 0
-    po_number = f"PO-{count + 1:05d}"
+    order_number = f"PO-{count + 1:05d}"
     
     # Create order
     order = PurchaseOrder(
         id=str(uuid_lib.uuid4()),
-        po_number=po_number,
+        order_number=order_number,
         request_id=data.request_id,
         project_id=request.project_id,
         project_name=request.project_name,
