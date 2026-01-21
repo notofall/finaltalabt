@@ -191,6 +191,24 @@ class CatalogRepository:
         
         return f"{code_prefix}-{count + 1:04d}"
     
+    async def get_next_code_by_category(self, category_code: Optional[str] = None, category_name: Optional[str] = None) -> str:
+        """Generate next item code based on category code (e.g., 1-0001, 2-0001)"""
+        if category_code:
+            # Use the provided category code directly
+            code_prefix = category_code.strip()
+            
+            # Count items with this prefix pattern (code-)
+            result = await self.session.execute(
+                select(func.count(PriceCatalog.id))
+                .where(PriceCatalog.item_code.like(f"{code_prefix}-%"))
+            )
+            count = result.scalar_one()
+            
+            return f"{code_prefix}-{count + 1:04d}"
+        else:
+            # Fall back to old behavior
+            return await self.get_next_code(category_name)
+    
     # ==================== Item Aliases ====================
     
     async def get_all_aliases(self) -> List[ItemAlias]:
