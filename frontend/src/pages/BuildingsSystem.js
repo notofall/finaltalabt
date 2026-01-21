@@ -703,6 +703,14 @@ const BuildingsSystem = () => {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-slate-800 border-t border-slate-700 p-4 space-y-2">
+            <Button
+              variant="outline"
+              className="w-full border-emerald-600 text-emerald-400"
+              onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
+            >
+              <Home className="w-4 h-4 ml-2" />
+              الرئيسية
+            </Button>
             {selectedProject && (
               <Button
                 variant="outline"
