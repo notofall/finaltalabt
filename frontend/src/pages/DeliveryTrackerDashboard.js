@@ -177,7 +177,7 @@ const DeliveryTrackerDashboard = () => {
       await axios.post(`${API_V2_URL}/delivery/${selectedOrder.id}/confirm-receipt`, {
         supplier_receipt_number: supplierReceiptNumber,
         delivery_notes: deliveryNotes,
-        items_delivered: itemsToDeliver.map(item => ({
+        items: itemsToDeliver.map(item => ({
           name: item.name,
           quantity_delivered: item.quantity_delivered
         }))
