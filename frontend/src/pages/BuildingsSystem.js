@@ -1212,7 +1212,11 @@ const BuildingsSystem = () => {
                     </Button>
                     <Button onClick={exportBOQ} variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
                       <Download className="w-4 h-4 ml-2" />
-                      تصدير BOQ
+                      تصدير Excel
+                    </Button>
+                    <Button onClick={exportBOQPDF} variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                      <FileDown className="w-4 h-4 ml-2" />
+                      تصدير PDF
                     </Button>
                   </div>
                 </div>
