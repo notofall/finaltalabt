@@ -106,7 +106,8 @@ async def create_user(
             name=data.name,
             email=data.email,
             password=data.password,
-            role=data.role
+            role=data.role,
+            supervisor_prefix=data.supervisor_prefix
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
