@@ -33,13 +33,20 @@ class AdminService(BaseService):
         name: str,
         email: str,
         password: str,
-        role: str
+        role: str,
+        supervisor_prefix: Optional[str] = None
     ) -> Dict:
         """Create a new user"""
         # Check if email exists
         existing = await self.repository.get_user_by_email(email)
         if existing:
             raise ValueError("البريد الإلكتروني مسجل بالفعل")
+        
+        # Validate prefix uniqueness for supervisors
+        if supervisor_prefix and role == 'supervisor':
+            prefix_exists = await self.repository.check_prefix_exists(supervisor_prefix)
+            if prefix_exists:
+                raise ValueError(f"رمز المشرف '{supervisor_prefix}' مستخدم بالفعل")
         
         # Hash password
         password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
@@ -49,7 +56,8 @@ class AdminService(BaseService):
             "email": email,
             "password": password_hash,
             "role": role,
-            "is_active": True
+            "is_active": True,
+            "supervisor_prefix": supervisor_prefix if role == 'supervisor' else None
         })
         
         return self._format_user(user)
