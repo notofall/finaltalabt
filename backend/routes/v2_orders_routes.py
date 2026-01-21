@@ -593,9 +593,11 @@ async def link_item_to_catalog(
     order_service: OrderService = Depends(get_order_service),
     current_user = Depends(get_current_user)
 ):
-    """ربط عنصر بالكتالوج"""
-    from database import PurchaseOrderItem
+    """ربط عنصر بالكتالوج وإنشاء اسم بديل"""
+    from database import PurchaseOrderItem, ItemAlias, PriceCatalogItem
     from sqlalchemy import select
+    import uuid as uuid_lib
+    from datetime import datetime, timezone
     
     session = order_service.order_repo.session
     
@@ -607,12 +609,50 @@ async def link_item_to_catalog(
     if not item:
         raise HTTPException(status_code=404, detail="العنصر غير موجود")
     
-    item.catalog_item_id = data.get("catalog_item_id")
+    catalog_item_id = data.get("catalog_item_id")
+    item.catalog_item_id = catalog_item_id
     
-    from datetime import datetime
+    # Get catalog item name
+    catalog_item_name = ""
+    if catalog_item_id:
+        cat_result = await session.execute(
+            select(PriceCatalogItem).where(PriceCatalogItem.id == catalog_item_id)
+        )
+        cat_item = cat_result.scalar_one_or_none()
+        if cat_item:
+            catalog_item_name = cat_item.name
+            
+            # Create alias if item name is different from catalog name
+            if item.name and item.name.strip() != cat_item.name.strip():
+                # Check if alias already exists
+                alias_check = await session.execute(
+                    select(ItemAlias).where(
+                        ItemAlias.alias_name == item.name,
+                        ItemAlias.catalog_item_id == catalog_item_id
+                    )
+                )
+                existing_alias = alias_check.scalar_one_or_none()
+                
+                if not existing_alias:
+                    # Create new alias
+                    user_id = str(current_user.id) if hasattr(current_user, 'id') else "system"
+                    user_name = current_user.name if hasattr(current_user, 'name') else "النظام"
+                    
+                    new_alias = ItemAlias(
+                        id=str(uuid_lib.uuid4()),
+                        alias_name=item.name,
+                        catalog_item_id=catalog_item_id,
+                        catalog_item_name=catalog_item_name,
+                        usage_count=1,
+                        created_by=user_id,
+                        created_by_name=user_name,
+                        created_at=datetime.now(timezone.utc)
+                    )
+                    session.add(new_alias)
+    
     await session.commit()
     
-    return {"message": "تم ربط العنصر بالكتالوج"}
+    return {"message": "تم ربط العنصر بالكتالوج", "alias_created": catalog_item_name != "" and item.name != catalog_item_name}
 
 
 @router.post("/{order_id}/sync-prices")
