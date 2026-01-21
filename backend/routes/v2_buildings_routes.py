@@ -1086,3 +1086,502 @@ async def get_project_stats(
     Uses: BuildingsService -> BuildingsRepository
     """
     return await buildings_service.get_project_stats(project_id)
+
+
+# ==================== EXPORT / IMPORT ====================
+
+@router.get("/projects/{project_id}/export/boq-excel")
+async def export_boq_excel(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    buildings_service: BuildingsService = Depends(get_buildings_service),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """Export BOQ to Excel file"""
+    from fastapi.responses import StreamingResponse
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+    from io import BytesIO
+    from database.models import UnitTemplate, UnitTemplateMaterial, ProjectFloor, ProjectAreaMaterial
+    
+    # Get project
+    result = await session.execute(select(Project).where(Project.id == project_id))
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Calculate quantities
+    calc_data = await buildings_service.calculate_project_quantities(project_id)
+    
+    # Create workbook
+    wb = Workbook()
+    
+    # Styles
+    header_font = Font(bold=True, size=12, color="FFFFFF")
+    header_fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
+    border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin')
+    )
+    center_align = Alignment(horizontal='center', vertical='center')
+    right_align = Alignment(horizontal='right', vertical='center')
+    
+    # === Sheet 1: Summary ===
+    ws = wb.active
+    ws.title = "ملخص"
+    ws.sheet_view.rightToLeft = True
+    
+    ws['A1'] = f"جدول الكميات - {project.name}"
+    ws['A1'].font = Font(bold=True, size=16)
+    ws.merge_cells('A1:E1')
+    
+    ws['A3'] = "المشروع:"
+    ws['B3'] = project.name
+    ws['A4'] = "المالك:"
+    ws['B4'] = project.owner_name or ""
+    ws['A5'] = "إجمالي المساحة:"
+    ws['B5'] = f"{calc_data['total_area']} م²"
+    ws['A6'] = "إجمالي الوحدات:"
+    ws['B6'] = calc_data['total_units']
+    ws['A7'] = "إجمالي الحديد:"
+    ws['B7'] = f"{calc_data['steel_calculation']['total_steel_tons']} طن"
+    ws['A8'] = "إجمالي التكلفة:"
+    ws['B8'] = f"{calc_data['total_materials_cost']:,.2f} ر.س"
+    
+    # === Sheet 2: Steel by Floor ===
+    ws2 = wb.create_sheet("الحديد حسب الدور")
+    ws2.sheet_view.rightToLeft = True
+    
+    headers = ["الدور", "المساحة (م²)", "المعامل (كجم/م²)", "الحديد (طن)"]
+    for col, header in enumerate(headers, 1):
+        cell = ws2.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+        cell.alignment = center_align
+    
+    for row, floor in enumerate(calc_data['steel_calculation']['floors'], 2):
+        ws2.cell(row=row, column=1, value=floor['floor_name']).border = border
+        ws2.cell(row=row, column=2, value=floor['area']).border = border
+        ws2.cell(row=row, column=3, value=floor['steel_factor']).border = border
+        ws2.cell(row=row, column=4, value=floor['steel_tons']).border = border
+    
+    # === Sheet 3: Unit Materials ===
+    ws3 = wb.create_sheet("مواد الوحدات")
+    ws3.sheet_view.rightToLeft = True
+    
+    headers = ["الكود", "المادة", "الوحدة", "الكمية", "السعر", "الإجمالي"]
+    for col, header in enumerate(headers, 1):
+        cell = ws3.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+        cell.alignment = center_align
+    
+    for row, mat in enumerate(calc_data['materials'], 2):
+        ws3.cell(row=row, column=1, value=mat.get('item_code', '')).border = border
+        ws3.cell(row=row, column=2, value=mat['item_name']).border = border
+        ws3.cell(row=row, column=3, value=mat['unit']).border = border
+        ws3.cell(row=row, column=4, value=mat['quantity']).border = border
+        ws3.cell(row=row, column=5, value=mat['unit_price']).border = border
+        ws3.cell(row=row, column=6, value=mat['total_price']).border = border
+    
+    # Total row
+    total_row = len(calc_data['materials']) + 2
+    ws3.cell(row=total_row, column=5, value="الإجمالي:").font = Font(bold=True)
+    ws3.cell(row=total_row, column=6, value=calc_data['total_unit_materials_cost']).font = Font(bold=True)
+    
+    # === Sheet 4: Area Materials ===
+    ws4 = wb.create_sheet("مواد المساحة")
+    ws4.sheet_view.rightToLeft = True
+    
+    headers = ["المادة", "الوحدة", "المعامل", "الدور", "الهالك%", "الكمية", "السعر", "الإجمالي"]
+    for col, header in enumerate(headers, 1):
+        cell = ws4.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+        cell.alignment = center_align
+    
+    for row, mat in enumerate(calc_data['area_materials'], 2):
+        ws4.cell(row=row, column=1, value=mat['item_name']).border = border
+        ws4.cell(row=row, column=2, value=mat['unit']).border = border
+        ws4.cell(row=row, column=3, value=mat.get('factor', 0)).border = border
+        ws4.cell(row=row, column=4, value=mat.get('floor_name', 'جميع الأدوار')).border = border
+        ws4.cell(row=row, column=5, value=mat.get('waste_percentage', 0)).border = border
+        ws4.cell(row=row, column=6, value=mat['quantity']).border = border
+        ws4.cell(row=row, column=7, value=mat['unit_price']).border = border
+        ws4.cell(row=row, column=8, value=mat['total_price']).border = border
+    
+    # Total row
+    total_row = len(calc_data['area_materials']) + 2
+    ws4.cell(row=total_row, column=7, value="الإجمالي:").font = Font(bold=True)
+    ws4.cell(row=total_row, column=8, value=calc_data['total_area_materials_cost']).font = Font(bold=True)
+    
+    # Adjust column widths
+    for ws in [wb.active, ws2, ws3, ws4]:
+        for col in ws.columns:
+            max_length = 0
+            column = col[0].column_letter
+            for cell in col:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            ws.column_dimensions[column].width = max_length + 5
+    
+    # Save to buffer
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=BOQ_{project.name}.xlsx"}
+    )
+
+
+@router.get("/projects/{project_id}/export/boq-pdf")
+async def export_boq_pdf(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    buildings_service: BuildingsService = Depends(get_buildings_service),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """Export BOQ to PDF file"""
+    from fastapi.responses import StreamingResponse
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from io import BytesIO
+    import os
+    
+    # Get project
+    result = await session.execute(select(Project).where(Project.id == project_id))
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Calculate quantities
+    calc_data = await buildings_service.calculate_project_quantities(project_id)
+    
+    # Create PDF
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    
+    elements = []
+    styles = getSampleStyleSheet()
+    
+    # Title
+    title_style = ParagraphStyle('Title', fontSize=18, alignment=1, spaceAfter=20)
+    elements.append(Paragraph(f"BOQ - {project.name}", title_style))
+    elements.append(Spacer(1, 20))
+    
+    # Summary table
+    summary_data = [
+        ["Project", project.name],
+        ["Owner", project.owner_name or ""],
+        ["Total Area", f"{calc_data['total_area']} m²"],
+        ["Total Units", str(calc_data['total_units'])],
+        ["Total Steel", f"{calc_data['steel_calculation']['total_steel_tons']} ton"],
+        ["Total Cost", f"{calc_data['total_materials_cost']:,.2f} SAR"],
+    ]
+    
+    summary_table = Table(summary_data, colWidths=[150, 300])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.Color(0.18, 0.49, 0.2)),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 30))
+    
+    # Steel table
+    elements.append(Paragraph("Steel by Floor", styles['Heading2']))
+    steel_data = [["Floor", "Area (m²)", "Factor (kg/m²)", "Steel (ton)"]]
+    for floor in calc_data['steel_calculation']['floors']:
+        steel_data.append([floor['floor_name'], floor['area'], floor['steel_factor'], floor['steel_tons']])
+    steel_data.append(["Total", calc_data['total_area'], "", calc_data['steel_calculation']['total_steel_tons']])
+    
+    steel_table = Table(steel_data, colWidths=[150, 100, 100, 100])
+    steel_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0.18, 0.49, 0.2)),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+    ]))
+    elements.append(steel_table)
+    elements.append(Spacer(1, 30))
+    
+    # Unit Materials table
+    if calc_data['materials']:
+        elements.append(Paragraph("Unit Materials", styles['Heading2']))
+        mat_data = [["Code", "Material", "Unit", "Qty", "Price", "Total"]]
+        for mat in calc_data['materials']:
+            mat_data.append([
+                mat.get('item_code', ''),
+                mat['item_name'][:30],
+                mat['unit'],
+                mat['quantity'],
+                mat['unit_price'],
+                mat['total_price']
+            ])
+        mat_data.append(["", "", "", "", "Total:", f"{calc_data['total_unit_materials_cost']:,.2f}"])
+        
+        mat_table = Table(mat_data, colWidths=[60, 150, 50, 60, 60, 80])
+        mat_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0.18, 0.49, 0.2)),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
+        ]))
+        elements.append(mat_table)
+        elements.append(Spacer(1, 30))
+    
+    # Area Materials table
+    if calc_data['area_materials']:
+        elements.append(Paragraph("Area Materials", styles['Heading2']))
+        area_data = [["Material", "Unit", "Factor", "Waste%", "Qty", "Price", "Total"]]
+        for mat in calc_data['area_materials']:
+            area_data.append([
+                mat['item_name'][:25],
+                mat['unit'],
+                mat.get('factor', 0),
+                mat.get('waste_percentage', 0),
+                mat['quantity'],
+                mat['unit_price'],
+                mat['total_price']
+            ])
+        area_data.append(["", "", "", "", "", "Total:", f"{calc_data['total_area_materials_cost']:,.2f}"])
+        
+        area_table = Table(area_data, colWidths=[120, 40, 50, 50, 60, 60, 80])
+        area_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0.18, 0.49, 0.2)),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
+        ]))
+        elements.append(area_table)
+    
+    doc.build(elements)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=BOQ_{project.name}.pdf"}
+    )
+
+
+@router.get("/projects/{project_id}/export/floors-excel")
+async def export_floors_excel(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """Export floors to Excel file"""
+    from fastapi.responses import StreamingResponse
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+    from io import BytesIO
+    from database.models import ProjectFloor
+    
+    # Get project
+    result = await session.execute(select(Project).where(Project.id == project_id))
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Get floors
+    floors_result = await session.execute(
+        select(ProjectFloor).where(ProjectFloor.project_id == project_id).order_by(ProjectFloor.floor_number)
+    )
+    floors = floors_result.scalars().all()
+    
+    # Create workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "الأدوار"
+    ws.sheet_view.rightToLeft = True
+    
+    # Styles
+    header_font = Font(bold=True, size=12, color="FFFFFF")
+    header_fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
+    border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin')
+    )
+    
+    # Headers
+    headers = ["رقم الدور", "اسم الدور", "المساحة (م²)", "معامل التسليح (كجم/م²)"]
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+    
+    # Data
+    for row, floor in enumerate(floors, 2):
+        ws.cell(row=row, column=1, value=floor.floor_number).border = border
+        ws.cell(row=row, column=2, value=floor.floor_name).border = border
+        ws.cell(row=row, column=3, value=floor.area).border = border
+        ws.cell(row=row, column=4, value=floor.steel_factor).border = border
+    
+    # Adjust column widths
+    ws.column_dimensions['A'].width = 12
+    ws.column_dimensions['B'].width = 20
+    ws.column_dimensions['C'].width = 15
+    ws.column_dimensions['D'].width = 25
+    
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=Floors_{project.name}.xlsx"}
+    )
+
+
+@router.post("/projects/{project_id}/import/floors")
+async def import_floors_excel(
+    project_id: str,
+    file: UploadFile = File(...),
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """Import floors from Excel file"""
+    from openpyxl import load_workbook
+    from io import BytesIO
+    from database.models import ProjectFloor
+    
+    # Get project
+    result = await session.execute(select(Project).where(Project.id == project_id))
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Read Excel file
+    contents = await file.read()
+    wb = load_workbook(BytesIO(contents))
+    ws = wb.active
+    
+    imported_count = 0
+    errors = []
+    
+    # Skip header row
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        if not row[0] and not row[1]:
+            continue
+        
+        try:
+            floor_number = int(row[0]) if row[0] else 0
+            floor_name = str(row[1]) if row[1] else f"الدور {floor_number}"
+            area = float(row[2]) if row[2] else 0
+            steel_factor = float(row[3]) if row[3] else 120
+            
+            floor = ProjectFloor(
+                id=str(uuid4()),
+                project_id=project_id,
+                floor_number=floor_number,
+                floor_name=floor_name,
+                area=area,
+                steel_factor=steel_factor
+            )
+            session.add(floor)
+            imported_count += 1
+        except Exception as e:
+            errors.append(f"Row {row}: {str(e)}")
+    
+    await session.commit()
+    
+    return {
+        "message": f"تم استيراد {imported_count} دور بنجاح",
+        "imported_count": imported_count,
+        "errors": errors if errors else None
+    }
+
+
+@router.get("/export/project-template")
+async def download_project_template(current_user = Depends(get_current_user)):
+    """Download project import template (Excel)"""
+    from fastapi.responses import StreamingResponse
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Border, Side
+    from io import BytesIO
+    
+    wb = Workbook()
+    
+    # Floors sheet
+    ws1 = wb.active
+    ws1.title = "الأدوار"
+    ws1.sheet_view.rightToLeft = True
+    
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
+    
+    headers = ["رقم الدور", "اسم الدور", "المساحة (م²)", "معامل التسليح (كجم/م²)"]
+    for col, header in enumerate(headers, 1):
+        cell = ws1.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+    
+    # Sample data
+    sample_floors = [
+        [0, "اللبشة", 430, 120],
+        [1, "دور المواقف", 800, 120],
+        [2, "الدور الأول", 300, 120],
+    ]
+    for row, data in enumerate(sample_floors, 2):
+        for col, value in enumerate(data, 1):
+            ws1.cell(row=row, column=col, value=value)
+    
+    ws1.column_dimensions['A'].width = 12
+    ws1.column_dimensions['B'].width = 20
+    ws1.column_dimensions['C'].width = 15
+    ws1.column_dimensions['D'].width = 25
+    
+    # Templates sheet
+    ws2 = wb.create_sheet("النماذج")
+    ws2.sheet_view.rightToLeft = True
+    
+    headers = ["الكود", "الاسم", "عدد الوحدات", "المساحة (م²)", "الغرف", "الحمامات"]
+    for col, header in enumerate(headers, 1):
+        cell = ws2.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+    
+    sample_templates = [
+        ["A", "شقة أمامية", 4, 200, 4, 3],
+        ["B", "شقة خلفية", 3, 150, 3, 2],
+    ]
+    for row, data in enumerate(sample_templates, 2):
+        for col, value in enumerate(data, 1):
+            ws2.cell(row=row, column=col, value=value)
+    
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=project_template.xlsx"}
+    )
