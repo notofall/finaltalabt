@@ -2918,7 +2918,16 @@ const ProcurementDashboard = () => {
               {/* Add Default Category Form */}
               <div className="bg-slate-50 p-4 rounded-lg space-y-3">
                 <h3 className="font-medium text-sm mb-2">إضافة تصنيف افتراضي جديد</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <Label className="text-xs">كود التصنيف</Label>
+                    <Input 
+                      placeholder="مثال: 1, 2, 3..." 
+                      value={newDefaultCategory.code}
+                      onChange={(e) => setNewDefaultCategory({...newDefaultCategory, code: e.target.value})}
+                      className="h-9 mt-1"
+                    />
+                  </div>
                   <div>
                     <Label className="text-xs">اسم التصنيف</Label>
                     <Input 
