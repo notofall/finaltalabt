@@ -247,18 +247,64 @@ class BuildingsService(BaseService):
                     "total_price": total_price
                 })
         
-        # Calculate area materials
+        # Calculate area materials with advanced options
         area_mats = []
         for m in area_materials:
-            quantity = total_area * m.factor
-            total_price = quantity * m.unit_price
+            # Get calculation method (factor or direct)
+            calc_method = getattr(m, 'calculation_method', 'factor') or 'factor'
+            
+            # Determine area to use
+            if getattr(m, 'calculation_type', 'all_floors') == 'selected_floor' and getattr(m, 'selected_floor_id', None):
+                # Use specific floor area
+                floor_area = next((f.area for f in floors if str(f.id) == m.selected_floor_id), 0)
+                selected_floor_name = next((f.floor_name for f in floors if str(f.id) == m.selected_floor_id), "")
+            else:
+                # Use total area from all floors
+                floor_area = total_area
+                selected_floor_name = "جميع الأدوار"
+            
+            # Calculate base quantity
+            if calc_method == 'direct':
+                # Direct quantity input
+                base_quantity = getattr(m, 'direct_quantity', 0) or 0
+            else:
+                # Calculate by factor
+                base_quantity = floor_area * m.factor
+            
+            # Handle tile calculation (by dimensions)
+            tile_width = getattr(m, 'tile_width', 0) or 0
+            tile_height = getattr(m, 'tile_height', 0) or 0
+            tiles_count = 0
+            
+            if tile_width > 0 and tile_height > 0:
+                # Calculate tiles count: area / (width * height in m²)
+                tile_area_m2 = (tile_width / 100) * (tile_height / 100)  # Convert cm to m
+                if tile_area_m2 > 0:
+                    tiles_count = floor_area / tile_area_m2
+                    base_quantity = tiles_count  # Override with tiles count
+            
+            # Apply waste percentage
+            waste_pct = getattr(m, 'waste_percentage', 0) or 0
+            original_quantity = base_quantity
+            quantity_with_waste = base_quantity * (1 + waste_pct / 100)
+            
+            total_price = quantity_with_waste * m.unit_price
+            
             area_mats.append({
+                "id": str(m.id),
                 "item_name": m.item_name,
                 "unit": m.unit,
+                "calculation_method": calc_method,
                 "factor": m.factor,
-                "quantity": quantity,
+                "floor_name": selected_floor_name,
+                "floor_area": floor_area,
+                "tile_dimensions": f"{int(tile_width)}×{int(tile_height)}" if tile_width > 0 else None,
+                "tiles_count": round(tiles_count) if tiles_count > 0 else None,
+                "waste_percentage": waste_pct,
+                "original_quantity": round(original_quantity, 2),
+                "quantity": round(quantity_with_waste, 2),
                 "unit_price": m.unit_price,
-                "total_price": total_price
+                "total_price": round(total_price, 2)
             })
         
         return {
