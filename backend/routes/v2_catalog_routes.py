@@ -27,6 +27,7 @@ class CatalogItemCreate(BaseModel):
     unit: str
     price: float
     category_name: Optional[str] = None
+    category_code: Optional[str] = None  # كود التصنيف لتوليد كود الصنف
     item_code: Optional[str] = None
     description: Optional[str] = None
     supplier_id: Optional[str] = None
