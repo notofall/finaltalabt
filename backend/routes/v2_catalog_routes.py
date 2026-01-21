@@ -496,34 +496,77 @@ async def export_catalog_excel(
     current_user = Depends(get_current_user),
     catalog_service: CatalogService = Depends(get_catalog_service)
 ):
-    """Export catalog items to Excel format (CSV with BOM)"""
-    items_orm = await catalog_service.get_all_items(skip=0, limit=10000)
-    # Convert ORM to dict
-    items = [item_to_response(i).model_dump() for i in items_orm]
-    
-    output = io.StringIO()
-    writer = csv.writer(output)
-    
-    writer.writerow(["كود الصنف", "اسم الصنف", "الوحدة", "السعر", "الفئة", "المورد", "الوصف"])
-    
-    for item in items:
-        writer.writerow([
-            item.get("item_code", ""),
-            item.get("name", ""),
-            item.get("unit", ""),
-            item.get("price", 0),
-            item.get("category_name", ""),
-            item.get("supplier_name", ""),
-            item.get("description", "")
-        ])
-    
-    output.seek(0)
-    
-    return StreamingResponse(
-        io.BytesIO(output.getvalue().encode('utf-8-sig')),
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=price_catalog.xlsx"}
-    )
+    """Export catalog items to Excel format (XLSX)"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+        from urllib.parse import quote
+        
+        items_orm = await catalog_service.get_all_items(skip=0, limit=10000)
+        items = [item_to_response(i).model_dump() for i in items_orm]
+        
+        # Create workbook
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "كتالوج الأسعار"
+        ws.sheet_view.rightToLeft = True
+        
+        # Styles
+        header_font = Font(bold=True, size=12)
+        header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+        header_font_white = Font(bold=True, size=12, color="FFFFFF")
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        # Headers
+        headers = ["كود الصنف", "اسم الصنف", "الوحدة", "السعر", "الفئة", "المورد", "الوصف"]
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.font = header_font_white
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal='center')
+            cell.border = thin_border
+        
+        # Data rows
+        for row_idx, item in enumerate(items, 2):
+            ws.cell(row=row_idx, column=1, value=item.get("item_code", "")).border = thin_border
+            ws.cell(row=row_idx, column=2, value=item.get("name", "")).border = thin_border
+            ws.cell(row=row_idx, column=3, value=item.get("unit", "")).border = thin_border
+            ws.cell(row=row_idx, column=4, value=item.get("price", 0)).border = thin_border
+            ws.cell(row=row_idx, column=5, value=item.get("category_name", "") or "").border = thin_border
+            ws.cell(row=row_idx, column=6, value=item.get("supplier_name", "") or "").border = thin_border
+            ws.cell(row=row_idx, column=7, value=item.get("description", "") or "").border = thin_border
+        
+        # Set column widths
+        ws.column_dimensions['A'].width = 15
+        ws.column_dimensions['B'].width = 30
+        ws.column_dimensions['C'].width = 12
+        ws.column_dimensions['D'].width = 12
+        ws.column_dimensions['E'].width = 20
+        ws.column_dimensions['F'].width = 25
+        ws.column_dimensions['G'].width = 30
+        
+        # Save to bytes
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        filename = f"كتالوج_الأسعار_{__import__('datetime').datetime.now().strftime('%Y%m%d')}.xlsx"
+        encoded_filename = quote(filename)
+        
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting: {str(e)}")
 
 
 @router.post("/validate-items")
