@@ -255,7 +255,7 @@ const SupervisorDashboard = () => {
       setDeliveryDialogOpen(false);
       fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || "فشل في تسجيل الاستلام");
+      toast.error(getErrorMessage(error, "فشل في تسجيل الاستلام"));
     } finally {
       setSubmitting(false);
     }
