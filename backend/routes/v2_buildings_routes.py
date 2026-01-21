@@ -1473,10 +1473,16 @@ async def export_floors_excel(
     wb.save(buffer)
     buffer.seek(0)
     
+    from urllib.parse import quote
+    safe_filename = f"Floors_{project_id[:8]}.xlsx"
+    encoded_filename = quote(f"Floors_{project.name}.xlsx")
+    
     return StreamingResponse(
         buffer,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename=Floors_{project.name}.xlsx"}
+        headers={
+            "Content-Disposition": f"attachment; filename=\"{safe_filename}\"; filename*=UTF-8''{encoded_filename}"
+        }
     )
 
 
