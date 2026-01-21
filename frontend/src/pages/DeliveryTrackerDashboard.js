@@ -614,6 +614,7 @@ const DeliveryTrackerDashboard = () => {
                     <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                       <div><span className="text-slate-400">المورد:</span> {order.supplier_name}</div>
                       <div><span className="text-slate-400">المبلغ:</span> <span className="font-bold text-emerald-600">{order.total_amount?.toLocaleString('ar-SA')} ر.س</span></div>
+                      <div><span className="text-slate-400">رقم الطلب:</span> {order.request_number || '-'}</div>
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={() => { setSelectedOrder(order); setViewDialogOpen(true); }} className="flex-1">
@@ -632,9 +633,11 @@ const DeliveryTrackerDashboard = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-right">رقم الأمر</TableHead>
+                      <TableHead className="text-right">رقم أمر الشراء</TableHead>
+                      <TableHead className="text-right">رقم الطلب</TableHead>
                       <TableHead className="text-right">المشروع</TableHead>
                       <TableHead className="text-right">المورد</TableHead>
+                      <TableHead className="text-center">الأصناف</TableHead>
                       <TableHead className="text-center">المبلغ</TableHead>
                       <TableHead className="text-center">الحالة</TableHead>
                       <TableHead className="text-center">إجراءات</TableHead>
@@ -644,8 +647,14 @@ const DeliveryTrackerDashboard = () => {
                     {pendingOrders.map((order) => (
                       <TableRow key={order.id}>
                         <TableCell className="font-bold text-orange-600">{order.order_number || order.id?.slice(0, 8).toUpperCase()}</TableCell>
+                        <TableCell className="text-slate-600">{order.request_number || '-'}</TableCell>
                         <TableCell>{order.project_name}</TableCell>
                         <TableCell>{order.supplier_name}</TableCell>
+                        <TableCell className="text-center">
+                          <span className="text-xs bg-slate-100 px-2 py-1 rounded">
+                            {order.items?.length || 0} صنف
+                          </span>
+                        </TableCell>
                         <TableCell className="text-center font-bold text-emerald-600">{order.total_amount?.toLocaleString('ar-SA')} ر.س</TableCell>
                         <TableCell className="text-center">{getStatusBadge(order.status)}</TableCell>
                         <TableCell className="text-center">
