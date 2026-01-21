@@ -534,13 +534,18 @@ const ProcurementDashboard = () => {
       toast.error("الرجاء إدخال اسم التصنيف");
       return;
     }
+    if (!newDefaultCategory.code.trim()) {
+      toast.error("الرجاء إدخال كود التصنيف");
+      return;
+    }
     try {
       await axios.post(`${API_V2_URL}/budget/defaults`, {
         name: newDefaultCategory.name,
+        code: newDefaultCategory.code,
         default_budget: parseFloat(newDefaultCategory.default_budget) || 0
       }, getAuthHeaders());
       toast.success("تم إضافة التصنيف بنجاح");
-      setNewDefaultCategory({ name: "", default_budget: "" });
+      setNewDefaultCategory({ name: "", code: "", default_budget: "" });
       fetchData(); // Refresh default categories
     } catch (error) {
       toast.error(error.response?.data?.detail || "فشل في إضافة التصنيف");
@@ -553,6 +558,7 @@ const ProcurementDashboard = () => {
     try {
       await axios.put(`${API_V2_URL}/budget/defaults/${editingDefaultCategory.id}`, {
         name: editingDefaultCategory.name,
+        code: editingDefaultCategory.code,
         default_budget: parseFloat(editingDefaultCategory.default_budget) || 0
       }, getAuthHeaders());
       toast.success("تم تحديث التصنيف بنجاح");
