@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.services import DeliveryService
 from app.dependencies import get_delivery_service
 from routes.v2_auth_routes import get_current_user
-from database.connection import get_session
+from database.connection import get_postgres_session as get_session
 
 
 router = APIRouter(prefix="/api/v2/delivery", tags=["Delivery V2"])
