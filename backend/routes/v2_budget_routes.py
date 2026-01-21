@@ -81,6 +81,7 @@ def default_category_to_response(cat) -> DefaultCategoryResponse:
     return DefaultCategoryResponse(
         id=str(cat.id),
         name=cat.name,
+        code=getattr(cat, 'code', None),
         default_budget=cat.default_budget,
         created_at=cat.created_at.isoformat() if cat.created_at else None
     )
