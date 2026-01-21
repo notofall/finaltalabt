@@ -815,27 +815,27 @@ export default function AdvancedReports({ onClose }) {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card className="border-r-4 border-blue-500">
                   <CardContent className="p-4 text-center">
-                    <p className="text-3xl font-bold">{approvalReport.summary.total_requests}</p>
+                    <p className="text-3xl font-bold">{approvalReport?.summary?.total_requests ?? 0}</p>
                     <p className="text-sm text-slate-500">إجمالي الطلبات</p>
                   </CardContent>
                 </Card>
                 <Card className="border-r-4 border-green-500">
                   <CardContent className="p-4 text-center">
-                    <p className="text-3xl font-bold text-green-600">{approvalReport.summary.approved}</p>
+                    <p className="text-3xl font-bold text-green-600">{approvalReport?.summary?.approved ?? 0}</p>
                     <p className="text-sm text-slate-500">معتمدة</p>
-                    <Badge className="mt-1 bg-green-100 text-green-700">{approvalReport.summary.approval_rate}%</Badge>
+                    <Badge className="mt-1 bg-green-100 text-green-700">{approvalReport?.summary?.approval_rate ?? 0}%</Badge>
                   </CardContent>
                 </Card>
                 <Card className="border-r-4 border-red-500">
                   <CardContent className="p-4 text-center">
-                    <p className="text-3xl font-bold text-red-600">{approvalReport.summary.rejected}</p>
+                    <p className="text-3xl font-bold text-red-600">{approvalReport?.summary?.rejected ?? 0}</p>
                     <p className="text-sm text-slate-500">مرفوضة</p>
-                    <Badge className="mt-1 bg-red-100 text-red-700">{approvalReport.summary.rejection_rate}%</Badge>
+                    <Badge className="mt-1 bg-red-100 text-red-700">{approvalReport?.summary?.rejection_rate ?? 0}%</Badge>
                   </CardContent>
                 </Card>
                 <Card className="border-r-4 border-yellow-500">
                   <CardContent className="p-4 text-center">
-                    <p className="text-3xl font-bold text-yellow-600">{approvalReport.summary.pending}</p>
+                    <p className="text-3xl font-bold text-yellow-600">{approvalReport?.summary?.pending ?? 0}</p>
                     <p className="text-sm text-slate-500">معلقة</p>
                   </CardContent>
                 </Card>
