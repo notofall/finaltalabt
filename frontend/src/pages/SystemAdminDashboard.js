@@ -1929,6 +1929,21 @@ export default function SystemAdminDashboard() {
                 </SelectContent>
               </Select>
             </div>
+            {userForm.role === 'supervisor' && (
+              <div className="space-y-2">
+                <Label>رمز المشرف (لترقيم الطلبات)</Label>
+                <Input 
+                  value={userForm.supervisor_prefix} 
+                  onChange={(e) => setUserForm(prev => ({ ...prev, supervisor_prefix: e.target.value.toLowerCase() }))}
+                  placeholder="مثال: a1, b2, c3"
+                  maxLength={5}
+                  className="font-mono"
+                />
+                <p className="text-xs text-gray-500">
+                  رمز فريد لكل مشرف يستخدم في ترقيم طلباته (مثال: a1-0001, a1-0002)
+                </p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowUserDialog(false)}>إلغاء</Button>
