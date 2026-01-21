@@ -158,6 +158,38 @@ async def get_buildings_dashboard(
     }
 
 
+@router.get("/reports/supply-details/{project_id}")
+async def get_supply_details_report(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """Get detailed supply report for a project"""
+    # Get project
+    result = await session.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = result.scalar_one_or_none()
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Return report data structure
+    return {
+        "project_id": project_id,
+        "project_name": project.name,
+        "summary": {
+            "total_materials": 0,
+            "total_delivered": 0,
+            "total_pending": 0,
+            "completion_percentage": 0
+        },
+        "materials": [],
+        "delivery_timeline": [],
+        "suppliers": []
+    }
+
+
 @router.get("/reports/summary")
 async def get_buildings_reports_summary(
     current_user = Depends(get_current_user),
