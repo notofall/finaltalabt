@@ -67,7 +67,22 @@ const SupplyAdvancedReport = ({ projectId, projectName }) => {
     return <div className="text-center py-8 text-slate-400">لا توجد بيانات</div>;
   }
 
-  const { summary, completed_items, in_progress_items, not_started_items } = reportData;
+  // Safely extract data with defaults
+  const summary = reportData.summary || {
+    total_items: 0,
+    completed_count: 0,
+    in_progress_count: 0,
+    not_started_count: 0,
+    overall_completion: 0,
+    total_required: 0,
+    total_received: 0,
+    total_remaining: 0,
+    total_required_value: 0,
+    total_received_value: 0
+  };
+  const completed_items = reportData.completed_items || [];
+  const in_progress_items = reportData.in_progress_items || [];
+  const not_started_items = reportData.not_started_items || [];
 
   return (
     <div className="space-y-6" dir="rtl">
