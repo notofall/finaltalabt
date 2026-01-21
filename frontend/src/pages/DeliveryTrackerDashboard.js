@@ -440,10 +440,6 @@ const DeliveryTrackerDashboard = () => {
     printWindow.document.close();
   };
 
-  // تقسيم الأوامر حسب الحالة
-  const pendingOrders = orders.filter(o => ['approved', 'printed', 'shipped', 'partially_delivered'].includes(o.status));
-  const deliveredOrders = orders.filter(o => o.status === 'delivered');
-
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin"></div></div>;
   }
