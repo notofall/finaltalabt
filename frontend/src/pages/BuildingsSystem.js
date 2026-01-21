@@ -660,6 +660,15 @@ const BuildingsSystem = () => {
           
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/')}
+              className="border-emerald-600 text-emerald-400 hover:bg-emerald-900/30"
+            >
+              <Home className="w-4 h-4 ml-2" />
+              الرئيسية
+            </Button>
             {selectedProject && (
               <Button
                 variant="outline"
