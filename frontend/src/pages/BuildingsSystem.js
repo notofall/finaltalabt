@@ -198,7 +198,7 @@ const BuildingsSystem = () => {
     
     try {
       await axios.post(
-        `${BUILDINGS_API}/projects/${selectedProject.id}/supply/sync`,
+        `${BUILDINGS_API}/projects/${selectedProject.id}/sync-supply`,
         {},
         getAuthHeaders()
       );
