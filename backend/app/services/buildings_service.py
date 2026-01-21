@@ -145,10 +145,7 @@ class BuildingsService(BaseService):
             floor_number=floor_number,
             floor_name=floor_name,
             area=area,
-            steel_factor=steel_factor,
-            created_by=created_by,
-            created_by_name=created_by_name,
-            created_at=datetime.now(timezone.utc)
+            steel_factor=steel_factor
         )
         return await self.buildings_repo.create_floor(floor)
     
