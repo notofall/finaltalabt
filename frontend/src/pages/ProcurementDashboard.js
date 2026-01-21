@@ -117,6 +117,16 @@ const ProcurementDashboard = () => {
   const [editingDefaultCategory, setEditingDefaultCategory] = useState(null);
   const [budgetViewMode, setBudgetViewMode] = useState("default"); // "default" or "projects"
   
+  // Project Management Dialog - إدارة المشاريع
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+  const [newProject, setNewProject] = useState({ 
+    name: "", code: "", owner_name: "", description: "", location: "",
+    supervisor_id: "", engineer_id: ""
+  });
+  const [editingProject, setEditingProject] = useState(null);
+  const [supervisors, setSupervisors] = useState([]);
+  const [engineers, setEngineers] = useState([]);
+  
   // Mobile Menu Drawer - القائمة الجانبية للجوال
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
