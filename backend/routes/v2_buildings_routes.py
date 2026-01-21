@@ -4,7 +4,7 @@ V2 مباني API - باستخدام طبقة الخدمات
 
 Architecture: Route -> Service -> Repository
 """
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, File, UploadFile
 from pydantic import BaseModel
 from typing import Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
