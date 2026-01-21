@@ -116,8 +116,8 @@ export default function AdvancedReports({ onClose }) {
       // Set default values even on error
       setSummaryReport({ summary: { total_requests: 0, total_orders: 0, total_spending: 0, approved_orders: 0 }, top_projects: [], top_suppliers: [], monthly_spending: [] });
       setApprovalReport({ summary: { total_requests: 0, approved: 0, rejected: 0, pending: 0, approval_rate: 0, rejection_rate: 0 }, by_engineer: [], by_supervisor: [], by_project: [] });
-      setSupplierReport({ suppliers: [] });
-      setPriceVarianceReport({ items: [] });
+      setSupplierReport({ suppliers: [], summary: { total_suppliers: 0, total_orders: 0, total_spending: 0, avg_on_time_rate: 0 } });
+      setPriceVarianceReport({ items: [], increased: [], decreased: [], summary: { total_items_analyzed: 0, items_with_changes: 0, increased_items: 0, decreased_items: 0 } });
     } finally {
       setLoading(false);
     }
