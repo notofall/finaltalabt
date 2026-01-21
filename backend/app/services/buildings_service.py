@@ -58,6 +58,7 @@ class BuildingsService(BaseService):
     async def create_template(
         self,
         project_id: str,
+        project_name: str,
         code: str,
         name: str,
         area: float = 0,
@@ -72,6 +73,7 @@ class BuildingsService(BaseService):
         template = UnitTemplate(
             id=str(uuid4()),
             project_id=project_id,
+            project_name=project_name,
             code=code,
             name=name,
             area=area,
