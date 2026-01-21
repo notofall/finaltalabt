@@ -32,8 +32,10 @@ DEFAULT_LIMIT = PaginationConfig.DEFAULT_PAGE_SIZE
 
 class ProjectCreate(BaseModel):
     name: str
-    code: str
+    code: Optional[str] = None
+    owner_name: Optional[str] = None
     description: Optional[str] = ""
+    location: Optional[str] = None
     total_area: float = 0
     floors_count: int = 0
 
