@@ -28,6 +28,7 @@ const BuildingsSystem = () => {
   const BUILDINGS_API = `${API_V2_URL}/buildings`;
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [projectTab, setProjectTab] = useState("templates"); // للتبويب الداخلي للمشروع
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Dashboard data
