@@ -241,6 +241,31 @@ const BuildingsSystem = () => {
     }
   };
 
+  // Export BOQ PDF
+  const exportBOQPDF = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const res = await axios.get(
+        `${BUILDINGS_API}/projects/${selectedProject.id}/export/boq-pdf`,
+        { ...getAuthHeaders(), responseType: 'blob' }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `BOQ_${selectedProject.name}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success("تم تصدير جدول الكميات PDF");
+    } catch (error) {
+      console.error("Error exporting BOQ PDF:", error);
+      toast.error("فشل في التصدير");
+    }
+  };
+
   // Export floors to Excel
   const exportFloors = async () => {
     if (!selectedProject) return;
