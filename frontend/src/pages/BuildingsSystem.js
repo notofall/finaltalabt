@@ -623,6 +623,52 @@ const BuildingsSystem = () => {
     }
   };
 
+  // Fetch available projects (not in buildings system)
+  const fetchAvailableProjects = async () => {
+    setLoadingAvailableProjects(true);
+    try {
+      // Get all projects from main system
+      const allProjectsRes = await axios.get(`${API_V2_URL}/projects/`, getAuthHeaders());
+      const allProjects = allProjectsRes.data.items || (Array.isArray(allProjectsRes.data) ? allProjectsRes.data : []);
+      
+      // Get projects in buildings system
+      const buildingsProjectsRes = await axios.get(`${BUILDINGS_API}/projects`, getAuthHeaders());
+      const buildingsProjects = Array.isArray(buildingsProjectsRes.data) ? buildingsProjectsRes.data : [];
+      const buildingsProjectIds = buildingsProjects.map(p => p.id);
+      
+      // Filter to get only projects not in buildings system
+      const available = allProjects.filter(p => 
+        !buildingsProjectIds.includes(p.id) && p.status === 'active'
+      );
+      
+      setAvailableProjects(available);
+    } catch (error) {
+      console.error("Error fetching available projects:", error);
+      toast.error("فشل في تحميل المشاريع المتاحة");
+    } finally {
+      setLoadingAvailableProjects(false);
+    }
+  };
+
+  // Add project to buildings system
+  const handleAddProjectToBuildings = async (projectId) => {
+    try {
+      await axios.post(`${BUILDINGS_API}/projects/${projectId}/enable`, {}, getAuthHeaders());
+      toast.success("تم إضافة المشروع إلى نظام الكميات بنجاح");
+      setAddProjectDialogOpen(false);
+      fetchDashboard();
+    } catch (error) {
+      console.error("Error adding project to buildings:", error);
+      toast.error("فشل في إضافة المشروع");
+    }
+  };
+
+  // Open add project dialog
+  const openAddProjectDialog = () => {
+    fetchAvailableProjects();
+    setAddProjectDialogOpen(true);
+  };
+
   // Fetch reports
   const fetchReports = useCallback(async () => {
     try {
