@@ -387,24 +387,85 @@ import csv
 async def get_import_template(
     current_user = Depends(get_current_user)
 ):
-    """Get CSV template for importing catalog items"""
-    output = io.StringIO()
-    writer = csv.writer(output)
-    
-    # Header
-    writer.writerow(["name", "unit", "price", "category_name", "item_code", "description", "supplier_name"])
-    
-    # Example rows
-    writer.writerow(["اسمنت بورتلاند", "طن", "450", "مواد البناء", "CEM-001", "اسمنت عادي", "شركة الأسمنت"])
-    writer.writerow(["حديد تسليح 12مم", "طن", "3500", "حديد", "STEEL-12", "حديد تسليح قطر 12 مم", "حديد السعودية"])
-    
-    output.seek(0)
-    
-    return StreamingResponse(
-        io.BytesIO(output.getvalue().encode('utf-8-sig')),
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=catalog_template.csv"}
-    )
+    """Get Excel template for importing catalog items"""
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+        from urllib.parse import quote
+        
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "نموذج الاستيراد"
+        ws.sheet_view.rightToLeft = True
+        
+        # Styles
+        header_font = Font(bold=True, size=11)
+        header_fill = PatternFill(start_color="70AD47", end_color="70AD47", fill_type="solid")
+        header_font_white = Font(bold=True, size=11, color="FFFFFF")
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        # Headers (matching import format)
+        headers = ["name", "unit", "price", "category_name", "item_code", "description", "supplier_name"]
+        arabic_headers = ["اسم الصنف *", "الوحدة", "السعر", "التصنيف", "كود الصنف", "الوصف", "المورد"]
+        
+        for col, (eng, ar) in enumerate(zip(headers, arabic_headers), 1):
+            cell = ws.cell(row=1, column=col, value=eng)
+            cell.font = header_font_white
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal='center')
+            cell.border = thin_border
+        
+        # Example rows
+        examples = [
+            ["اسمنت بورتلاند", "طن", 450, "مواد البناء", "CEM-001", "اسمنت عادي", "شركة الأسمنت"],
+            ["حديد تسليح 12مم", "طن", 3500, "حديد", "STEEL-12", "حديد تسليح قطر 12 مم", "حديد السعودية"],
+            ["بلوك 20سم", "قطعة", 3.5, "مواد البناء", "BLK-20", "بلوك خرساني", "مصنع البلوك"]
+        ]
+        
+        for row_idx, row_data in enumerate(examples, 2):
+            for col_idx, value in enumerate(row_data, 1):
+                cell = ws.cell(row=row_idx, column=col_idx, value=value)
+                cell.border = thin_border
+        
+        # Set column widths
+        ws.column_dimensions['A'].width = 25
+        ws.column_dimensions['B'].width = 10
+        ws.column_dimensions['C'].width = 10
+        ws.column_dimensions['D'].width = 15
+        ws.column_dimensions['E'].width = 15
+        ws.column_dimensions['F'].width = 25
+        ws.column_dimensions['G'].width = 20
+        
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": "attachment; filename*=UTF-8''catalog_template.xlsx"
+            }
+        )
+    except Exception as e:
+        # Fallback to CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["name", "unit", "price", "category_name", "item_code", "description", "supplier_name"])
+        writer.writerow(["اسمنت بورتلاند", "طن", "450", "مواد البناء", "CEM-001", "اسمنت عادي", "شركة الأسمنت"])
+        writer.writerow(["حديد تسليح 12مم", "طن", "3500", "حديد", "STEEL-12", "حديد تسليح قطر 12 مم", "حديد السعودية"])
+        output.seek(0)
+        
+        return StreamingResponse(
+            io.BytesIO(output.getvalue().encode('utf-8-sig')),
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=catalog_template.csv"}
+        )
 
 
 @router.post("/import")
