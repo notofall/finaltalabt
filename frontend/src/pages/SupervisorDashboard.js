@@ -333,7 +333,7 @@ const SupervisorDashboard = () => {
       setNewProject({ name: "", owner_name: "", description: "", location: "" });
       fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || "فشل في إنشاء المشروع");
+      toast.error(getErrorMessage(error, "فشل في إنشاء المشروع"));
     }
   };
 
