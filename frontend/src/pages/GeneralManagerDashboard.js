@@ -40,6 +40,7 @@ export default function GeneralManagerDashboard() {
   const [pendingOrders, setPendingOrders] = useState([]);
   const [gmApprovedOrders, setGmApprovedOrders] = useState([]); // الأوامر المعتمدة من المدير العام
   const [procurementApprovedOrders, setProcurementApprovedOrders] = useState([]); // الأوامر المعتمدة من المشتريات
+  const [allRequests, setAllRequests] = useState([]); // جميع الطلبات للفلترة
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
@@ -48,7 +49,7 @@ export default function GeneralManagerDashboard() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [orderToReject, setOrderToReject] = useState(null);
-  const [activeTab, setActiveTab] = useState('pending'); // 'pending', 'gm_approved', 'procurement_approved'
+  const [activeTab, setActiveTab] = useState('pending'); // 'pending', 'gm_approved', 'procurement_approved', 'all_requests'
   const [pendingPage, setPendingPage] = useState(1);
   const [gmApprovedPage, setGmApprovedPage] = useState(1);
   const [procurementApprovedPage, setProcurementApprovedPage] = useState(1);
@@ -57,6 +58,17 @@ export default function GeneralManagerDashboard() {
   const [procurementApprovedTotalPages, setProcurementApprovedTotalPages] = useState(1);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [advancedReportsOpen, setAdvancedReportsOpen] = useState(false);
+  
+  // فلاتر الطلبات
+  const [requestFilters, setRequestFilters] = useState({
+    project: '',
+    supervisor: '',
+    engineer: '',
+    status: ''
+  });
+  const [projects, setProjects] = useState([]);
+  const [supervisors, setSupervisors] = useState([]);
+  const [engineers, setEngineers] = useState([]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
