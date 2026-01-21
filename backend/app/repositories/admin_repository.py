@@ -41,6 +41,18 @@ class AdminRepository:
         )
         return result.scalar_one_or_none()
     
+    async def check_prefix_exists(self, prefix: str, exclude_user_id: Optional[str] = None) -> bool:
+        """Check if supervisor prefix already exists"""
+        query = select(User).where(
+            User.supervisor_prefix == prefix,
+            User.role == 'supervisor'
+        )
+        if exclude_user_id:
+            query = query.where(User.id != exclude_user_id)
+        
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none() is not None
+    
     async def create_user(self, data: Dict) -> User:
         """Create a new user"""
         user = User(
