@@ -228,6 +228,10 @@ const ProcurementDashboard = () => {
       // Handle V2 paginated users response
       const usersData = usersRes.data.items || usersRes.data || [];
       setUsers(usersData);
+      
+      // Filter supervisors and engineers for project management
+      setSupervisors(usersData.filter(u => u.role === 'supervisor'));
+      setEngineers(usersData.filter(u => u.role === 'engineer'));
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("فشل في تحميل البيانات");
