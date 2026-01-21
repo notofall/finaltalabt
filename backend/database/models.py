@@ -133,6 +133,7 @@ class DefaultBudgetCategory(Base):
     __tablename__ = "default_budget_categories"
     
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid_lib.uuid4()))
+    code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, index=True)  # كود التصنيف
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     default_budget: Mapped[float] = mapped_column(Float, default=0)
     created_by: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False)
