@@ -437,12 +437,62 @@ export default function GeneralManagerDashboard() {
               {activeTab === 'pending' && 'أوامر شراء بانتظار موافقتي'}
               {activeTab === 'gm_approved' && 'أوامر شراء اعتمدتها'}
               {activeTab === 'procurement_approved' && 'أوامر شراء معتمدة من المشتريات'}
+              {activeTab === 'all_requests' && 'جميع طلبات المواد'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-500">
               {activeTab === 'pending' && `أوامر شراء تتجاوز ${formatCurrency(stats.approval_limit)} وتحتاج موافقتك`}
               {activeTab === 'gm_approved' && 'أوامر الشراء التي وافقت عليها (تجاوزت حد الموافقة)'}
               {activeTab === 'procurement_approved' && 'أوامر شراء اعتمدها مدير المشتريات مباشرة (ضمن صلاحيته)'}
+              {activeTab === 'all_requests' && 'متابعة جميع طلبات المواد بجميع حالاتها'}
             </p>
+            
+            {/* فلاتر الطلبات */}
+            {activeTab === 'all_requests' && (
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <select
+                  value={requestFilters.project}
+                  onChange={(e) => setRequestFilters({...requestFilters, project: e.target.value})}
+                  className="h-9 px-3 rounded-lg border border-slate-300 text-sm"
+                >
+                  <option value="">جميع المشاريع</option>
+                  {projects.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={requestFilters.supervisor}
+                  onChange={(e) => setRequestFilters({...requestFilters, supervisor: e.target.value})}
+                  className="h-9 px-3 rounded-lg border border-slate-300 text-sm"
+                >
+                  <option value="">جميع المشرفين</option>
+                  {supervisors.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={requestFilters.engineer}
+                  onChange={(e) => setRequestFilters({...requestFilters, engineer: e.target.value})}
+                  className="h-9 px-3 rounded-lg border border-slate-300 text-sm"
+                >
+                  <option value="">جميع المهندسين</option>
+                  {engineers.map(e => (
+                    <option key={e.id} value={e.id}>{e.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={requestFilters.status}
+                  onChange={(e) => setRequestFilters({...requestFilters, status: e.target.value})}
+                  className="h-9 px-3 rounded-lg border border-slate-300 text-sm"
+                >
+                  <option value="">جميع الحالات</option>
+                  <option value="pending_engineer">بانتظار المهندس</option>
+                  <option value="approved_by_engineer">معتمد من المهندس</option>
+                  <option value="rejected_by_engineer">مرفوض من المهندس</option>
+                  <option value="rejected_by_manager">مرفوض من المشتريات</option>
+                  <option value="po_created">تم إصدار أمر شراء</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {loading ? (
