@@ -554,7 +554,9 @@ async def validate_items(
         if not search_result_orm:
             alias = await catalog_service.find_alias(item_name)
             if alias:
-                search_result_orm = [await catalog_service.get_item(alias.catalog_item_id)]
+                linked_item = await catalog_service.get_item_by_id(alias.catalog_item_id)
+                if linked_item:
+                    search_result_orm = [linked_item]
         
         if search_result_orm and search_result_orm[0]:
             catalog_item = item_to_response(search_result_orm[0]).model_dump()
