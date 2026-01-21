@@ -36,7 +36,7 @@ export default function SystemAdminDashboard() {
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [userForm, setUserForm] = useState({
-    name: "", email: "", password: "", role: "supervisor"
+    name: "", email: "", password: "", role: "supervisor", supervisor_prefix: ""
   });
   
   // Company Settings
