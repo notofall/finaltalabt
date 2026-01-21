@@ -480,7 +480,7 @@ export default function SystemAdminDashboard() {
       
       setShowUserDialog(false);
       setEditingUser(null);
-      setUserForm({ name: "", email: "", password: "", role: "supervisor" });
+      setUserForm({ name: "", email: "", password: "", role: "supervisor", supervisor_prefix: "" });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || "حدث خطأ");
