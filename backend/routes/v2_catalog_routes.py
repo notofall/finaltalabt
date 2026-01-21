@@ -525,21 +525,43 @@ async def validate_items(
     current_user = Depends(get_current_user),
     catalog_service: CatalogService = Depends(get_catalog_service)
 ):
-    """Validate items against catalog"""
+    """Validate items against catalog - يتحقق من الربط أو الاسم البديل"""
     items = data.get("items", [])
     
     results = []
     for item in items:
         item_name = item.get("name", "")
-        # Search for matching catalog item
+        catalog_item_id = item.get("catalog_item_id")  # الربط المباشر بالكتالوج
+        
+        # إذا كان الصنف مربوط بالكتالوج مسبقاً
+        if catalog_item_id:
+            catalog_item_orm = await catalog_service.get_item(catalog_item_id)
+            if catalog_item_orm:
+                catalog_item = item_to_response(catalog_item_orm).model_dump()
+                results.append({
+                    "name": item_name,
+                    "found": True,
+                    "linked": True,  # مربوط بالكتالوج
+                    "catalog_item": catalog_item,
+                    "price_match": True
+                })
+                continue
+        
+        # البحث عن الصنف بالاسم أو الاسم البديل
         search_result_orm = await catalog_service.search_items(item_name, limit=1)
         
-        if search_result_orm:
-            # Convert ORM to dict
+        # البحث في الأسماء البديلة أيضاً
+        if not search_result_orm:
+            alias = await catalog_service.find_alias(item_name)
+            if alias:
+                search_result_orm = [await catalog_service.get_item(alias.catalog_item_id)]
+        
+        if search_result_orm and search_result_orm[0]:
             catalog_item = item_to_response(search_result_orm[0]).model_dump()
             results.append({
                 "name": item_name,
                 "found": True,
+                "linked": False,
                 "catalog_item": catalog_item,
                 "price_match": abs(catalog_item.get("price", 0) - item.get("unit_price", 0)) < 0.01
             })
@@ -547,12 +569,16 @@ async def validate_items(
             results.append({
                 "name": item_name,
                 "found": False,
+                "linked": False,
                 "catalog_item": None,
                 "price_match": False
             })
     
+    all_valid = all(r["found"] or r.get("linked", False) for r in results)
+    
     return {
         "items": results,
+        "all_valid": all_valid,
         "total_found": sum(1 for r in results if r["found"]),
         "total_not_found": sum(1 for r in results if not r["found"])
     }
