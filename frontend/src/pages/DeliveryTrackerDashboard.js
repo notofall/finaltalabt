@@ -111,7 +111,7 @@ const DeliveryTrackerDashboard = () => {
 
   // الأوامر المفلترة
   const filteredOrders = getFilteredOrders();
-  const pendingOrders = filteredOrders.filter(o => o.status !== 'delivered');
+  const pendingOrders = filteredOrders.filter(o => ['approved', 'printed', 'shipped', 'partially_delivered'].includes(o.status));
   const deliveredOrders = filteredOrders.filter(o => o.status === 'delivered');
 
   const openReceiptDialog = (order) => {
