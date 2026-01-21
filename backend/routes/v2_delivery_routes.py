@@ -181,9 +181,14 @@ async def confirm_receipt(
     from database import PurchaseOrder, PurchaseOrderItem
     from sqlalchemy import select, update
     
+    # Get user attributes safely
+    user_role = current_user.role if hasattr(current_user, 'role') else current_user.get("role", "")
+    user_id = str(current_user.id) if hasattr(current_user, 'id') else current_user.get("id", "")
+    user_name = current_user.name if hasattr(current_user, 'name') else current_user.get("name", "Unknown")
+    
     # التحقق من الصلاحيات
     allowed_roles = ["system_admin", "procurement_manager", "delivery_tracker"]
-    if current_user.get("role") not in allowed_roles:
+    if user_role not in allowed_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="ليس لديك صلاحية تأكيد الاستلام"
@@ -232,7 +237,7 @@ async def confirm_receipt(
         if item_name and item_name in order_items:
             item = order_items[item_name]
             new_delivered = (item.delivered_quantity or 0) + delivery_item.quantity_delivered
-            item.delivered_quantity = min(new_delivered, item.quantity)  # Cap at max quantity
+            item.delivered_quantity = min(int(new_delivered), item.quantity)  # Cap at max quantity
             items_updated += 1
             
             if item.delivered_quantity < item.quantity:
@@ -253,8 +258,8 @@ async def confirm_receipt(
     else:
         order.status = "partially_delivered"
     
-    order.received_by_id = current_user.get("id")
-    order.received_by_name = current_user.get("name", "Unknown")
+    order.received_by_id = user_id
+    order.received_by_name = user_name
     
     await session.commit()
     
