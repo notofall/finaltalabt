@@ -42,9 +42,9 @@ export default function AdvancedReports({ onClose }) {
   const fetchFilterOptions = useCallback(async () => {
     try {
       const [projectsRes, usersRes, suppliersRes] = await Promise.all([
-        axios.get(`${API_V2_URL}/projects/`, getAuthHeaders()),
-        axios.get(`${API_V2_URL}/auth/users/`, getAuthHeaders()),
-        axios.get(`${API_V2_URL}/suppliers/`, getAuthHeaders())
+        axios.get(`${API_V2_URL}/projects/`, getAuthHeaders()).catch(() => ({ data: [] })),
+        axios.get(`${API_V2_URL}/auth/users`, getAuthHeaders()).catch(() => ({ data: [] })),
+        axios.get(`${API_V2_URL}/suppliers/`, getAuthHeaders()).catch(() => ({ data: [] }))
       ]);
       
       setProjects(projectsRes.data?.items || projectsRes.data || []);
