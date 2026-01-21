@@ -93,8 +93,7 @@ def floor_to_response(floor) -> dict:
         "floor_number": floor.floor_number,
         "floor_name": floor.floor_name,
         "area": floor.area,
-        "steel_factor": floor.steel_factor,
-        "created_at": floor.created_at.isoformat() if floor.created_at else None
+        "steel_factor": floor.steel_factor
     }
 
 
