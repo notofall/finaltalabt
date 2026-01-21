@@ -43,11 +43,12 @@ class ProjectService(BaseService[Project]):
     async def create_project(
         self,
         name: str,
-        code: str,
+        code: str = None,
         description: str = "",
         total_area: float = 0,
         floors_count: int = 0,
         owner_name: str = "",
+        location: str = None,
         created_by: str = "",
         created_by_name: str = ""
     ) -> Project:
@@ -58,6 +59,7 @@ class ProjectService(BaseService[Project]):
             code=code,
             owner_name=owner_name or name,  # Use name as default owner_name
             description=description,
+            location=location,
             total_area=total_area,
             floors_count=floors_count,
             status="active",
