@@ -1159,28 +1159,28 @@ export default function AdvancedReports({ onClose }) {
                 <Card className="border-r-4 border-blue-500">
                   <CardContent className="p-4 text-center">
                     <Package className="h-8 w-8 mx-auto text-blue-500 mb-2" />
-                    <p className="text-3xl font-bold">{priceVarianceReport.summary?.total_items_analyzed || 0}</p>
+                    <p className="text-3xl font-bold">{priceVarianceReport?.summary?.total_items_analyzed ?? 0}</p>
                     <p className="text-sm text-slate-500">أصناف تم تحليلها</p>
                   </CardContent>
                 </Card>
                 <Card className="border-r-4 border-purple-500">
                   <CardContent className="p-4 text-center">
                     <TrendingUp className="h-8 w-8 mx-auto text-purple-500 mb-2" />
-                    <p className="text-3xl font-bold">{priceVarianceReport.summary?.items_with_changes || 0}</p>
+                    <p className="text-3xl font-bold">{priceVarianceReport?.summary?.items_with_changes ?? 0}</p>
                     <p className="text-sm text-slate-500">أصناف متغيرة</p>
                   </CardContent>
                 </Card>
                 <Card className="border-r-4 border-red-500">
                   <CardContent className="p-4 text-center">
                     <TrendingUp className="h-8 w-8 mx-auto text-red-500 mb-2 transform rotate-45" />
-                    <p className="text-3xl font-bold text-red-600">{priceVarianceReport.summary?.increased_items || 0}</p>
+                    <p className="text-3xl font-bold text-red-600">{priceVarianceReport?.summary?.increased_items ?? 0}</p>
                     <p className="text-sm text-slate-500">ارتفع سعرها</p>
                   </CardContent>
                 </Card>
                 <Card className="border-r-4 border-green-500">
                   <CardContent className="p-4 text-center">
                     <TrendingUp className="h-8 w-8 mx-auto text-green-500 mb-2 transform -rotate-45" />
-                    <p className="text-3xl font-bold text-green-600">{priceVarianceReport.summary?.decreased_items || 0}</p>
+                    <p className="text-3xl font-bold text-green-600">{priceVarianceReport?.summary?.decreased_items ?? 0}</p>
                     <p className="text-sm text-slate-500">انخفض سعرها</p>
                   </CardContent>
                 </Card>
