@@ -122,6 +122,8 @@ def request_to_response(req: MaterialRequest, items: List[dict]) -> dict:
         "engineer_name": req.engineer_name,
         "status": req.status or "pending_engineer",
         "rejection_reason": req.rejection_reason,
+        "manager_rejection_reason": getattr(req, 'manager_rejection_reason', None),
+        "rejected_by_manager_id": getattr(req, 'rejected_by_manager_id', None),
         "expected_delivery_date": req.expected_delivery_date,
         "created_at": to_iso_string(req.created_at),
         "updated_at": to_iso_string(req.updated_at)
