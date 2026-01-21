@@ -152,9 +152,11 @@ class BudgetCategory(Base):
     project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), nullable=False, index=True)
     project_name: Mapped[str] = mapped_column(String(255), nullable=False)
     estimated_budget: Mapped[float] = mapped_column(Float, default=0)
+    actual_spent: Mapped[float] = mapped_column(Float, default=0)  # المصروفات الفعلية
     created_by: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False)
     created_by_name: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True, onupdate=datetime.utcnow)
     
     __table_args__ = (
         Index('idx_budget_categories_project_name', 'project_id', 'name'),
