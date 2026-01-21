@@ -81,12 +81,11 @@ export default function GeneralManagerDashboard() {
       }
       
       // Using V2 APIs for GM Dashboard
-      const [pendingRes, gmApprovedRes, procurementApprovedRes, requestsRes, usersRes, projectsRes] = await Promise.all([
+      const [pendingRes, gmApprovedRes, procurementApprovedRes, requestsRes, projectsRes] = await Promise.all([
         axios.get(`${API_URL}/api/v2/gm/pending-orders`, { headers }),
         axios.get(`${API_URL}/api/v2/gm/all-orders?approval_type=gm_approved`, { headers }),
         axios.get(`${API_URL}/api/v2/gm/all-orders?approval_type=manager_approved`, { headers }),
         axios.get(`${API_URL}/api/v2/requests/?limit=1000`, { headers }).catch(() => ({ data: { items: [] } })),
-        axios.get(`${API_URL}/api/v2/auth/users/`, { headers }).catch(() => ({ data: { items: [] } })),
         axios.get(`${API_URL}/api/v2/projects/`, { headers }).catch(() => ({ data: { items: [] } }))
       ]);
       
@@ -101,10 +100,19 @@ export default function GeneralManagerDashboard() {
       const requests = requestsRes.data?.items || requestsRes.data || [];
       setAllRequests(requests);
       
-      // Set users for filters
-      const users = usersRes.data?.items || usersRes.data || [];
-      setSupervisors(users.filter(u => u.role === 'supervisor'));
-      setEngineers(users.filter(u => u.role === 'engineer'));
+      // استخراج المشرفين والمهندسين من الطلبات
+      const supervisorMap = new Map();
+      const engineerMap = new Map();
+      requests.forEach(req => {
+        if (req.supervisor_id && req.supervisor_name) {
+          supervisorMap.set(req.supervisor_id, { id: req.supervisor_id, name: req.supervisor_name });
+        }
+        if (req.engineer_id && req.engineer_name) {
+          engineerMap.set(req.engineer_id, { id: req.engineer_id, name: req.engineer_name });
+        }
+      });
+      setSupervisors(Array.from(supervisorMap.values()));
+      setEngineers(Array.from(engineerMap.values()));
       
       // Set projects
       const projectsList = projectsRes.data?.items || projectsRes.data || [];
