@@ -74,34 +74,13 @@ class ProjectRepository(BaseRepository[Project]):
         return project
     
     async def delete(self, id: UUID) -> bool:
-        """Delete project (hard delete if no related requests/orders, otherwise soft delete)"""
-        from database.models import MaterialRequest, PurchaseOrder
-        
+        """Delete project (soft delete by setting status to inactive)"""
         project = await self.get_by_id(id)
-        if not project:
-            return False
-        
-        # Check if project has related requests or orders
-        requests_result = await self.session.execute(
-            select(func.count(MaterialRequest.id)).where(MaterialRequest.project_id == str(id))
-        )
-        requests_count = requests_result.scalar_one()
-        
-        orders_result = await self.session.execute(
-            select(func.count(PurchaseOrder.id)).where(PurchaseOrder.project_id == str(id))
-        )
-        orders_count = orders_result.scalar_one()
-        
-        if requests_count > 0 or orders_count > 0:
-            # Soft delete if has related data
+        if project:
             project.status = "inactive"
             await self.session.flush()
-        else:
-            # Hard delete if no related data
-            await self.session.delete(project)
-            await self.session.flush()
-        
-        return True
+            return True
+        return False
     
     async def count(self) -> int:
         """Count total projects"""
