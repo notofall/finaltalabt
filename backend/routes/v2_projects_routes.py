@@ -243,23 +243,64 @@ async def get_project_dashboard(
 async def create_project(
     project_data: ProjectCreate,
     project_service: ProjectService = Depends(get_project_service),
+    session: AsyncSession = Depends(get_postgres_session),
     current_user = Depends(get_current_user)
 ):
-    """إنشاء مشروع جديد"""
+    """
+    إنشاء مشروع جديد
+    - فقط للمهندسين ومدير المشتريات والمدير العام ومدير النظام
+    - يجب تحديد كود المشروع (إلزامي وفريد)
+    - يمكن تحديد المشرف والمهندس للمشروع
+    """
+    # التحقق من الصلاحيات
+    allowed_roles = ['system_admin', 'engineer', 'procurement_manager', 'general_manager']
+    user_role = current_user.role if hasattr(current_user, 'role') else current_user.get('role')
+    
+    if user_role not in allowed_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="ليس لديك صلاحية لإنشاء مشروع"
+        )
+    
     user_id = current_user.get("id") if isinstance(current_user, dict) else str(current_user.id)
     user_name = current_user.get("name") if isinstance(current_user, dict) else current_user.name
     
-    project = await project_service.create_project(
-        name=project_data.name,
-        code=project_data.code,
-        owner_name=project_data.owner_name,
-        description=project_data.description or "",
-        location=project_data.location,
-        total_area=project_data.total_area,
-        floors_count=project_data.floors_count,
-        created_by=user_id or "system",
-        created_by_name=user_name or "النظام"
-    )
+    # جلب أسماء المشرف والمهندس إذا تم تحديدهم
+    supervisor_name = None
+    engineer_name = None
+    
+    if project_data.supervisor_id:
+        from database import User
+        result = await session.execute(select(User).where(User.id == project_data.supervisor_id))
+        supervisor = result.scalar_one_or_none()
+        if supervisor:
+            supervisor_name = supervisor.name
+    
+    if project_data.engineer_id:
+        from database import User
+        result = await session.execute(select(User).where(User.id == project_data.engineer_id))
+        engineer = result.scalar_one_or_none()
+        if engineer:
+            engineer_name = engineer.name
+    
+    try:
+        project = await project_service.create_project(
+            name=project_data.name,
+            code=project_data.code,
+            owner_name=project_data.owner_name,
+            description=project_data.description or "",
+            location=project_data.location,
+            total_area=project_data.total_area,
+            floors_count=project_data.floors_count,
+            created_by=user_id or "system",
+            created_by_name=user_name or "النظام",
+            supervisor_id=project_data.supervisor_id,
+            supervisor_name=supervisor_name,
+            engineer_id=project_data.engineer_id,
+            engineer_name=engineer_name
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     
     stats = await project_service.get_project_full_stats(str(project.id))
     return project_to_response(project, stats)
