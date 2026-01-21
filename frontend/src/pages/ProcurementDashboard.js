@@ -1073,7 +1073,7 @@ const ProcurementDashboard = () => {
     
     setSubmitting(true);
     try {
-      await axios.post(`${API_V2_URL}/orders`, { 
+      await axios.post(`${API_V2_URL}/orders/`, { 
         request_id: selectedRequest.id, 
         supplier_id: selectedSupplierId || null,
         supplier_name: supplierName, 
