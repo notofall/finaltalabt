@@ -820,7 +820,7 @@ async def create_area_material(
     buildings_service: BuildingsService = Depends(get_buildings_service)
 ):
     """
-    Create area material
+    Create area material with advanced options
     Uses: BuildingsService -> BuildingsRepository
     """
     material = await buildings_service.create_area_material(
@@ -828,8 +828,16 @@ async def create_area_material(
         catalog_item_id=data.catalog_item_id,
         item_name=data.item_name,
         unit=data.unit,
+        calculation_method=data.calculation_method,
         factor=data.factor,
+        direct_quantity=data.direct_quantity,
         unit_price=data.unit_price,
+        calculation_type=data.calculation_type,
+        selected_floor_id=data.selected_floor_id,
+        tile_width=data.tile_width,
+        tile_height=data.tile_height,
+        waste_percentage=data.waste_percentage,
+        notes=data.notes,
         created_by=str(current_user.id),
         created_by_name=current_user.name
     )
