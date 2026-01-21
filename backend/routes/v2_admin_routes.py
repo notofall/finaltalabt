@@ -43,12 +43,14 @@ class UserCreate(BaseModel):
     email: str
     password: str
     role: str
+    supervisor_prefix: Optional[str] = None
 
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
     role: Optional[str] = None
+    supervisor_prefix: Optional[str] = None
 
 
 class PasswordReset(BaseModel):
