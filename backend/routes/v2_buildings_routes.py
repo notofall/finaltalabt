@@ -975,13 +975,13 @@ async def sync_supply_tracking(
                 project_id=project_id,
                 catalog_item_id=m.catalog_item_id,
                 item_code=m.item_code,
-                item_name=m.item_name,
+                item_name=f"{m.item_name} ({template.name})",
                 unit=m.unit,
                 required_quantity=quantity,
                 received_quantity=0,
                 unit_price=m.unit_price,
-                source_type="template",
-                source_name=template.name
+                source="quantity",
+                notes=f"من نموذج: {template.name}"
             )
             session.add(supply_item)
             created_items.append(supply_item)
@@ -992,6 +992,7 @@ async def sync_supply_tracking(
         
         if calc_method == 'direct':
             base_quantity = getattr(m, 'direct_quantity', 0) or 0
+            floor_area = 0
         else:
             # Get floor area
             if getattr(m, 'calculation_type', 'all_floors') == 'selected_floor' and getattr(m, 'selected_floor_id', None):
@@ -1003,7 +1004,7 @@ async def sync_supply_tracking(
         # Handle tile calculation
         tile_width = getattr(m, 'tile_width', 0) or 0
         tile_height = getattr(m, 'tile_height', 0) or 0
-        if tile_width > 0 and tile_height > 0:
+        if tile_width > 0 and tile_height > 0 and floor_area > 0:
             tile_area_m2 = (tile_width / 100) * (tile_height / 100)
             if tile_area_m2 > 0:
                 base_quantity = floor_area / tile_area_m2
@@ -1022,8 +1023,8 @@ async def sync_supply_tracking(
             required_quantity=round(quantity, 2),
             received_quantity=0,
             unit_price=m.unit_price,
-            source_type="area",
-            source_name="مواد المساحة"
+            source="area",
+            notes="مواد المساحة"
         )
         session.add(supply_item)
         created_items.append(supply_item)
