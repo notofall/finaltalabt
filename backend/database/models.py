@@ -99,6 +99,7 @@ class Project(Base):
     total_area: Mapped[float] = mapped_column(Float, default=0)  # المساحة الإجمالية بالمتر
     floors_count: Mapped[int] = mapped_column(Integer, default=0)  # عدد الأدوار
     steel_factor: Mapped[float] = mapped_column(Float, default=120)  # معامل التسليح الافتراضي (كجم/م²)
+    is_building_project: Mapped[bool] = mapped_column(Boolean, default=True)  # هل المشروع مُفعّل في نظام الكميات
     
     __table_args__ = (
         Index('idx_projects_status_created_at', 'status', 'created_at'),
