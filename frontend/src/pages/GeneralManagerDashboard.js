@@ -414,6 +414,20 @@ export default function GeneralManagerDashboard() {
                   {procurementApprovedOrders.length}
                 </span>
               </button>
+              <button
+                onClick={() => setActiveTab('all_requests')}
+                className={`flex-1 sm:flex-none px-3 sm:px-5 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  activeTab === 'all_requests'
+                    ? 'border-blue-600 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <ClipboardCheck className="w-4 h-4 inline-block ml-1" />
+                جميع الطلبات
+                <span className="mr-1 px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
+                  {allRequests.length}
+                </span>
+              </button>
             </div>
           </div>
 
