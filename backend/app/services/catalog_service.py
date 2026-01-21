@@ -45,6 +45,7 @@ class CatalogService(BaseService):
         unit: str,
         price: float,
         category_name: Optional[str] = None,
+        category_code: Optional[str] = None,
         item_code: Optional[str] = None,
         description: Optional[str] = None,
         supplier_id: Optional[str] = None,
@@ -53,9 +54,9 @@ class CatalogService(BaseService):
         created_by_name: Optional[str] = None
     ) -> PriceCatalog:
         """Create new catalog item"""
-        # Auto-generate code if not provided, based on category
+        # Auto-generate code if not provided, based on category code
         if not item_code:
-            item_code = await self.catalog_repo.get_next_code(category_name)
+            item_code = await self.catalog_repo.get_next_code_by_category(category_code, category_name)
         
         item = PriceCatalog(
             id=str(uuid4()),
