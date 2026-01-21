@@ -4046,8 +4046,16 @@ const ProcurementDashboard = () => {
               {/* Add New Category Form */}
               <div className="border rounded-lg p-3 bg-slate-50">
                 <h4 className="font-medium text-sm mb-2">إضافة تصنيف جديد</h4>
-                <div className="flex gap-2 items-end">
-                  <div className="flex-1">
+                <div className="flex gap-2 items-end flex-wrap">
+                  <div className="w-24">
+                    <Label className="text-xs">كود التصنيف *</Label>
+                    <Input 
+                      placeholder="مثال: 1"
+                      value={newDefaultCategory.code}
+                      onChange={(e) => setNewDefaultCategory({...newDefaultCategory, code: e.target.value})}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[200px]">
                     <Label className="text-xs">اسم التصنيف *</Label>
                     <Input 
                       placeholder="مثال: مواد البناء"
@@ -4069,6 +4077,9 @@ const ProcurementDashboard = () => {
                     إضافة
                   </Button>
                 </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  💡 كود التصنيف يُستخدم لتوليد أكواد الأصناف تلقائياً (مثال: تصنيف بكود 1 → أصناف 1-0001, 1-0002...)
+                </p>
               </div>
 
               {/* Categories List */}
@@ -4076,6 +4087,7 @@ const ProcurementDashboard = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-20">الكود</TableHead>
                       <TableHead>اسم التصنيف</TableHead>
                       <TableHead>الميزانية الافتراضية</TableHead>
                       <TableHead>الإجراءات</TableHead>
@@ -4084,13 +4096,18 @@ const ProcurementDashboard = () => {
                   <TableBody>
                     {defaultCategories.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={3} className="text-center text-slate-500">
+                        <TableCell colSpan={4} className="text-center text-slate-500">
                           لا توجد تصنيفات - أضف تصنيفات لتظهر هنا
                         </TableCell>
                       </TableRow>
                     ) : (
                       defaultCategories.map(category => (
                         <TableRow key={category.id}>
+                          <TableCell>
+                            <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-mono text-sm">
+                              {category.code || '-'}
+                            </span>
+                          </TableCell>
                           <TableCell className="font-medium">{category.name}</TableCell>
                           <TableCell>{category.default_budget?.toLocaleString() || 0} ر.س</TableCell>
                           <TableCell>
