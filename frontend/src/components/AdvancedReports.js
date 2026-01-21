@@ -33,7 +33,12 @@ export default function AdvancedReports({ onClose }) {
     suppliers: [], 
     summary: { total_suppliers: 0, total_orders: 0, total_spending: 0, avg_on_time_rate: 0 } 
   });
-  const [priceVarianceReport, setPriceVarianceReport] = useState({ items: [] });
+  const [priceVarianceReport, setPriceVarianceReport] = useState({ 
+    items: [], 
+    increased: [], 
+    decreased: [],
+    summary: { total_items_analyzed: 0, items_with_changes: 0, increased_items: 0, decreased_items: 0 } 
+  });
   
   // Filter options data
   const [projects, setProjects] = useState([]);
