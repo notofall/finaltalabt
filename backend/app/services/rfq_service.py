@@ -848,10 +848,13 @@ class RFQService(BaseService):
         supplier_id: str,
         supplier_name: str,
         created_by: str,
-        created_by_name: str
+        created_by_name: str,
+        category_name: str = None,
+        category_code: str = None,
+        unit: str = "قطعة"
     ):
         """Update or create catalog item with new price"""
-        from sqlalchemy import select
+        from sqlalchemy import select, func
         from database.models import PriceCatalogItem
         
         # Try to find existing catalog item by name
@@ -869,12 +872,33 @@ class RFQService(BaseService):
             catalog_item.supplier_name = supplier_name
             catalog_item.updated_at = datetime.now(timezone.utc)
         else:
-            # Create new catalog item
+            # Generate item code based on category code or default
+            item_code = None
+            if category_code:
+                # Count items with this prefix pattern
+                count_result = await self.session.execute(
+                    select(func.count(PriceCatalogItem.id))
+                    .where(PriceCatalogItem.item_code.like(f"{category_code}-%"))
+                )
+                count = count_result.scalar_one() or 0
+                item_code = f"{category_code}-{count + 1:04d}"
+            else:
+                # Use generic code if no category
+                count_result = await self.session.execute(
+                    select(func.count(PriceCatalogItem.id))
+                    .where(PriceCatalogItem.item_code.like("0-%"))
+                )
+                count = count_result.scalar_one() or 0
+                item_code = f"0-{count + 1:04d}"
+            
+            # Create new catalog item with code
             new_item = PriceCatalogItem(
                 id=str(uuid.uuid4()),
+                item_code=item_code,
                 name=item_name,
                 price=unit_price,
-                unit="قطعة",
+                unit=unit,
+                category_name=category_name,
                 supplier_id=supplier_id,
                 supplier_name=supplier_name,
                 is_active=True,
