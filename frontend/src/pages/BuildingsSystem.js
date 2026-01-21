@@ -2039,6 +2039,59 @@ const BuildingsSystem = () => {
         open={passwordDialogOpen} 
         onOpenChange={setPasswordDialogOpen} 
       />
+
+      {/* Add Project to Buildings Dialog */}
+      <Dialog open={addProjectDialogOpen} onOpenChange={setAddProjectDialogOpen}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-lg max-h-[80vh]" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5 text-emerald-400" />
+              إضافة مشروع إلى نظام الكميات
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-slate-400 text-sm">
+              اختر مشروعاً من القائمة لإضافته إلى نظام الكميات
+            </p>
+            
+            {loadingAvailableProjects ? (
+              <div className="text-center py-8 text-slate-400">جاري التحميل...</div>
+            ) : availableProjects.length === 0 ? (
+              <div className="text-center py-8 text-slate-400">
+                <Building2 className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>جميع المشاريع مُضافة بالفعل إلى نظام الكميات</p>
+                <p className="text-xs mt-2">أنشئ مشروعاً جديداً من لوحة المشرف أولاً</p>
+              </div>
+            ) : (
+              <div className="max-h-96 overflow-y-auto space-y-2">
+                {availableProjects.map((project) => (
+                  <div
+                    key={project.id}
+                    onClick={() => handleAddProjectToBuildings(project.id)}
+                    className="p-4 bg-slate-700/50 rounded-lg border border-slate-600 hover:border-emerald-500 cursor-pointer transition-all"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold text-white">{project.name}</h3>
+                        <p className="text-slate-400 text-sm">المالك: {project.owner_name}</p>
+                      </div>
+                      <Badge className="bg-emerald-600">
+                        <Plus className="w-3 h-3 ml-1" />
+                        إضافة
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setAddProjectDialogOpen(false)} className="border-slate-600">
+              إغلاق
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
