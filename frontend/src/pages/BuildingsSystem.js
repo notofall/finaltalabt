@@ -852,18 +852,41 @@ const BuildingsSystem = () => {
                         return (
                           <div
                             key={project.id}
-                            onClick={() => setSelectedProject(project)}
-                            className="p-4 bg-slate-700/50 rounded-lg border border-slate-600 hover:border-emerald-500 cursor-pointer transition-all"
+                            className="p-4 bg-slate-700/50 rounded-lg border border-slate-600 hover:border-emerald-500 transition-all"
                             data-testid={`project-card-${project.id}`}
                           >
                             <div className="flex items-start justify-between mb-3">
-                              <div>
+                              <div 
+                                className="flex-1 cursor-pointer"
+                                onClick={() => setSelectedProject(project)}
+                              >
                                 <h3 className="font-semibold text-white">{project.name}</h3>
                                 <p className="text-slate-400 text-sm">{project.code || "بدون كود"}</p>
                               </div>
-                              <ChevronRight className="w-5 h-5 text-slate-400" />
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveProjectFromBuildings(project.id);
+                                  }}
+                                  className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                                  title="إزالة من نظام الكميات"
+                                  data-testid={`remove-project-btn-${project.id}`}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                                <ChevronRight 
+                                  className="w-5 h-5 text-slate-400 cursor-pointer hover:text-emerald-400" 
+                                  onClick={() => setSelectedProject(project)}
+                                />
+                              </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div 
+                              className="grid grid-cols-2 gap-2 text-sm cursor-pointer"
+                              onClick={() => setSelectedProject(project)}
+                            >
                               <div className="text-slate-400">النماذج: <span className="text-white">{summary?.templates_count || 0}</span></div>
                               <div className="text-slate-400">الوحدات: <span className="text-white">{summary?.units_count || 0}</span></div>
                               <div className="text-slate-400">الأدوار: <span className="text-white">{summary?.floors_count || 0}</span></div>
