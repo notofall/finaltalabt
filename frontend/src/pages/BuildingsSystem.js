@@ -535,7 +535,7 @@ const BuildingsSystem = () => {
       
       toast.success("تم إضافة المادة للنموذج");
       setTemplateMaterialDialogOpen(false);
-      setNewTemplateMaterial({ catalog_item_id: "", item_name: "", unit: "قطعة", quantity_per_unit: 0 });
+      setNewTemplateMaterial({ catalog_item_id: "", item_code: "", item_name: "", unit: "قطعة", quantity_per_unit: 0, unit_price: 0 });
       fetchProjectDetails(selectedProject.id);
     } catch (error) {
       console.error("Error adding template material:", error);
