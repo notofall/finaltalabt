@@ -934,7 +934,7 @@ const BuildingsSystem = () => {
                                     handleRemoveProjectFromBuildings(project.id);
                                   }}
                                   className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/30"
-                                  title="إزالة من نظام الكميات"
+                                  title="حذف كميات المشروع"
                                   data-testid={`remove-project-btn-${project.id}`}
                                 >
                                   <Trash2 className="w-4 h-4" />
