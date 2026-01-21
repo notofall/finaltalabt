@@ -319,7 +319,7 @@ async def revoke_permission(
     session: AsyncSession = Depends(get_postgres_session)
 ):
     """Revoke building permission"""
-    from database.models import BuildingPermission
+    from database.models import BuildingsPermission
     
     result = await session.execute(
         select(BuildingPermission).where(BuildingPermission.id == permission_id)
