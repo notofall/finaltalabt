@@ -485,8 +485,8 @@ async def import_catalog(
     errors = []
     
     # Get user info for created_by
-    user_id = current_user.get("id")
-    user_name = current_user.get("name", "")
+    user_id = current_user.id if hasattr(current_user, 'id') else current_user.get("id") if isinstance(current_user, dict) else None
+    user_name = current_user.name if hasattr(current_user, 'name') else current_user.get("name", "") if isinstance(current_user, dict) else ""
     
     try:
         # Handle Excel files
