@@ -354,7 +354,7 @@ async def create_order_from_request(
     from sqlalchemy import select
     import uuid as uuid_lib
     
-    session = order_service.repository.session
+    session = order_service.order_repo.session
     
     # Get request
     request_result = await session.execute(
@@ -472,7 +472,7 @@ async def create_order(
     from sqlalchemy import select
     import uuid as uuid_lib
     
-    session = order_service.repository.session
+    session = order_service.order_repo.session
     
     # Get project
     project_result = await session.execute(
@@ -562,7 +562,7 @@ async def update_order(
     from database import PurchaseOrder
     from sqlalchemy import select
     
-    session = order_service.repository.session
+    session = order_service.order_repo.session
     
     result = await session.execute(
         select(PurchaseOrder).where(PurchaseOrder.id == str(order_id))
@@ -597,7 +597,7 @@ async def link_item_to_catalog(
     from database import PurchaseOrderItem
     from sqlalchemy import select
     
-    session = order_service.repository.session
+    session = order_service.order_repo.session
     
     result = await session.execute(
         select(PurchaseOrderItem).where(PurchaseOrderItem.id == item_id)
@@ -625,7 +625,7 @@ async def sync_order_prices(
     from database import PurchaseOrder, PurchaseOrderItem, PriceCatalogItem
     from sqlalchemy import select
     
-    session = order_service.repository.session
+    session = order_service.order_repo.session
     
     # Get order
     result = await session.execute(
