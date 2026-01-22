@@ -337,7 +337,11 @@ async def create_backup(
     for item in result.scalars().all():
         backup_data["price_catalog"].append({
             "id": item.id, "name": item.name, "item_code": item.item_code,
-            "unit": item.unit, "price": item.price, "supplier_id": item.supplier_id
+            "description": item.description, "unit": item.unit, 
+            "price": item.price, "currency": item.currency,
+            "supplier_id": item.supplier_id, "supplier_name": item.supplier_name,
+            "category_id": item.category_id, "category_name": item.category_name,
+            "is_active": item.is_active
         })
     
     # Planned Quantities
