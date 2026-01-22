@@ -451,6 +451,12 @@ const OrderCreationDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-lg h-[90vh] max-h-[750px] p-0 flex flex-col overflow-hidden" dir="rtl">
+        {/* Accessibility - Hidden Title and Description */}
+        <VisuallyHidden>
+          <DialogTitle>إصدار أمر شراء</DialogTitle>
+          <DialogDescription>نافذة إصدار أمر شراء جديد من الطلب</DialogDescription>
+        </VisuallyHidden>
+        
         {/* Header */}
         <div className="flex-shrink-0 border-b bg-gradient-to-l from-orange-50 to-white">
           <div className="flex items-center justify-between p-4">
