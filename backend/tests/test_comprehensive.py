@@ -14,7 +14,7 @@ from datetime import datetime
 import time
 
 class ComprehensiveAPITester:
-    def __init__(self, base_url="https://project-code-mgmt.preview.emergentagent.com"):
+    def __init__(self, base_url="https://item-alias-link.preview.emergentagent.com"):
         self.base_url = base_url
         self.tokens = {}  # Store tokens for all user roles
         self.test_data = {}  # Store created test data

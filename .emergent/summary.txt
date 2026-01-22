@@ -1,265 +1,164 @@
 <analysis>**original_problem_statement:**
-The user's initial goal was to enhance a procurement management application with a series of features and bug fixes. The core requirements included:
+The user provided a new set of requirements to be implemented in the procurement management application:
+1.  **UI/UX Improvements:**
+    *   Replace all native browser  alerts with a custom, in-app confirmation dialog for a more integrated user experience.
+    *   On the Buildings System page, improve the mobile responsiveness of the various tabs (, , etc.) to prevent layout issues on small screens.
+2.  **Feature Changes:**
+    *   Remove the Add Project functionality entirely from the Supervisor's dashboard, as an enhanced version exists elsewhere.
+    *   When sending RFQ (Request for Quotation) documents to suppliers, the estimated price field must be hidden from the generated PDF.
+3.  **Bug Fix / Logic Enhancement:**
+    *   When a procurement manager links an item from a purchase order to a master catalog item, the original item's name should be automatically saved as an alias.
+    *   Subsequently, when a supervisor creates a new request using an item name that has a known alias, the system should automatically link it to the correct master catalog item, so the procurement manager doesn't have to link it again.
 
-1.  **Project & Request Management:** Unique project codes, role-based access, automatic engineer assignment, and advanced request numbering ().
-2.  **PDF & Reporting:** Re-style Quotation PDFs to match Purchase Order PDFs, fix Arabic font support in Buildings System PDFs, and fix errors when opening Advanced Reports.
-3.  **Dashboard Enhancements:**
-    *   **Delivery Tracker:** Add filters (project, supervisor, engineer, supplier), show PO and Request numbers, and improve the Confirm Receipt modal to display received vs. remaining quantities.
-    *   **General Manager:** Add a setting to define a PO approval limit for the Procurement Manager, add access to Buildings and Quotations systems, and add a new screen to view all material requests with filtering.
-4.  **Data Synchronization:** Ensure that when an item is marked as received in the Delivery Tracker, the corresponding quantity is updated in the Buildings System ( table).
-5.  **Deployment:** A new, high-priority request emerged to deploy the entire application (React frontend, FastAPI backend) from the development environment to a user-provided AWS Lightsail server using PostgreSQL as the database.
+This new set of requests took priority over the previous task of deploying the application to an AWS server.
 
 **User's preferred language**: العربية (Arabic). The next agent MUST respond in Arabic.
 
 **what currently exists?**
-The application is a full-stack procurement system. In this session, the agent successfully fixed several critical bugs in the Advanced Reports and Delivery Tracker dashboards. The agent implemented the data synchronization between the delivery and buildings systems.
+The agent successfully addressed a critical bug in the System Admin dashboard concerning the Backup, Restore, and Clean Data features. This involved an extensive rewrite of the backend logic in  to correctly handle all relevant database tables and their relationships, fixing data serialization issues, and ensuring data integrity during these operations.
 
-The primary focus then shifted to guiding the user through a manual deployment of the application onto an AWS Lightsail server. This involved providing detailed, step-by-step instructions for setting up the server environment (Nginx, Node.js, Python), configuring the backend and frontend, and migrating the database from SQLite to PostgreSQL. The agent also fixed a bug in the logo upload functionality that was discovered during the deployment process.
+Following that, the agent began implementing the user's new list of requests. It has:
+*   Created a new reusable confirmation dialog component () and integrated its provider into the main .
+*   Removed the project management section from the  and started replacing  calls.
+*   Modified the backend PDF generation service () to exclude the estimated price from RFQ documents.
+*   Updated the backend logic in  to automatically find and apply item aliases when creating purchase orders from requests.
+*   Applied a CSS fix to the  page to make the tabs scrollable on mobile devices.
 
 **Last working item**:
-- **Last item agent was working:** Guiding the user through troubleshooting a  conflict on their AWS server. The user's local changes were preventing them from pulling the latest bug fixes (specifically for the logo upload feature).
-- **Status:** USER VERIFICATION PENDING
-- **Agent Testing Done:** N/A (The task is deployment guidance on the user's external server).
-- **Which testing method agent to use?** Manual testing by the user on their AWS server. The agent must guide the user to verify each part of the deployment.
+- **Last item agent was working:** The agent was systematically replacing all  calls across the application with the new custom  hook. It had just completed this refactoring for the  and  files.
+- **Status:** IN PROGRESS
+- **Agent Testing Done:** N
+- **Which testing method agent to use?** Frontend testing agent. The agent should verify that all actions previously using  (e.g., deleting items, canceling requests) now correctly trigger the new custom dialog across all relevant pages.
 - **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: Complete and Verify AWS Lightsail Deployment (P0)**
-    - **Description:** The user is in the middle of deploying the application to an AWS Lightsail server (IP: ). They have encountered several issues related to file permissions, dependencies, and code conflicts. The deployment is currently in a broken state.
-    - **Attempted fixes:** The agent provided commands to resolve a  conflict by stashing local changes. The agent also previously provided fixes for Nginx permissions, missing Python packages (, ), and an outdated Node.js version. Code was modified to fix the logo upload functionality.
+- **Issue 1: Verify alias auto-linking logic (P1)**
+    - **Description:** The user reported that when a supervisor creates a request with an item name that has an existing alias, the procurement manager still sees the item as unlinked. The backend logic was updated to address this, but it requires thorough testing.
+    - **Attempted fixes:** The agent added logic to  in the  function to automatically look up an alias and populate the  when an order is generated.
     - **Next debug checklist:**
-        1.  Confirm the user has successfully pulled the latest code using Saved working directory and index state WIP on main: 80e9bfc Auto-generated changes and .
-        2.  Guide the user to run the update script/commands to install dependencies (
-Usage:   
-  pip <command> [options]
-
-Commands:
-  install                     Install packages.
-  lock                        Generate a lock file.
-  download                    Download packages.
-  uninstall                   Uninstall packages.
-  freeze                      Output installed packages in requirements format.
-  inspect                     Inspect the python environment.
-  list                        List installed packages.
-  show                        Show information about installed packages.
-  check                       Verify installed packages have compatible dependencies.
-  config                      Manage local and global configuration.
-  search                      Search PyPI for packages.
-  cache                       Inspect and manage pip's wheel cache.
-  index                       Inspect information available from package indexes.
-  wheel                       Build wheels from your requirements.
-  hash                        Compute hashes of package archives.
-  completion                  A helper command used for command completion.
-  debug                       Show information useful for debugging.
-  help                        Show help for commands.
-
-General Options:
-  -h, --help                  Show help.
-  --debug                     Let unhandled exceptions propagate outside the
-                              main subroutine, instead of logging them to
-                              stderr.
-  --isolated                  Run pip in an isolated mode, ignoring
-                              environment variables and user configuration.
-  --require-virtualenv        Allow pip to only run in a virtual environment;
-                              exit with an error otherwise.
-  --python <python>           Run pip with the specified Python interpreter.
-  -v, --verbose               Give more output. Option is additive, and can be
-                              used up to 3 times.
-  -V, --version               Show version and exit.
-  -q, --quiet                 Give less output. Option is additive, and can be
-                              used up to 3 times (corresponding to WARNING,
-                              ERROR, and CRITICAL logging levels).
-  --log <path>                Path to a verbose appending log.
-  --no-input                  Disable prompting for input.
-  --keyring-provider <keyring_provider>
-                              Enable the credential lookup via the keyring
-                              library if user input is allowed. Specify which
-                              mechanism to use [auto, disabled, import,
-                              subprocess]. (default: auto)
-  --proxy <proxy>             Specify a proxy in the form
-                              scheme://[user:passwd@]proxy.server:port.
-  --retries <retries>         Maximum attempts to establish a new HTTP
-                              connection. (default: 5)
-  --timeout <sec>             Set the socket timeout (default 15 seconds).
-  --exists-action <action>    Default action when a path already exists:
-                              (s)witch, (i)gnore, (w)ipe, (b)ackup, (a)bort.
-  --trusted-host <hostname>   Mark this host or host:port pair as trusted,
-                              even though it does not have valid or any HTTPS.
-  --cert <path>               Path to PEM-encoded CA certificate bundle. If
-                              provided, overrides the default. See 'SSL
-                              Certificate Verification' in pip documentation
-                              for more information.
-  --client-cert <path>        Path to SSL client certificate, a single file
-                              containing the private key and the certificate
-                              in PEM format.
-  --cache-dir <dir>           Store the cache data in <dir>.
-  --no-cache-dir              Disable the cache.
-  --disable-pip-version-check
-                              Don't periodically check PyPI to determine
-                              whether a new version of pip is available for
-                              download. Implied with --no-index.
-  --no-color                  Suppress colored output.
-  --use-feature <feature>     Enable new functionality, that may be backward
-                              incompatible.
-  --use-deprecated <feature>  Enable deprecated functionality, that will be
-                              removed in the future.
-  --resume-retries <resume_retries>
-                              Maximum attempts to resume or restart an
-                              incomplete download. (default: 5), yarn install v1.22.22
-[1/4] Resolving packages...
-[2/4] Fetching packages...
-[3/4] Linking dependencies...
-[4/4] Building fresh packages...
-success Saved lockfile.
-Done in 0.04s.), build the frontend (yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.), and restart services (, ).
-        3.  Verify the backend service is running correctly:  and -- No entries --.
-        4.  Verify Nginx is running and has the correct permissions:  and .
-        5.  Ask the user to test the application by visiting .
-        6.  Specifically guide the user to test the Add Logo functionality in the System Admin dashboard to confirm the recent fix.
-        7.  **CRITICAL:** Guide the user to perform the data migration from the old  (SQLite) file to the new PostgreSQL database using the  script. This step is pending.
-    - **Status:** IN PROGRESS
+        1.  Log in as a supervisor and create a material request with a unique item name (e.g., صنبور مطبخ موديل X).
+        2.  Log in as a procurement manager, generate a PO from that request, and manually link صنبور مطبخ موديل X to a catalog item (e.g., صنبور). This action should create the alias.
+        3.  Log in as a supervisor again and create a *new* material request using the exact same name (صنبور مطبخ موديل X).
+        4.  Log in as the procurement manager and view the newly generated request/PO. Verify that the item is now **automatically marked as linked** to the صنبور catalog item.
+        5.  If the issue persists, review the backend logic in  and the frontend rendering logic in  that determines the linked status.
+    - **Status:** TESTING PENDING
     - **Is recurring issue?** Y
-    - **Should Test frontend/backend/both after fix?** Both (on the user's AWS server).
-    - **Blocked on other issue:** None.
+    - **Should Test frontend/backend/both after fix?** Both.
 
 **In progress Task List**:
-There are no in-progress coding tasks; the entire focus is on completing the deployment described in Issue 1.
+- **Task 1: Complete UI/UX refactoring (P0)**
+    - **Description:** Finalize the implementation of all UI/UX changes requested by the user.
+    - **Where to resume:** Continue replacing  calls in the remaining frontend pages.
+    - **What will be achieved with this?** A consistent, modern user experience for all confirmation actions and improved usability on mobile.
+    - **Status:** IN PROGRESS
+    - **Blocked on something:** None.
+    - **Sub-tasks:**
+        - **Finish replacing :** Grep for  in  and replace all instances with the  hook. Files to check include , , and . (IN PROGRESS)
+        - **Verify mobile view:** Manually check the Buildings System page on a narrow viewport to confirm the tabs are scrollable. (DONE, VERIFICATION PENDING)
+        - **Verify RFQ PDF:** Generate an RFQ PDF and confirm the 'estimated price' column is gone. (DONE, VERIFICATION PENDING)
+        - **Verify Supervisor Dashboard:** Confirm the project management UI is removed. (DONE, VERIFICATION PENDING)
+    - **Should Test frontend/backend/both after fix?** Frontend.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-    - **P1: Fix Arabic Font in Buildings System PDFs:** PDFs exported from the Buildings System do not render Arabic text correctly. The fix involves replicating the font loading logic from the Purchase Order PDF generation code.
-    - **P1: Re-style Quotation PDF to Match PO PDF:** The Quotation PDF export needs to be redesigned to match the layout and style of the Purchase Order PDF.
-    - **P2: Add GM Approval Limit Setting:** Add a UI in the admin/GM settings to define a PO value limit for the Procurement Manager. This requires backend changes to the PO approval workflow.
+    - **P1: Fix Arabic Font in Buildings System PDFs:** PDFs from the Buildings System don't render Arabic correctly. Replicate the font loading from the Purchase Order PDF generator.
+    - **P2: Re-style Quotation PDF to Match PO PDF:** Redesign the Quotation PDF layout to match the Purchase Order PDF style.
+    - **P3: Add GM Approval Limit Setting:** Implement a UI for the General Manager to set a PO approval value limit for the Procurement Manager.
 
 - **Future Tasks:**
-    - **P1: Migrate Database from SQLite to PostgreSQL:** (This is now in progress as part of the deployment).
-    - **P2: Import Material Factors:** Implement a feature to parse an Excel file to populate a material factors library.
-    - **P3: Complete  Refactoring:** Continue breaking down the large component.
-    - **P3: Batch Assignment Feature:** Add a feature to assign a supervisor/engineer to all unassigned projects at once.
+    - **P1: Complete AWS Lightsail Deployment:** Resume guiding the user through the deployment process, including resolving git conflicts and running the data migration to PostgreSQL.
+    - **P2: Enhance Backup/Restore for All Data:** The restore logic for nested items (, , etc.) is likely incomplete. It needs to be fully implemented and verified to ensure 100% data fidelity on restore.
+    - **P3: Import Material Factors from Excel:** Implement a feature to parse an Excel file to populate the material factors library.
+    - **P4: Batch Assignment Feature:** Add a feature to assign a supervisor/engineer to all unassigned projects at once.
 
 **Completed work in this session**
-- **Deployment Guidance:**
-    - Provided detailed, step-by-step shell commands to set up an Ubuntu server on AWS Lightsail for production.
-    - Wrote configuration files for Nginx (as a reverse proxy) and Systemd (to run the backend as a service).
-    - Guided the user through setting up a PostgreSQL database, including user and database creation.
-    - Wrote a Python script () to transfer data from the existing SQLite DB to PostgreSQL.
-- **Bug Fixes:**
-    - **Advanced Reports:** Fixed a critical UI crash () by initializing component state with default empty values and adding optional chaining () to JSX rendering.
-    - **Delivery Tracker:**
-        - Fixed a  error.
-        - Modified the backend () to include  and  in the pending orders API response.
-        - Completely fixed the Confirm Receipt modal, ensuring it displays item details, including remaining vs. delivered quantities.
-        - Fixed the Confirm Receipt submission API to handle the correct payload and prevent React errors.
-        - Added a new endpoint () and updated the UI to correctly display orders in the أوامر تم استلامها (Received Orders) section.
-    - **Data Sync:** Fixed and implemented the logic in the  endpoint to update the  table in the Buildings System, ensuring quantities are synchronized upon delivery.
-    - **Logo Upload:** Fixed a bug where uploading the company logo was failing. This involved creating a new V2 API endpoint (), updating the backend to handle file storage in an  directory, and modifying the frontend to use the new endpoint.
-- **Feature Enhancements:**
-    - Granted access to the Buildings System for the General Manager and Procurement Manager roles.
-    - Added navigation buttons for the Buildings System and Quotations System to the General Manager's dashboard.
-    - Created a manual sync endpoint () to reconcile delivered quantities.
+- **System Admin Features (Backup/Restore/Clean):**
+    - **Fixed and Enhanced Backup:** Rewrote the backup function () to include all critical tables (, , , , , etc.) and fix incorrect data mappings.
+    - **Fixed and Enhanced Restore:** Overhauled the restore function () to correctly handle dependencies and insert data into the database from a backup file, fixing multiple crashes related to missing fields.
+    - **Diagnosed Ingress Timeout:** Identified that a  error when downloading backups via the public URL is an external proxy/ingress issue, as the endpoint works correctly when called internally.
+- **New Feature Implementation:**
+    - **Custom Confirmation Dialog:** Created a reusable  component and  to replace all  calls.
+    - **Removed Supervisor Project Management:** Successfully deleted the UI and related logic for project management from the  page.
+    - **Hid Price in RFQ PDF:** Removed the Estimated Price column from the RFQ PDF generation logic in .
+    - **Improved Mobile UI:** Made the tabs in  horizontally scrollable for better mobile viewing.
+    - **Updated PRD:** The  file was updated to reflect the completion of the backup/restore fixes.
+
+**Earlier issues found/mentioned but not fixed**
+- **Issue 1: K8s Ingress Timeout**
+    - **Description:** API endpoints that return large amounts of data (like ) fail with a  error when accessed via the external preview URL. The issue is with the platform's reverse proxy and is outside the agent's control.
+    - **Debug checklist:** None. This is an infrastructure issue. The workaround is to test such endpoints via internal  calls to .
+    - **Why to solve this issue and what will be achieved with this?** It would allow testing of large data downloads directly from the frontend UI.
+    - **Should Test frontend/backend/both after fix:** N/A
+    - **Is recurring issue?** Y
+
+**Known issue recurrence from previous fork**
+- None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Frontend:** React, , Tailwind CSS.
-- **Backend:** FastAPI, SQLAlchemy.
-- **Database:** Migrating from SQLite to **PostgreSQL**.
-- **Deployment:** Manual deployment on **AWS Lightsail** using **Nginx** as a reverse proxy and **Systemd** for service management.
-- **File I/O:** Handling file uploads and serving static files in FastAPI.
+- **Backend:** FastAPI, SQLAlchemy, Asynchronous Python (/).
+- **Frontend:** React, React Hooks, , Tailwind CSS.
+- **Architecture:** Introduction of a React Context () to provide a global confirmation dialog service, replacing a browser-native function.
+- **Debugging:** Differentiating between application code errors and external infrastructure issues (e.g., proxy timeouts) by testing endpoints both internally and externally.
+- **Data Integrity:** Complex logic for serializing and deserializing a significant portion of the database for backup/restore functionality.
 
 **key DB schema**
-- No database schema changes were made. All work involved fixing application logic and data flow between existing tables.
+- No schema changes were made. Logic was enhanced to better utilize the existing  table.
 
 **changes in tech stack**
-- **Database:** The user has committed to migrating from **SQLite to PostgreSQL** for the production environment on AWS. The necessary drivers (, ) have been added to the installation steps.
+- None.
 
 **All files of reference**
-- : Core logic for delivery tracking was fixed and enhanced here.
-- : UI counterpart to the delivery tracking fixes.
-- : Fixed the UI crash on load.
-- : Modified to serve the new  directory.
-- : Modified to handle logo uploads correctly.
-- : Updated to use the new logo upload API.
-- The user's deployment server has configuration files at  and .
-- A data migration script was created at .
-
-**Areas that need refactoring**:
-- The manual data migration script () is for one-time use. A proper migration tool like Alembic is still recommended for future schema changes.
+- : Core logic for backup, restore, and data cleaning.
+- : The new custom confirmation dialog component.
+- : Where the  is integrated.
+- : UI where project management was removed and  was replaced.
+- : UI where mobile view was improved and  was replaced.
+- : Logic for auto-linking items via aliases.
+- : PDF generation logic where estimated price was removed.
+- : Project requirements document.
 
 **key api endpoints**
-- : (HEAVILY UPDATED) Now accepts item-specific quantities and triggers a data sync with the buildings system.
-- : (UPDATED) Now returns related project, supplier, and request data.
-- : (NEW) Returns a list of fully delivered purchase orders.
-- : (NEW) Manually triggers a sync between delivered POs and the supply tracking table.
-- : (NEW) Endpoint for uploading the company logo.
+- : (HEAVILY MODIFIED) Now backs up most application tables.
+- : (HEAVILY MODIFIED) Restores data from a backup file.
+- : (MODIFIED) Now attempts to auto-link items using saved aliases.
+- : (MODIFIED) PDF generation logic no longer includes the estimated price.
 
 **Critical Info for New Agent**
-- **The primary task has shifted to guiding the user through a manual deployment on their AWS Lightsail server (IP: ).** All instructions and troubleshooting should be in the context of this external server environment.
-- **The database is being migrated to PostgreSQL.** The user has set up the DB on their server, but the data has not yet been migrated from the SQLite file. This is a critical pending step.
-- The user is executing shell commands directly on their server. Be very clear and precise with any commands you provide.
-- The user just encountered a  conflict. The immediate next step is to guide them to resolve it (Saved working directory and index state WIP on main: 80e9bfc Auto-generated changes, ) and continue the update process.
+- The user's priorities have shifted from AWS deployment to a new list of features and UI improvements. Focus on completing the tasks in the In progress Task List first.
+- The refactoring to replace  is incomplete. You must find and replace all remaining instances to ensure UI consistency.
+- The fix for the item alias logic has been implemented on the backend but needs to be thoroughly tested via the full user workflow to confirm it solves the problem.
+- Do not waste time debugging the  error when downloading the backup file from the frontend. It is a known platform issue. Test the backup endpoint with  against  if needed.
+- The agent tested the clean data function, which deleted data that was then restored. The integrity of the restored data for complex items (like purchase orders) is not guaranteed and might be a source of future bugs.
 
 **documents and test reports created in this job**
-- 
--  (Updated multiple times)
+-  (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Chat 447):** Shows a  error (Your local changes to the following files would be overwritten). (Status: PENDING FIX)
-2.  **User (Chat 409):** Asks the agent to modify the code for the logo upload and provide update instructions for GitHub. (Status: COMPLETED)
-3.  **User (Chat 407):** Shows a screenshot of an error when adding the company logo on the deployed server. (Status: PENDING FIX DEPLOYMENT)
-4.  **User (Chat 405):** Shows an Nginx Permission denied error log. (Status: COMPLETED, fix provided)
-5.  **User (Chat 403):** Shows the output of total 1776
-drwxr-xr-x 14 root root    4096 Jan 22 21:21 .
-drwxr-xr-x  1 root root    4096 Jan 22 21:21 ..
-drwxr-xr-x  2 root root    4096 Jan 21 13:10 .emergent
-drwxr-xr-x  8 root root    4096 Jan 22 21:21 .git
--rw-r--r--  1 root root      61 Jan 22 21:11 .gitconfig
--rw-r--r--  1 root root    2188 Jan 22 21:11 .gitignore
-drwxr-xr-x  4 root root    4096 Jan 21 19:46 .ruff_cache
--rw-r--r--  1 root root      29 Jun 18  2025 README.md
-drwxr-xr-x 13 root root    4096 Jan 22 21:09 backend
-drwxr-xr-x  2 root root    4096 Jan 21 05:34 backups
-drwxr-xr-x  6 root root    4096 Jan 22 21:21 frontend
-drwxr-xr-x  2 root root    4096 Jan 21 05:34 logs
-drwxr-xr-x  2 root root    4096 Jan 22 21:21 memory
-drwxr-xr-x  2 root root    4096 Jan 22 21:21 node_modules
-drwxr-xr-x 12 root root    4096 Jan 21 05:23 talabatawsoldnewgpylast-main
-drwxr-xr-x  3 root root    4096 Jan 21 20:55 test_reports
--rw-r--r--  1 root root    4774 Jun 18  2025 test_result.md
-drwxr-xr-x  2 root root    4096 Jun 18  2025 tests
--rw-r--r--  1 root root 1732950 Jan 21 05:23 uploaded.zip
--rw-r--r--  1 root root      86 Jan 22 21:21 yarn.lock confirming the frontend build files exist. (Status: COMPLETED)
-6.  **User (Chat 401):** Asks why the app isn't on port 3000, showing a This site can’t be reached error. (Status: COMPLETED, explanation provided)
-7.  **User (Chat 399):** Shows the output of , which now only shows deprecation warnings, not errors. (Status: COMPLETED)
-8.  **User (Chat 397):** Shows the  error when running the backend. (Status: COMPLETED, fix provided)
-9.  **User (Chat 395):** Pastes the status of the failing . (Status: COMPLETED, debugging instructions provided)
-10. **User (Chat 391):** Shows an error during yarn install v1.22.22
-[1/4] Resolving packages...
-success Already up-to-date.
-Done in 0.03s. related to Node.js version. (Status: COMPLETED, fix provided)
+- **User (Chat 263):** Provided a comprehensive list of new tasks: replace , hide estimated price in RFQ PDFs, fix and automate item alias linking, remove project creation from the supervisor dashboard, and improve the mobile view of the buildings system. (Status: IN PROGRESS)
+- **User (Chat 253):** Acknowledged the agent's screenshot and prompted the agent to update the PRD and finish the task. (Status: COMPLETED)
+- **User (Chat 251):** Asked the agent to take a screenshot of the working UI. (Status: COMPLETED)
 
 **Project Health Check:**
-- **Broken:**
-    - The production deployment on the user's AWS server is currently non-functional due to code conflicts, pending dependency updates, and an incomplete data migration.
+- **Broken:** The backup download functionality is broken when accessed from the public preview URL due to a proxy/ingress issue.
 - **Mocked:** None.
 
 **3rd Party Integrations**
 - None.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES, for the Advanced Reports and Delivery Tracker fixes ().
+- **Testing agent used after significant changes:** NO
 - **Troubleshoot agent used after agent stuck in loop:** NO
-- **Test files created:** []
-- **Known regressions:** None in the development environment. The production deployment is the main issue.
+- **Test files created:** None.
+- **Known regressions:** None from the current session's work, but the data integrity is questionable after a clean data and restore cycle was performed during debugging.
 
 **Credentials to test flow:**
-- **Application:** All user passwords are . (e.g.,  / )
-- **PostgreSQL on AWS Server:**
-    - User: 
-    - Password:  (The  was removed to avoid shell errors)
-    - Database: 
+- **Admin:**  / 
+- **Supervisor:**  / 
+- **Procurement Manager:**  / 
 
 **What agent forgot to execute**
-- The agent has not yet guided the user to perform the critical data migration step from the SQLite DB file to the new PostgreSQL database on the AWS server. This is the most important pending action after the code is updated.</analysis>
+- The agent did not complete the full refactoring of replacing . It started the task but left several pages untouched, which will lead to an inconsistent UI.
+- The agent did not plan a verification test for the newly implemented item alias logic, which is critical to confirming the user's bug report is resolved.</analysis>

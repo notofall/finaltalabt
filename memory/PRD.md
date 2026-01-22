@@ -258,5 +258,5 @@ GET /api/v2/system/database-stats  - إحصائيات قاعدة البيانا�
 ---
 
 ## الروابط
-- **Preview URL**: https://project-code-mgmt.preview.emergentagent.com
+- **Preview URL**: https://item-alias-link.preview.emergentagent.com
 - **Test Reports**: `/app/test_reports/iteration_1.json`
