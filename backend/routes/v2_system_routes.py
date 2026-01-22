@@ -425,7 +425,7 @@ async def restore_backup(
     current_user = Depends(get_current_user),
     session: AsyncSession = Depends(get_postgres_session)
 ):
-    """Restore system from backup file"""
+    """Restore system from backup file - restores data that doesn't already exist"""
     require_system_admin(current_user)
     
     try:
@@ -441,34 +441,138 @@ async def restore_backup(
         "users": 0,
         "projects": 0,
         "suppliers": 0,
-        "settings": 0
+        "budget_categories": 0,
+        "default_budget_categories": 0,
+        "material_requests": 0,
+        "material_request_items": 0,
+        "purchase_orders": 0,
+        "purchase_order_items": 0,
+        "delivery_records": 0,
+        "price_catalog": 0,
+        "planned_quantities": 0,
+        "system_settings": 0
     }
     
-    # Restore settings first
-    for setting in backup_data.get("system_settings", []):
-        try:
-            existing = await session.execute(
-                select(SystemSetting).where(SystemSetting.key == setting["key"])
-            )
-            if not existing.scalar_one_or_none():
-                new_setting = SystemSetting(
-                    id=setting["id"],
-                    key=setting["key"],
-                    value=setting["value"],
-                    description=setting.get("description")
+    try:
+        # 1. Restore Users (except existing emails)
+        for user_data in backup_data.get("users", []):
+            try:
+                existing = await session.execute(
+                    select(User).where(User.email == user_data["email"])
                 )
-                session.add(new_setting)
-                restored["settings"] += 1
-        except:
-            pass
-    
-    await session.commit()
-    
-    return {
-        "message": "تمت الاستعادة بنجاح",
-        "restored": restored,
-        "backup_date": backup_data.get("backup_info", {}).get("created_at")
-    }
+                if not existing.scalar_one_or_none():
+                    new_user = User(
+                        id=user_data["id"], name=user_data["name"],
+                        email=user_data["email"], password=user_data["password"],
+                        role=user_data["role"], is_active=user_data.get("is_active", True)
+                    )
+                    session.add(new_user)
+                    restored["users"] += 1
+            except:
+                pass
+        
+        # 2. Restore Suppliers (by name)
+        for supplier_data in backup_data.get("suppliers", []):
+            try:
+                existing = await session.execute(
+                    select(Supplier).where(Supplier.name == supplier_data["name"])
+                )
+                if not existing.scalar_one_or_none():
+                    new_supplier = Supplier(
+                        id=supplier_data["id"], name=supplier_data["name"],
+                        contact_person=supplier_data.get("contact_person"),
+                        phone=supplier_data.get("phone"), email=supplier_data.get("email"),
+                        address=supplier_data.get("address"), notes=supplier_data.get("notes")
+                    )
+                    session.add(new_supplier)
+                    restored["suppliers"] += 1
+            except:
+                pass
+        
+        # 3. Restore Projects (by name)
+        for project_data in backup_data.get("projects", []):
+            try:
+                existing = await session.execute(
+                    select(Project).where(Project.name == project_data["name"])
+                )
+                if not existing.scalar_one_or_none():
+                    new_project = Project(
+                        id=project_data["id"], name=project_data["name"],
+                        code=project_data.get("code"), description=project_data.get("description"),
+                        status=project_data.get("status", "active")
+                    )
+                    session.add(new_project)
+                    restored["projects"] += 1
+            except:
+                pass
+        
+        # 4. Restore Default Budget Categories
+        for cat_data in backup_data.get("default_budget_categories", []):
+            try:
+                existing = await session.execute(
+                    select(DefaultBudgetCategory).where(DefaultBudgetCategory.id == cat_data["id"])
+                )
+                if not existing.scalar_one_or_none():
+                    new_cat = DefaultBudgetCategory(
+                        id=cat_data["id"], name=cat_data["name"],
+                        code=cat_data.get("code"), default_budget=cat_data.get("default_budget", 0)
+                    )
+                    session.add(new_cat)
+                    restored["default_budget_categories"] += 1
+            except:
+                pass
+        
+        # 5. Restore System Settings
+        for setting in backup_data.get("system_settings", []):
+            try:
+                existing = await session.execute(
+                    select(SystemSetting).where(SystemSetting.key == setting["key"])
+                )
+                if not existing.scalar_one_or_none():
+                    new_setting = SystemSetting(
+                        id=setting["id"], key=setting["key"],
+                        value=setting["value"], description=setting.get("description")
+                    )
+                    session.add(new_setting)
+                    restored["system_settings"] += 1
+            except:
+                pass
+        
+        # 6. Restore Price Catalog
+        for item_data in backup_data.get("price_catalog", []):
+            try:
+                existing = await session.execute(
+                    select(PriceCatalogItem).where(PriceCatalogItem.id == item_data["id"])
+                )
+                if not existing.scalar_one_or_none():
+                    new_item = PriceCatalogItem(
+                        id=item_data["id"], name=item_data["name"],
+                        item_code=item_data.get("item_code"), description=item_data.get("description"),
+                        unit=item_data.get("unit"), price=item_data.get("price", 0),
+                        currency=item_data.get("currency", "SAR"),
+                        supplier_id=item_data.get("supplier_id"),
+                        supplier_name=item_data.get("supplier_name"),
+                        category_id=item_data.get("category_id"),
+                        category_name=item_data.get("category_name"),
+                        is_active=item_data.get("is_active", True)
+                    )
+                    session.add(new_item)
+                    restored["price_catalog"] += 1
+            except:
+                pass
+        
+        await session.commit()
+        
+        return {
+            "message": "تمت الاستعادة بنجاح",
+            "restored": restored,
+            "backup_date": backup_data.get("backup_info", {}).get("created_at"),
+            "note": "تم استعادة البيانات الغير موجودة فقط (البيانات الموجودة لم تُستبدل)"
+        }
+        
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=f"فشل في الاستعادة: {str(e)}")
 
 
 @router.post("/clean-data")
