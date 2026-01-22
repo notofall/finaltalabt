@@ -1227,30 +1227,35 @@ const BuildingsSystem = () => {
 
             {/* Tabs */}
             <Tabs value={projectTab} onValueChange={setProjectTab} className="w-full">
-              <TabsList className="bg-slate-800 border border-slate-700 w-full justify-start overflow-x-auto flex-wrap">
-                <TabsTrigger value="templates" className="data-[state=active]:bg-emerald-600">
-                  <Home className="w-4 h-4 ml-1" />
-                  نماذج الوحدات
+              <TabsList className="bg-slate-800 border border-slate-700 w-full grid grid-cols-3 md:flex md:justify-start gap-1 p-1 h-auto">
+                <TabsTrigger value="templates" className="data-[state=active]:bg-emerald-600 text-xs md:text-sm px-2 py-2 md:px-3">
+                  <Home className="w-3 h-3 md:w-4 md:h-4 md:ml-1" />
+                  <span className="hidden md:inline mr-1">نماذج الوحدات</span>
+                  <span className="md:hidden">الوحدات</span>
                 </TabsTrigger>
-                <TabsTrigger value="floors" className="data-[state=active]:bg-emerald-600">
-                  <Layers className="w-4 h-4 ml-1" />
-                  الأدوار
+                <TabsTrigger value="floors" className="data-[state=active]:bg-emerald-600 text-xs md:text-sm px-2 py-2 md:px-3">
+                  <Layers className="w-3 h-3 md:w-4 md:h-4 md:ml-1" />
+                  <span className="mr-1">الأدوار</span>
                 </TabsTrigger>
-                <TabsTrigger value="areaMaterials" className="data-[state=active]:bg-emerald-600">
-                  <Package className="w-4 h-4 ml-1" />
-                  مواد المساحة
+                <TabsTrigger value="areaMaterials" className="data-[state=active]:bg-emerald-600 text-xs md:text-sm px-2 py-2 md:px-3">
+                  <Package className="w-3 h-3 md:w-4 md:h-4 md:ml-1" />
+                  <span className="hidden md:inline mr-1">مواد المساحة</span>
+                  <span className="md:hidden">المساحة</span>
                 </TabsTrigger>
-                <TabsTrigger value="supply" className="data-[state=active]:bg-emerald-600">
-                  <Truck className="w-4 h-4 ml-1" />
-                  تتبع التوريد
+                <TabsTrigger value="supply" className="data-[state=active]:bg-emerald-600 text-xs md:text-sm px-2 py-2 md:px-3">
+                  <Truck className="w-3 h-3 md:w-4 md:h-4 md:ml-1" />
+                  <span className="hidden md:inline mr-1">تتبع التوريد</span>
+                  <span className="md:hidden">التوريد</span>
                 </TabsTrigger>
-                <TabsTrigger value="supplyReport" className="data-[state=active]:bg-emerald-600">
-                  <BarChart3 className="w-4 h-4 ml-1" />
-                  تقرير التوريد
+                <TabsTrigger value="supplyReport" className="data-[state=active]:bg-emerald-600 text-xs md:text-sm px-2 py-2 md:px-3">
+                  <BarChart3 className="w-3 h-3 md:w-4 md:h-4 md:ml-1" />
+                  <span className="hidden md:inline mr-1">تقرير التوريد</span>
+                  <span className="md:hidden">التقرير</span>
                 </TabsTrigger>
-                <TabsTrigger value="calculations" className="data-[state=active]:bg-emerald-600">
-                  <FileSpreadsheet className="w-4 h-4 ml-1" />
-                  جدول الكميات
+                <TabsTrigger value="calculations" className="data-[state=active]:bg-emerald-600 text-xs md:text-sm px-2 py-2 md:px-3">
+                  <FileSpreadsheet className="w-3 h-3 md:w-4 md:h-4 md:ml-1" />
+                  <span className="hidden md:inline mr-1">جدول الكميات</span>
+                  <span className="md:hidden">الكميات</span>
                 </TabsTrigger>
               </TabsList>
 
