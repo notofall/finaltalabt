@@ -39,6 +39,7 @@ class RequestItemResponse(BaseModel):
     quantity: int
     unit: str
     estimated_price: Optional[float]
+    catalog_item_id: Optional[str] = None
 
 
 class RequestResponse(BaseModel):
