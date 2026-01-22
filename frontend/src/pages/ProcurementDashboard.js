@@ -4868,6 +4868,125 @@ const ProcurementDashboard = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Unlinked Items Dialog - نافذة ربط الأصناف بالكتالوج */}
+      <Dialog open={unlinkedItemsDialog} onOpenChange={(open) => {
+        if (!open) {
+          setUnlinkedItemsDialog(false);
+          setPendingOrderData(null);
+          setUnlinkedItems([]);
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-center text-orange-600 flex items-center justify-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              أصناف غير مربوطة بالكتالوج
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm text-orange-700">
+              <p>يجب ربط جميع الأصناف بالكتالوج قبل إصدار أمر الشراء.</p>
+              <p className="mt-1">أضف الأصناف التالية للكتالوج:</p>
+            </div>
+            
+            {unlinkedItems.map((item, idx) => (
+              <div key={item.index} className="border rounded-lg p-4 bg-slate-50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Badge variant="outline" className="bg-white">صنف #{idx + 1}</Badge>
+                  <span className="text-sm text-slate-500">الطلب: {selectedRequest?.items?.[item.index]?.name}</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">كود الصنف *</Label>
+                    <Input
+                      value={item.item_code}
+                      onChange={(e) => updateUnlinkedItem(item.index, 'item_code', e.target.value)}
+                      placeholder="أدخل كود الصنف"
+                      className="h-9"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">اسم الصنف *</Label>
+                    <Input
+                      value={item.name}
+                      onChange={(e) => updateUnlinkedItem(item.index, 'name', e.target.value)}
+                      className="h-9"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">الوحدة</Label>
+                    <Input
+                      value={item.unit}
+                      onChange={(e) => updateUnlinkedItem(item.index, 'unit', e.target.value)}
+                      className="h-9"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">التصنيف *</Label>
+                    <Select
+                      value={item.category_id}
+                      onValueChange={(value) => updateUnlinkedItem(item.index, 'category_id', value)}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="اختر التصنيف" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {defaultCategories.map((cat) => (
+                          <SelectItem key={cat.id || cat.name} value={cat.name}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 gap-1"
+                    onClick={() => handleAddUnlinkedItemToCatalog(item.index)}
+                  >
+                    <Plus className="w-4 h-4" />
+                    إضافة للكتالوج وربط
+                  </Button>
+                </div>
+              </div>
+            ))}
+            
+            {unlinkedItems.length === 0 && (
+              <div className="text-center py-6 text-green-600">
+                <CheckCircle className="w-12 h-12 mx-auto mb-2" />
+                <p className="font-medium">تم ربط جميع الأصناف!</p>
+                <p className="text-sm text-slate-500">جاري إصدار أمر الشراء...</p>
+              </div>
+            )}
+            
+            <div className="flex gap-2 justify-end pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setUnlinkedItemsDialog(false);
+                  setPendingOrderData(null);
+                  setUnlinkedItems([]);
+                }}
+              >
+                إلغاء
+              </Button>
+              {unlinkedItems.length === 0 && (
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => pendingOrderData && proceedWithOrderCreation(pendingOrderData)}
+                >
+                  إصدار أمر الشراء
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Reject Request Dialog - نافذة رفض الطلب */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent className="max-w-md" dir="rtl">
