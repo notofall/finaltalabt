@@ -188,6 +188,11 @@ const ProcurementDashboard = () => {
   const [bestPriceAlerts, setBestPriceAlerts] = useState({});  // {itemIndex: {has_better_price, better_options}}
   const [quickAddItem, setQuickAddItem] = useState(null);  // For quick adding item to catalog
   const [showQuickAddDialog, setShowQuickAddDialog] = useState(false);
+  
+  // Unlinked items dialog for PO creation - نافذة الأصناف غير المربوطة
+  const [unlinkedItemsDialog, setUnlinkedItemsDialog] = useState(false);
+  const [unlinkedItems, setUnlinkedItems] = useState([]);  // [{index, name, unit, item_code, category_id}]
+  const [pendingOrderData, setPendingOrderData] = useState(null);  // Store order data while linking items
 
   const fetchData = async () => {
     try {
