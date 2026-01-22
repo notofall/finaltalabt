@@ -84,29 +84,30 @@ const PublicRoute = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <div className="App" dir="rtl" lang="ar">
-        <Toaster 
-          position="top-center" 
-          richColors 
-          closeButton
-          toastOptions={{
-            style: {
-              fontFamily: 'Cairo, sans-serif',
-              direction: 'rtl'
-            }
-          }}
-        />
-        <BrowserRouter>
-          <FirstRunCheck>
-            <Routes>
-              <Route
-                path="/login"
-                element={
-                  <PublicRoute>
-                    <LoginPage />
-                  </PublicRoute>
-                }
-              />
+      <ConfirmDialogProvider>
+        <div className="App" dir="rtl" lang="ar">
+          <Toaster 
+            position="top-center" 
+            richColors 
+            closeButton
+            toastOptions={{
+              style: {
+                fontFamily: 'Cairo, sans-serif',
+                direction: 'rtl'
+              }
+            }}
+          />
+          <BrowserRouter>
+            <FirstRunCheck>
+              <Routes>
+                <Route
+                  path="/login"
+                  element={
+                    <PublicRoute>
+                      <LoginPage />
+                    </PublicRoute>
+                  }
+                />
               <Route
                 path="/register"
                 element={
