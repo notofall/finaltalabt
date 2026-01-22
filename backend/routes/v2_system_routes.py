@@ -273,141 +273,141 @@ async def create_backup(
             })
         
         # Suppliers
-    result = await session.execute(select(Supplier))
-    for supplier in result.scalars().all():
-        backup_data["suppliers"].append({
-            "id": supplier.id, "name": supplier.name,
-            "contact_person": supplier.contact_person, "phone": supplier.phone,
-            "email": supplier.email, "address": supplier.address,
-            "notes": supplier.notes
-        })
-    
-    # Budget Categories
-    result = await session.execute(select(BudgetCategory))
-    for cat in result.scalars().all():
-        backup_data["budget_categories"].append({
-            "id": cat.id, "name": cat.name, "code": cat.code,
-            "project_id": cat.project_id, "project_name": cat.project_name,
-            "estimated_budget": cat.estimated_budget, "actual_spent": cat.actual_spent
-        })
-    
-    # Default Budget Categories
-    result = await session.execute(select(DefaultBudgetCategory))
-    for cat in result.scalars().all():
-        backup_data["default_budget_categories"].append({
-            "id": cat.id, "name": cat.name, "code": cat.code,
-            "default_budget": cat.default_budget
-        })
-    
-    # Material Requests
-    result = await session.execute(select(MaterialRequest))
-    for req in result.scalars().all():
-        backup_data["material_requests"].append({
-            "id": req.id, "request_number": req.request_number,
-            "request_seq": req.request_seq,
-            "project_id": req.project_id, "project_name": req.project_name,
-            "reason": req.reason, "supervisor_id": req.supervisor_id,
-            "supervisor_name": req.supervisor_name, "engineer_id": req.engineer_id,
-            "engineer_name": req.engineer_name, "status": req.status,
-            "expected_delivery_date": req.expected_delivery_date
-        })
-    
-    # Material Request Items
-    result = await session.execute(select(MaterialRequestItem))
-    for item in result.scalars().all():
-        backup_data["material_request_items"].append({
-            "id": item.id, "request_id": item.request_id,
-            "name": item.name, "quantity": item.quantity,
-            "unit": item.unit, "estimated_price": item.estimated_price,
-            "item_index": item.item_index
-        })
-    
-    # Purchase Orders
-    result = await session.execute(select(PurchaseOrder))
-    for order in result.scalars().all():
-        backup_data["purchase_orders"].append({
-            "id": order.id, "order_number": order.order_number,
-            "order_seq": order.order_seq,
-            "request_id": order.request_id, "request_number": order.request_number,
-            "project_id": order.project_id, "project_name": order.project_name,
-            "supplier_id": order.supplier_id, "supplier_name": order.supplier_name,
-            "category_id": order.category_id, "category_name": order.category_name,
-            "manager_id": order.manager_id, "manager_name": order.manager_name,
-            "status": order.status, "total_amount": order.total_amount,
-            "notes": order.notes
-        })
-    
-    # Purchase Order Items
-    result = await session.execute(select(PurchaseOrderItem))
-    for item in result.scalars().all():
-        backup_data["purchase_order_items"].append({
-            "id": item.id, "order_id": item.order_id,
-            "name": item.name, "quantity": item.quantity,
-            "unit": item.unit, "unit_price": item.unit_price,
-            "total_price": item.total_price, "delivered_quantity": item.delivered_quantity,
-            "item_index": item.item_index, "catalog_item_id": item.catalog_item_id,
-            "item_code": item.item_code
-        })
-    
-    # Delivery Records
-    result = await session.execute(select(DeliveryRecord))
-    for rec in result.scalars().all():
-        backup_data["delivery_records"].append({
-            "id": rec.id, "order_id": rec.order_id,
-            "items_delivered": rec.items_delivered,
-            "delivery_date": rec.delivery_date,
-            "delivered_by": rec.delivered_by, "received_by": rec.received_by,
-            "notes": rec.notes
-        })
-    
-    # Audit Logs (last 1000 only to keep backup size reasonable)
-    result = await session.execute(
-        select(AuditLog).order_by(AuditLog.timestamp.desc()).limit(1000)
-    )
-    for log in result.scalars().all():
-        backup_data["audit_logs"].append({
-            "id": log.id, "entity_type": log.entity_type,
-            "entity_id": log.entity_id, "action": log.action,
-            "changes": log.changes, "user_id": log.user_id,
-            "user_name": log.user_name, "user_role": log.user_role,
-            "description": log.description,
-            "timestamp": log.timestamp.isoformat() if log.timestamp else None
-        })
-    
-    # System Settings
-    result = await session.execute(select(SystemSetting))
-    for setting in result.scalars().all():
-        backup_data["system_settings"].append({
-            "id": setting.id, "key": setting.key, "value": setting.value,
-            "description": setting.description
-        })
-    
-    # Price Catalog
-    result = await session.execute(select(PriceCatalogItem))
-    for item in result.scalars().all():
-        backup_data["price_catalog"].append({
-            "id": item.id, "name": item.name, "item_code": item.item_code,
-            "description": item.description, "unit": item.unit, 
-            "price": item.price, "currency": item.currency,
-            "supplier_id": item.supplier_id, "supplier_name": item.supplier_name,
-            "category_id": item.category_id, "category_name": item.category_name,
-            "is_active": item.is_active
-        })
-    
-    # Planned Quantities
-    result = await session.execute(select(PlannedQuantity))
-    for pq in result.scalars().all():
-        backup_data["planned_quantities"].append({
-            "id": pq.id, "item_name": pq.item_name, "item_code": pq.item_code,
-            "unit": pq.unit, "description": pq.description,
-            "planned_quantity": pq.planned_quantity, 
-            "ordered_quantity": pq.ordered_quantity,
-            "remaining_quantity": pq.remaining_quantity,
-            "project_id": pq.project_id, "project_name": pq.project_name,
-            "category_id": pq.category_id, "category_name": pq.category_name,
-            "status": pq.status, "priority": pq.priority, "notes": pq.notes
-        })
-    
+        result = await session.execute(select(Supplier))
+        for supplier in result.scalars().all():
+            backup_data["suppliers"].append({
+                "id": supplier.id, "name": supplier.name,
+                "contact_person": supplier.contact_person, "phone": supplier.phone,
+                "email": supplier.email, "address": supplier.address,
+                "notes": supplier.notes
+            })
+        
+        # Budget Categories
+        result = await session.execute(select(BudgetCategory))
+        for cat in result.scalars().all():
+            backup_data["budget_categories"].append({
+                "id": cat.id, "name": cat.name, "code": cat.code,
+                "project_id": cat.project_id, "project_name": cat.project_name,
+                "estimated_budget": cat.estimated_budget, "actual_spent": cat.actual_spent
+            })
+        
+        # Default Budget Categories
+        result = await session.execute(select(DefaultBudgetCategory))
+        for cat in result.scalars().all():
+            backup_data["default_budget_categories"].append({
+                "id": cat.id, "name": cat.name, "code": cat.code,
+                "default_budget": cat.default_budget
+            })
+        
+        # Material Requests
+        result = await session.execute(select(MaterialRequest))
+        for req in result.scalars().all():
+            backup_data["material_requests"].append({
+                "id": req.id, "request_number": req.request_number,
+                "request_seq": req.request_seq,
+                "project_id": req.project_id, "project_name": req.project_name,
+                "reason": req.reason, "supervisor_id": req.supervisor_id,
+                "supervisor_name": req.supervisor_name, "engineer_id": req.engineer_id,
+                "engineer_name": req.engineer_name, "status": req.status,
+                "expected_delivery_date": req.expected_delivery_date
+            })
+        
+        # Material Request Items
+        result = await session.execute(select(MaterialRequestItem))
+        for item in result.scalars().all():
+            backup_data["material_request_items"].append({
+                "id": item.id, "request_id": item.request_id,
+                "name": item.name, "quantity": item.quantity,
+                "unit": item.unit, "estimated_price": item.estimated_price,
+                "item_index": item.item_index
+            })
+        
+        # Purchase Orders
+        result = await session.execute(select(PurchaseOrder))
+        for order in result.scalars().all():
+            backup_data["purchase_orders"].append({
+                "id": order.id, "order_number": order.order_number,
+                "order_seq": order.order_seq,
+                "request_id": order.request_id, "request_number": order.request_number,
+                "project_id": order.project_id, "project_name": order.project_name,
+                "supplier_id": order.supplier_id, "supplier_name": order.supplier_name,
+                "category_id": order.category_id, "category_name": order.category_name,
+                "manager_id": order.manager_id, "manager_name": order.manager_name,
+                "status": order.status, "total_amount": order.total_amount,
+                "notes": order.notes
+            })
+        
+        # Purchase Order Items
+        result = await session.execute(select(PurchaseOrderItem))
+        for item in result.scalars().all():
+            backup_data["purchase_order_items"].append({
+                "id": item.id, "order_id": item.order_id,
+                "name": item.name, "quantity": item.quantity,
+                "unit": item.unit, "unit_price": item.unit_price,
+                "total_price": item.total_price, "delivered_quantity": item.delivered_quantity,
+                "item_index": item.item_index, "catalog_item_id": item.catalog_item_id,
+                "item_code": item.item_code
+            })
+        
+        # Delivery Records
+        result = await session.execute(select(DeliveryRecord))
+        for rec in result.scalars().all():
+            backup_data["delivery_records"].append({
+                "id": rec.id, "order_id": rec.order_id,
+                "items_delivered": rec.items_delivered,
+                "delivery_date": rec.delivery_date,
+                "delivered_by": rec.delivered_by, "received_by": rec.received_by,
+                "notes": rec.notes
+            })
+        
+        # Audit Logs (last 1000 only to keep backup size reasonable)
+        result = await session.execute(
+            select(AuditLog).order_by(AuditLog.timestamp.desc()).limit(1000)
+        )
+        for log in result.scalars().all():
+            backup_data["audit_logs"].append({
+                "id": log.id, "entity_type": log.entity_type,
+                "entity_id": log.entity_id, "action": log.action,
+                "changes": log.changes, "user_id": log.user_id,
+                "user_name": log.user_name, "user_role": log.user_role,
+                "description": log.description,
+                "timestamp": log.timestamp.isoformat() if log.timestamp else None
+            })
+        
+        # System Settings
+        result = await session.execute(select(SystemSetting))
+        for setting in result.scalars().all():
+            backup_data["system_settings"].append({
+                "id": setting.id, "key": setting.key, "value": setting.value,
+                "description": setting.description
+            })
+        
+        # Price Catalog
+        result = await session.execute(select(PriceCatalogItem))
+        for item in result.scalars().all():
+            backup_data["price_catalog"].append({
+                "id": item.id, "name": item.name, "item_code": item.item_code,
+                "description": item.description, "unit": item.unit, 
+                "price": item.price, "currency": item.currency,
+                "supplier_id": item.supplier_id, "supplier_name": item.supplier_name,
+                "category_id": item.category_id, "category_name": item.category_name,
+                "is_active": item.is_active
+            })
+        
+        # Planned Quantities
+        result = await session.execute(select(PlannedQuantity))
+        for pq in result.scalars().all():
+            backup_data["planned_quantities"].append({
+                "id": pq.id, "item_name": pq.item_name, "item_code": pq.item_code,
+                "unit": pq.unit, "description": pq.description,
+                "planned_quantity": pq.planned_quantity, 
+                "ordered_quantity": pq.ordered_quantity,
+                "remaining_quantity": pq.remaining_quantity,
+                "project_id": pq.project_id, "project_name": pq.project_name,
+                "category_id": pq.category_id, "category_name": pq.category_name,
+                "status": pq.status, "priority": pq.priority, "notes": pq.notes
+            })
+        
         # Create JSON
         json_content = json.dumps(backup_data, ensure_ascii=False, indent=2)
         
