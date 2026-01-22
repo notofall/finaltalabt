@@ -216,6 +216,7 @@ class MaterialRequestItem(Base):
     unit: Mapped[str] = mapped_column(String(50), default="قطعة")
     estimated_price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     item_index: Mapped[int] = mapped_column(Integer, default=0)  # Order in the request
+    catalog_item_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("price_catalog_items.id"), nullable=True)  # Link to catalog
 
 
 # ==================== PURCHASE ORDER MODELS ====================
