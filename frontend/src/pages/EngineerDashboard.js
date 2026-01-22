@@ -446,7 +446,7 @@ const EngineerDashboard = () => {
         
         {/* الكميات المخططة */}
         <div className="mt-6">
-          <PlannedQuantitiesView showProjectFilter={true} />
+          <PlannedQuantitiesView key={`planned-${refreshKey}`} showProjectFilter={true} />
         </div>
 
         {/* Supply Tracking Section - قسم تتبع التوريد */}
