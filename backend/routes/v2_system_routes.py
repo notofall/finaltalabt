@@ -349,7 +349,13 @@ async def create_backup(
     for pq in result.scalars().all():
         backup_data["planned_quantities"].append({
             "id": pq.id, "item_name": pq.item_name, "item_code": pq.item_code,
-            "planned_quantity": pq.planned_quantity, "project_id": pq.project_id
+            "unit": pq.unit, "description": pq.description,
+            "planned_quantity": pq.planned_quantity, 
+            "ordered_quantity": pq.ordered_quantity,
+            "remaining_quantity": pq.remaining_quantity,
+            "project_id": pq.project_id, "project_name": pq.project_name,
+            "category_id": pq.category_id, "category_name": pq.category_name,
+            "status": pq.status, "priority": pq.priority, "notes": pq.notes
         })
     
     # Create JSON
