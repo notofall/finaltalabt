@@ -106,6 +106,52 @@ async def update_company_settings(
     return {"message": "تم تحديث إعدادات الشركة بنجاح"}
 
 
+@router.post("/company-logo")
+async def upload_company_logo(
+    file: UploadFile = File(...),
+    current_user = Depends(get_current_user),
+    service: SettingsService = Depends(get_settings_service)
+):
+    """
+    رفع شعار الشركة - System Admin only
+    """
+    require_system_admin(current_user)
+    
+    # التحقق من نوع الملف
+    allowed_types = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="نوع الملف غير مدعوم. يرجى رفع صورة (PNG, JPG, GIF, WebP)"
+        )
+    
+    # إنشاء اسم فريد للملف
+    ext = file.filename.split(".")[-1] if "." in file.filename else "png"
+    filename = f"logo_{uuid.uuid4().hex[:8]}.{ext}"
+    filepath = UPLOAD_DIR / filename
+    
+    # حفظ الملف
+    try:
+        content = await file.read()
+        with open(filepath, "wb") as f:
+            f.write(content)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"فشل في حفظ الملف: {str(e)}"
+        )
+    
+    # تحديث إعدادات الشركة
+    logo_url = f"/uploads/{filename}"
+    await service.update_company_settings(
+        settings={"company_logo": logo_url},
+        user_id=current_user.id,
+        user_name=current_user.name
+    )
+    
+    return {"logo": logo_url, "message": "تم رفع الشعار بنجاح"}
+
+
 @router.get("/settings")
 async def get_all_settings(
     current_user = Depends(get_current_user),
