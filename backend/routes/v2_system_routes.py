@@ -259,20 +259,20 @@ async def create_backup(
         # Users
         result = await session.execute(select(User))
         for user in result.scalars().all():
-        backup_data["users"].append({
-            "id": user.id, "name": user.name, "email": user.email,
-            "password": user.password, "role": user.role, "is_active": user.is_active
-        })
-    
-    # Projects
-    result = await session.execute(select(Project))
-    for project in result.scalars().all():
-        backup_data["projects"].append({
-            "id": project.id, "name": project.name, "code": project.code,
-            "description": project.description, "status": project.status
-        })
-    
-    # Suppliers
+            backup_data["users"].append({
+                "id": user.id, "name": user.name, "email": user.email,
+                "password": user.password, "role": user.role, "is_active": user.is_active
+            })
+        
+        # Projects
+        result = await session.execute(select(Project))
+        for project in result.scalars().all():
+            backup_data["projects"].append({
+                "id": project.id, "name": project.name, "code": project.code,
+                "description": project.description, "status": project.status
+            })
+        
+        # Suppliers
     result = await session.execute(select(Supplier))
     for supplier in result.scalars().all():
         backup_data["suppliers"].append({
