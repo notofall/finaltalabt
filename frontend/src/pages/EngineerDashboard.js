@@ -126,7 +126,12 @@ const EngineerDashboard = () => {
 
   // إعادة إرسال الطلب المرفوض من مدير المشتريات
   const handleResubmit = async (requestId) => {
-    if (!window.confirm("هل تريد إعادة إرسال هذا الطلب؟")) return;
+    const confirmed = await confirm({
+      title: "إعادة إرسال الطلب",
+      description: "هل تريد إعادة إرسال هذا الطلب؟",
+      confirmText: "إرسال"
+    });
+    if (!confirmed) return;
     
     setActionLoading(true);
     try {
