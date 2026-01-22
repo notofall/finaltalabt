@@ -314,8 +314,14 @@ async def create_backup(
     for order in result.scalars().all():
         backup_data["purchase_orders"].append({
             "id": order.id, "order_number": order.order_number,
-            "project_id": order.project_id, "supplier_id": order.supplier_id,
-            "status": order.status, "total_amount": order.total_amount
+            "order_seq": order.order_seq,
+            "request_id": order.request_id, "request_number": order.request_number,
+            "project_id": order.project_id, "project_name": order.project_name,
+            "supplier_id": order.supplier_id, "supplier_name": order.supplier_name,
+            "category_id": order.category_id, "category_name": order.category_name,
+            "manager_id": order.manager_id, "manager_name": order.manager_name,
+            "status": order.status, "total_amount": order.total_amount,
+            "notes": order.notes
         })
     
     # System Settings
