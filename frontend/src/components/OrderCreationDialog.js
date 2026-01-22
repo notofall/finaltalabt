@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { 
   X, ChevronDown, ChevronUp, Package, User, DollarSign, 
   FileText, CheckCircle, AlertCircle, Plus, Loader2,
-  ShoppingCart, Send, Trash2, Link2
+  ShoppingCart, Send, Trash2, Link2, Calendar, Search
 } from "lucide-react";
 import SearchableSelect from "./SearchableSelect";
 
@@ -32,9 +32,9 @@ const AccordionSection = ({
 }) => {
   const statusColors = {
     default: "border-slate-200 bg-white",
-    complete: "border-green-300 bg-green-50",
-    warning: "border-yellow-300 bg-yellow-50",
-    error: "border-red-300 bg-red-50"
+    complete: "border-green-300 bg-green-50/50",
+    warning: "border-yellow-300 bg-yellow-50/50",
+    error: "border-red-300 bg-red-50/50"
   };
   
   const statusIconColors = {
@@ -50,7 +50,7 @@ const AccordionSection = ({
         type="button"
         onClick={onToggle}
         disabled={disabled}
-        className={`w-full flex items-center justify-between p-3 ${disabled ? 'opacity-50' : 'hover:bg-slate-50'}`}
+        className={`w-full flex items-center justify-between p-3 ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-50/50 cursor-pointer'}`}
       >
         <div className="flex items-center gap-3">
           <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${statusIconColors[status]}`}>
@@ -74,11 +74,11 @@ const AccordionSection = ({
           )}
         </div>
       </button>
-      {isOpen && (
+      <div className={`transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
         <div className="border-t bg-white p-3">
           {children}
         </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -86,13 +86,18 @@ const AccordionSection = ({
 // Progress Steps Component
 const ProgressSteps = ({ currentStep, steps }) => {
   return (
-    <div className="flex items-center gap-1 px-4 py-2 bg-slate-50">
+    <div className="flex items-center gap-1 px-4 py-3 bg-gradient-to-l from-slate-100 to-slate-50">
       {steps.map((step, idx) => (
         <div key={idx} className="flex items-center flex-1">
-          <div className={`
-            h-1.5 flex-1 rounded-full transition-all
-            ${idx < currentStep ? 'bg-green-500' : idx === currentStep ? 'bg-orange-500' : 'bg-slate-200'}
-          `} />
+          <div className="flex flex-col items-center flex-1">
+            <div className={`
+              h-2 w-full rounded-full transition-all
+              ${idx < currentStep ? 'bg-green-500' : idx === currentStep ? 'bg-orange-500' : 'bg-slate-200'}
+            `} />
+            <span className={`text-[10px] mt-1 font-medium ${idx <= currentStep ? 'text-slate-700' : 'text-slate-400'}`}>
+              {step}
+            </span>
+          </div>
           {idx < steps.length - 1 && <div className="w-1" />}
         </div>
       ))}
@@ -110,17 +115,18 @@ const ItemCard = ({
   catalogInfo, 
   onCatalogSelect,
   onCatalogClear,
-  catalogItems,
-  isExpanded,
-  onExpandToggle
+  onAutoSearch,
+  catalogItems
 }) => {
+  const isLinked = !!catalogInfo?.catalog_item_id;
+  
   return (
     <div className={`rounded-xl border-2 overflow-hidden transition-all ${
       isSelected 
-        ? catalogInfo ? 'border-green-400 bg-green-50/50' : 'border-orange-400 bg-orange-50/50'
-        : 'border-slate-200 bg-white'
+        ? isLinked ? 'border-green-400 bg-green-50/30' : 'border-orange-400 bg-orange-50/30'
+        : 'border-slate-200 bg-white hover:border-slate-300'
     }`}>
-      {/* Main Row - Always Visible */}
+      {/* Main Row */}
       <div 
         className="flex items-center gap-3 p-3 cursor-pointer"
         onClick={onToggle}
@@ -136,65 +142,96 @@ const ItemCard = ({
         </div>
         {isSelected && (
           <div className="flex items-center gap-2">
-            {catalogInfo && (
-              <Badge className="bg-green-100 text-green-700 text-xs">
+            {isLinked && (
+              <Badge className="bg-green-100 text-green-700 text-xs shrink-0">
                 <Link2 className="w-3 h-3 ml-1" />
                 مربوط
               </Badge>
             )}
-            <Input 
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="السعر"
-              value={price || ""}
-              onChange={(e) => {
-                e.stopPropagation();
-                onPriceChange(e.target.value);
-              }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-20 h-8 text-sm text-center"
-            />
           </div>
         )}
       </div>
       
-      {/* Expanded Details */}
+      {/* Expanded Details - Only when selected */}
       {isSelected && (
-        <div className="border-t bg-slate-50 p-3 space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs text-slate-600">ربط بالكتالوج:</Label>
-            {catalogInfo && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={onCatalogClear}
-                className="h-6 text-xs text-red-500 hover:text-red-700"
-              >
-                <Trash2 className="w-3 h-3 ml-1" />
-                إلغاء
-              </Button>
+        <div className="border-t bg-slate-50/50 p-3 space-y-3">
+          {/* Price Input */}
+          <div className="flex items-center gap-2">
+            <Label className="text-xs text-slate-600 w-16 shrink-0">السعر:</Label>
+            <div className="flex items-center gap-1 flex-1 bg-white rounded-lg border px-2">
+              <Input 
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={price || ""}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  onPriceChange(e.target.value);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="flex-1 h-9 text-sm text-center border-0 focus:ring-0 bg-transparent"
+              />
+              <span className="text-xs text-slate-500 font-medium">ر.س</span>
+            </div>
+          </div>
+          
+          {/* Catalog Linking */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-slate-600">ربط بالكتالوج:</Label>
+              <div className="flex items-center gap-1">
+                {!isLinked && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAutoSearch();
+                    }}
+                    className="text-blue-600 h-6 px-2 text-xs"
+                  >
+                    <Search className="w-3 h-3 ml-1" />
+                    بحث تلقائي
+                  </Button>
+                )}
+                {isLinked && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCatalogClear();
+                    }}
+                    className="h-6 text-xs text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="w-3 h-3 ml-1" />
+                    إلغاء
+                  </Button>
+                )}
+              </div>
+            </div>
+            {isLinked ? (
+              <div className="flex items-center gap-2 p-2 bg-green-100 rounded-lg">
+                <CheckCircle className="w-4 h-4 text-green-600 shrink-0" />
+                <span className="text-sm text-green-800 font-medium truncate">{catalogInfo.name}</span>
+              </div>
+            ) : (
+              <Select onValueChange={(val) => onCatalogSelect(val)}>
+                <SelectTrigger className="h-9 text-sm bg-white">
+                  <SelectValue placeholder="اختر صنف من الكتالوج" />
+                </SelectTrigger>
+                <SelectContent>
+                  {catalogItems.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      <span className="text-xs text-slate-500 ml-1">{cat.item_code}</span>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
           </div>
-          {catalogInfo ? (
-            <div className="flex items-center gap-2 p-2 bg-green-100 rounded-lg">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-sm text-green-800 font-medium">{catalogInfo.name}</span>
-            </div>
-          ) : (
-            <Select onValueChange={onCatalogSelect}>
-              <SelectTrigger className="h-9 text-sm bg-white">
-                <SelectValue placeholder="اختر صنف من الكتالوج" />
-              </SelectTrigger>
-              <SelectContent>
-                {catalogItems.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.item_code} - {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
         </div>
       )}
     </div>
@@ -214,6 +251,7 @@ const OrderCreationDialog = ({
   onCreateOrder,
   onCreateRFQ,
   onAddSupplier,
+  onSearchCatalog,
   API_V2_URL,
   getAuthHeaders
 }) => {
@@ -221,7 +259,7 @@ const OrderCreationDialog = ({
   const [openSections, setOpenSections] = useState({
     items: true,
     supplier: false,
-    prices: false,
+    budget: false,
     notes: false
   });
   
@@ -233,11 +271,13 @@ const OrderCreationDialog = ({
   const [itemPrices, setItemPrices] = useState({});
   const [catalogPrices, setCatalogPrices] = useState({});
   const [orderNotes, setOrderNotes] = useState("");
+  const [termsConditions, setTermsConditions] = useState("");
+  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   // Reset form when dialog opens
   useEffect(() => {
-    if (open && remainingItems.length > 0) {
+    if (open && remainingItems && remainingItems.length > 0) {
       // Auto-select all items
       setSelectedItemIndices(remainingItems.map(i => i.index));
       
@@ -249,16 +289,29 @@ const OrderCreationDialog = ({
           prices[item.index] = item.estimated_price.toString();
         }
         if (item.catalog_item_id) {
-          const catItem = catalogItems.find(c => c.id === item.catalog_item_id);
+          const catItem = catalogItems?.find(c => c.id === item.catalog_item_id);
           catalogs[item.index] = {
             catalog_item_id: item.catalog_item_id,
             name: catItem?.name || item.name,
             price: catItem?.price || item.estimated_price
           };
+          // Auto-fill price from catalog
+          if (catItem?.price && !prices[item.index]) {
+            prices[item.index] = catItem.price.toString();
+          }
         }
       });
       setItemPrices(prices);
       setCatalogPrices(catalogs);
+      
+      // Reset other fields
+      setSupplierName("");
+      setSelectedSupplierId("");
+      setSelectedCategoryId("");
+      setOrderNotes("");
+      setTermsConditions("");
+      setExpectedDeliveryDate("");
+      setOpenSections({ items: true, supplier: false, budget: false, notes: false });
     }
   }, [open, remainingItems, catalogItems]);
 
@@ -286,7 +339,7 @@ const OrderCreationDialog = ({
   // Calculate total
   const calculateTotal = () => {
     return selectedItemIndices.reduce((sum, idx) => {
-      const item = remainingItems.find(i => i.index === idx);
+      const item = remainingItems?.find(i => i.index === idx);
       const price = parseFloat(itemPrices[idx]) || 0;
       return sum + (price * (item?.quantity || 0));
     }, 0);
@@ -299,9 +352,8 @@ const OrderCreationDialog = ({
         return selectedItemIndices.length > 0 ? 'complete' : 'default';
       case 'supplier':
         return supplierName.trim() ? 'complete' : selectedItemIndices.length > 0 ? 'warning' : 'default';
-      case 'prices':
-        const hasUnlinked = selectedItemIndices.some(idx => !catalogPrices[idx]);
-        return hasUnlinked ? 'warning' : selectedItemIndices.length > 0 ? 'complete' : 'default';
+      case 'budget':
+        return selectedCategoryId ? 'complete' : 'default';
       default:
         return 'default';
     }
@@ -309,7 +361,7 @@ const OrderCreationDialog = ({
 
   // Handle catalog selection
   const handleCatalogSelect = (idx, catalogId) => {
-    const catItem = catalogItems.find(c => c.id === catalogId);
+    const catItem = catalogItems?.find(c => c.id === catalogId);
     if (catItem) {
       setCatalogPrices(prev => ({
         ...prev,
@@ -325,10 +377,33 @@ const OrderCreationDialog = ({
     }
   };
 
+  // Handle auto search in catalog
+  const handleAutoSearch = async (idx, itemName) => {
+    if (onSearchCatalog) {
+      const result = await onSearchCatalog(itemName, idx);
+      if (result) {
+        setCatalogPrices(prev => ({
+          ...prev,
+          [idx]: {
+            catalog_item_id: result.id,
+            name: result.name,
+            price: result.price
+          }
+        }));
+        setItemPrices(prev => ({ ...prev, [idx]: result.price?.toString() || "" }));
+      }
+    }
+  };
+
   // Handle create order
   const handleCreate = async (isRFQ = false) => {
-    if (selectedItemIndices.length === 0) return;
-    if (!supplierName.trim()) return;
+    if (selectedItemIndices.length === 0) {
+      return;
+    }
+    if (!supplierName.trim()) {
+      toggleSection('supplier');
+      return;
+    }
     
     // Check for unlinked items
     const unlinkedItems = selectedItemIndices.filter(idx => !catalogPrices[idx]);
@@ -336,27 +411,30 @@ const OrderCreationDialog = ({
     setSubmitting(true);
     try {
       const orderData = {
-        request_id: request.id,
+        request_id: request?.id,
         supplier_id: selectedSupplierId || null,
         supplier_name: supplierName,
         selected_items: selectedItemIndices,
+        category_id: selectedCategoryId || null,
+        notes: orderNotes,
+        terms_conditions: termsConditions,
+        expected_delivery_date: expectedDeliveryDate || null,
         item_prices: selectedItemIndices.map(idx => ({
           index: idx,
           unit_price: parseFloat(itemPrices[idx]) || 0,
           catalog_item_id: catalogPrices[idx]?.catalog_item_id || null
         })),
-        category_id: selectedCategoryId || null,
-        notes: orderNotes,
         unlinked_items: unlinkedItems.map(idx => {
-          const item = remainingItems.find(i => i.index === idx);
+          const item = remainingItems?.find(i => i.index === idx);
           return { index: idx, name: item?.name, unit: item?.unit };
-        })
+        }),
+        catalogPrices: catalogPrices
       };
       
       if (isRFQ) {
-        await onCreateRFQ(orderData);
+        await onCreateRFQ?.(orderData);
       } else {
-        await onCreateOrder(orderData, unlinkedItems.length > 0);
+        await onCreateOrder?.(orderData, unlinkedItems.length > 0, catalogPrices, itemPrices);
       }
     } finally {
       setSubmitting(false);
@@ -365,15 +443,18 @@ const OrderCreationDialog = ({
 
   const total = calculateTotal();
   const unlinkedCount = selectedItemIndices.filter(idx => !catalogPrices[idx]).length;
+  const filteredBudgetCategories = budgetCategories?.filter(c => 
+    c.project_id === request?.project_id || c.project_name === request?.project_name
+  ) || [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md h-[90vh] max-h-[700px] p-0 flex flex-col" dir="rtl">
+      <DialogContent className="w-[95vw] max-w-lg h-[90vh] max-h-[750px] p-0 flex flex-col overflow-hidden" dir="rtl">
         {/* Header */}
         <div className="flex-shrink-0 border-b bg-gradient-to-l from-orange-50 to-white">
           <div className="flex items-center justify-between p-4">
             <div>
-              <h2 className="font-bold text-slate-800">إصدار أمر شراء</h2>
+              <h2 className="font-bold text-lg text-slate-800">إصدار أمر شراء</h2>
               {request && (
                 <p className="text-xs text-slate-500 mt-0.5">
                   {request.request_number} • {request.project_name}
@@ -401,7 +482,7 @@ const OrderCreationDialog = ({
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
             </div>
-          ) : remainingItems.length === 0 ? (
+          ) : !remainingItems || remainingItems.length === 0 ? (
             <div className="text-center py-12">
               <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-3" />
               <p className="text-green-700 font-semibold">تم إصدار أوامر شراء لجميع الأصناف</p>
@@ -437,7 +518,7 @@ const OrderCreationDialog = ({
                     </Button>
                   </div>
                   
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
                     {remainingItems.map((item) => (
                       <ItemCard
                         key={item.index}
@@ -453,7 +534,8 @@ const OrderCreationDialog = ({
                           delete newPrices[item.index];
                           return newPrices;
                         })}
-                        catalogItems={catalogItems}
+                        onAutoSearch={() => handleAutoSearch(item.index, item.name)}
+                        catalogItems={catalogItems || []}
                       />
                     ))}
                   </div>
@@ -473,7 +555,7 @@ const OrderCreationDialog = ({
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <SearchableSelect
-                        options={suppliers}
+                        options={suppliers || []}
                         value={selectedSupplierId}
                         onChange={(value, supplier) => {
                           setSelectedSupplierId(value);
@@ -507,32 +589,98 @@ const OrderCreationDialog = ({
                 </div>
               </AccordionSection>
 
+              {/* Budget Category Section */}
+              <AccordionSection
+                title="تصنيف الميزانية"
+                icon={DollarSign}
+                isOpen={openSections.budget}
+                onToggle={() => toggleSection('budget')}
+                status={getSectionStatus('budget')}
+                badge={selectedCategoryId ? "محدد" : "اختياري"}
+                disabled={selectedItemIndices.length === 0}
+              >
+                <div className="space-y-2">
+                  <SearchableSelect
+                    options={filteredBudgetCategories}
+                    value={selectedCategoryId}
+                    onChange={(value) => setSelectedCategoryId(value)}
+                    placeholder="-- اختر التصنيف (اختياري) --"
+                    searchPlaceholder="ابحث في التصنيفات..."
+                    displayKey="name"
+                    valueKey="id"
+                  />
+                  {selectedCategoryId && (() => {
+                    const cat = filteredBudgetCategories.find(c => c.id === selectedCategoryId);
+                    if (!cat) return null;
+                    const willExceed = total > (cat.remaining || 0);
+                    return (
+                      <div className={`text-xs p-2 rounded-lg ${willExceed ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+                        {willExceed 
+                          ? `⚠️ تجاوز الميزانية بـ ${(total - (cat.remaining || 0)).toLocaleString('ar-SA')} ر.س`
+                          : `✓ ضمن الميزانية - سيتبقى ${((cat.remaining || 0) - total).toLocaleString('ar-SA')} ر.س`
+                        }
+                      </div>
+                    );
+                  })()}
+                </div>
+              </AccordionSection>
+
               {/* Notes Section */}
               <AccordionSection
-                title="ملاحظات"
+                title="معلومات إضافية"
                 icon={FileText}
                 isOpen={openSections.notes}
                 onToggle={() => toggleSection('notes')}
+                badge="اختياري"
                 disabled={selectedItemIndices.length === 0}
               >
-                <Textarea
-                  placeholder="ملاحظات إضافية (اختياري)"
-                  value={orderNotes}
-                  onChange={(e) => setOrderNotes(e.target.value)}
-                  className="min-h-[80px] resize-none"
-                />
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs text-slate-600 mb-1 block">تاريخ التسليم المتوقع</Label>
+                    <div className="relative">
+                      <Input 
+                        type="date"
+                        value={expectedDeliveryDate}
+                        onChange={(e) => setExpectedDeliveryDate(e.target.value)}
+                        className="h-10 pl-10"
+                      />
+                      <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-600 mb-1 block">ملاحظات</Label>
+                    <Textarea
+                      placeholder="أضف أي ملاحظات..."
+                      value={orderNotes}
+                      onChange={(e) => setOrderNotes(e.target.value)}
+                      className="min-h-[60px] resize-none text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-600 mb-1 block">الشروط والأحكام</Label>
+                    <Textarea
+                      placeholder="شروط الدفع، التسليم..."
+                      value={termsConditions}
+                      onChange={(e) => setTermsConditions(e.target.value)}
+                      className="min-h-[60px] resize-none text-sm"
+                    />
+                  </div>
+                </div>
               </AccordionSection>
             </>
           )}
         </div>
 
         {/* Footer - Sticky */}
-        {remainingItems.length > 0 && selectedItemIndices.length > 0 && (
-          <div className="flex-shrink-0 border-t bg-white p-3 space-y-2">
+        {remainingItems && remainingItems.length > 0 && selectedItemIndices.length > 0 && (
+          <div className="flex-shrink-0 border-t bg-white p-3 space-y-2 shadow-lg">
             {/* Summary */}
             <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-slate-600">الإجمالي:</span>
-              <span className="font-bold text-lg text-slate-800">
+              <div className="flex items-center gap-3">
+                <span className="text-slate-600">الإجمالي:</span>
+                <span className="text-xs text-slate-500">({selectedItemIndices.length} صنف)</span>
+              </div>
+              <span className="font-bold text-xl text-orange-600">
                 {total.toLocaleString('ar-SA')} ر.س
               </span>
             </div>
@@ -541,7 +689,7 @@ const OrderCreationDialog = ({
             {unlinkedCount > 0 && (
               <div className="flex items-center gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-700">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span>{unlinkedCount} صنف غير مربوط بالكتالوج</span>
+                <span>{unlinkedCount} صنف غير مربوط بالكتالوج - سيُطلب إضافته قبل الإصدار</span>
               </div>
             )}
             
@@ -551,7 +699,7 @@ const OrderCreationDialog = ({
                 variant="outline"
                 onClick={() => handleCreate(true)}
                 disabled={submitting || !supplierName.trim()}
-                className="flex-1 h-11 gap-2"
+                className="flex-1 h-11 gap-2 border-indigo-300 text-indigo-600 hover:bg-indigo-50"
               >
                 <Send className="w-4 h-4" />
                 طلب عرض سعر
