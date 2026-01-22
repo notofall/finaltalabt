@@ -233,31 +233,32 @@ async def create_backup(
     """Create a full system backup as JSON"""
     require_system_admin(current_user)
     
-    backup_data = {
-        "backup_info": {
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "created_by": current_user.name,
-            "version": "2.0"
-        },
-        "users": [],
-        "projects": [],
-        "suppliers": [],
-        "budget_categories": [],
-        "default_budget_categories": [],
-        "material_requests": [],
-        "material_request_items": [],
-        "purchase_orders": [],
-        "purchase_order_items": [],
-        "delivery_records": [],
-        "audit_logs": [],
-        "system_settings": [],
-        "price_catalog": [],
-        "planned_quantities": []
-    }
-    
-    # Users
-    result = await session.execute(select(User))
-    for user in result.scalars().all():
+    try:
+        backup_data = {
+            "backup_info": {
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_by": current_user.name,
+                "version": "2.0"
+            },
+            "users": [],
+            "projects": [],
+            "suppliers": [],
+            "budget_categories": [],
+            "default_budget_categories": [],
+            "material_requests": [],
+            "material_request_items": [],
+            "purchase_orders": [],
+            "purchase_order_items": [],
+            "delivery_records": [],
+            "audit_logs": [],
+            "system_settings": [],
+            "price_catalog": [],
+            "planned_quantities": []
+        }
+        
+        # Users
+        result = await session.execute(select(User))
+        for user in result.scalars().all():
         backup_data["users"].append({
             "id": user.id, "name": user.name, "email": user.email,
             "password": user.password, "role": user.role, "is_active": user.is_active
