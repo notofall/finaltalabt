@@ -208,12 +208,24 @@ class RequestRepository(BaseRepository[MaterialRequest]):
         return current_max + 1
     
     async def add_items(self, request_id: str, items: List[dict]) -> List:
-        """Add items to a request"""
-        from database import MaterialRequestItem
+        """Add items to a request - with automatic alias lookup"""
+        from database import MaterialRequestItem, ItemAlias
+        from sqlalchemy import select
         import uuid
         
         created_items = []
         for idx, item in enumerate(items):
+            catalog_item_id = item.get("catalog_item_id")
+            
+            # If no catalog_item_id provided, look for alias match
+            if not catalog_item_id:
+                alias_result = await self.session.execute(
+                    select(ItemAlias).where(ItemAlias.alias_name == item.get("name", ""))
+                )
+                alias = alias_result.scalar_one_or_none()
+                if alias:
+                    catalog_item_id = alias.catalog_item_id
+            
             item_obj = MaterialRequestItem(
                 id=str(uuid.uuid4()),
                 request_id=request_id,
@@ -222,7 +234,7 @@ class RequestRepository(BaseRepository[MaterialRequest]):
                 unit=item.get("unit", "قطعة"),
                 estimated_price=item.get("estimated_price"),
                 item_index=idx,
-                catalog_item_id=item.get("catalog_item_id")  # Link to catalog if provided
+                catalog_item_id=catalog_item_id  # Link from provided or alias
             )
             self.session.add(item_obj)
             created_items.append(item_obj)
