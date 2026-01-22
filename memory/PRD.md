@@ -257,6 +257,52 @@ GET /api/v2/system/database-stats  - إحصائيات قاعدة البيانا�
 
 ---
 
+## الإصلاحات المُنجزة (22 يناير 2026 - الجزء 2)
+
+### 1. استبدال window.confirm بحوار تأكيد مخصص ✅
+- **المشكلة**: استخدام `window.confirm()` الأصلي للمتصفح يعطي تجربة غير متجانسة
+- **الحل**: إنشاء مكون `confirm-dialog.jsx` مخصص باستخدام AlertDialog من shadcn
+- **الملفات المُحدّثة**:
+  - `frontend/src/components/ui/confirm-dialog.jsx` - مكون الحوار
+  - `frontend/src/components/procurement/CatalogManagement.js` - handleDeleteCatalogItem, handleDeleteAlias
+  - `frontend/src/components/procurement/ProjectManagement.js` - handleDeleteProject
+  - `frontend/src/components/procurement/SupplierManagement.js` - handleDeleteSupplier
+  - `frontend/src/components/BuildingsPermissions.js` - revokePermission
+  - `frontend/src/pages/SystemAdminDashboard.js` - handleDeleteUser, handleResetDomain, handleClearOldLogs, handleUploadUpdate
+- **الميزات**:
+  - دعم RTL للعربية
+  - نمط `destructive` للعمليات الخطرة (لون أحمر)
+  - أزرار مخصصة قابلة للتعديل
+
+### 2. تحسين نظام الأسماء البديلة (Aliases) ✅
+- **المنطق المُطبق**:
+  - عند إنشاء أمر شراء من طلب مواد، النظام يبحث تلقائياً عن alias مطابق لاسم الصنف
+  - إذا وُجد alias، يتم ربط `catalog_item_id` و `item_code` تلقائياً
+  - عند ربط صنف يدوياً بالكتالوج، يتم إنشاء alias جديد إذا كان اسم الصنف مختلفاً عن اسم الكتالوج
+- **الملفات ذات الصلة**:
+  - `backend/routes/v2_orders_routes.py` (سطور 424-466, 611-678)
+- **الأسماء البديلة الموجودة**:
+  - "ماسورة 3/4" → مواسير PVC
+  - "كوع 3/4" → مواسير PVC
+
+---
+
+## المهام القادمة (مُحدّث)
+
+### P1 - أولوية عالية
+- [ ] إصلاح الخط العربي في ملفات PDF لنظام المباني (Buildings System)
+- [ ] إعادة تصميم ملف PDF لعرض الأسعار ليتطابق مع تصميم أمر الشراء
+
+### P2 - أولوية متوسطة
+- [ ] إضافة إعداد حد موافقة المدير العام على أوامر الشراء
+- [ ] استيراد معاملات المواد من ملف Excel
+
+### P3 - أولوية منخفضة
+- [ ] استكمال النشر على AWS Lightsail
+- [ ] تحسين وظيفة النسخ الاحتياطي والاستعادة للبيانات المتداخلة
+
+---
+
 ## الروابط
 - **Preview URL**: https://item-alias-link.preview.emergentagent.com
-- **Test Reports**: `/app/test_reports/iteration_1.json`
+- **Test Reports**: `/app/test_reports/iteration_5.json`
