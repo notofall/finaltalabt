@@ -284,7 +284,8 @@ async def create_backup(
     for cat in result.scalars().all():
         backup_data["budget_categories"].append({
             "id": cat.id, "name": cat.name, "code": cat.code,
-            "project_id": cat.project_id, "estimated_budget": cat.estimated_budget
+            "project_id": cat.project_id, "project_name": cat.project_name,
+            "estimated_budget": cat.estimated_budget, "actual_spent": cat.actual_spent
         })
     
     # Default Budget Categories
