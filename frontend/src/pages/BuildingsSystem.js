@@ -692,7 +692,13 @@ const BuildingsSystem = () => {
 
   // Remove project from buildings system (not delete, just hide)
   const handleRemoveProjectFromBuildings = async (projectId) => {
-    if (!window.confirm("⚠️ هل أنت متأكد من حذف جميع كميات هذا المشروع؟\n\nسيتم حذف:\n• نماذج الوحدات\n• مواد النماذج\n• أدوار المشروع\n• مواد المساحة\n• بيانات تتبع التوريد\n\nهذا الإجراء لا يمكن التراجع عنه!")) return;
+    const confirmed = await confirm({
+      title: "⚠️ تحذير هام",
+      description: "هل أنت متأكد من حذف جميع كميات هذا المشروع؟\n\nسيتم حذف:\n• نماذج الوحدات\n• مواد النماذج\n• أدوار المشروع\n• مواد المساحة\n• بيانات تتبع التوريد\n\nهذا الإجراء لا يمكن التراجع عنه!",
+      confirmText: "حذف الكل",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     
     try {
       const res = await axios.delete(`${BUILDINGS_API}/projects/${projectId}`, getAuthHeaders());
