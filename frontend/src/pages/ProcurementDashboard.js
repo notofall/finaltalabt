@@ -1189,28 +1189,73 @@ const ProcurementDashboard = () => {
     if (!supplierName.trim()) { toast.error("الرجاء إدخال اسم المورد"); return; }
     if (selectedItemIndices.length === 0) { toast.error("الرجاء اختيار صنف واحد على الأقل"); return; }
     
+    // Check for unlinked items (items without catalog_item_id)
+    const unlinkedItemsList = [];
+    selectedItemIndices.forEach(idx => {
+      const item = selectedRequest.items[idx];
+      const hasCatalogLink = catalogPrices[idx]?.catalog_item_id || item?.catalog_item_id;
+      
+      if (!hasCatalogLink) {
+        unlinkedItemsList.push({
+          index: idx,
+          name: item.name,
+          unit: item.unit || "قطعة",
+          item_code: "",
+          category_id: ""
+        });
+      }
+    });
+    
+    // If there are unlinked items, show dialog to add them to catalog
+    if (unlinkedItemsList.length > 0) {
+      setUnlinkedItems(unlinkedItemsList);
+      setPendingOrderData({
+        request_id: selectedRequest.id,
+        supplier_id: selectedSupplierId || null,
+        supplier_name: supplierName,
+        selected_items: selectedItemIndices,
+        category_id: selectedCategoryId || null,
+        notes: orderNotes,
+        terms_conditions: termsConditions,
+        expected_delivery_date: expectedDeliveryDate || null
+      });
+      setUnlinkedItemsDialog(true);
+      return;
+    }
+    
+    // All items are linked, proceed with order creation
+    await proceedWithOrderCreation();
+  };
+  
+  // Proceed with order creation after all items are linked
+  const proceedWithOrderCreation = async (overrideData = null) => {
+    const orderData = overrideData || {
+      request_id: selectedRequest.id,
+      supplier_id: selectedSupplierId || null,
+      supplier_name: supplierName,
+      selected_items: selectedItemIndices,
+      category_id: selectedCategoryId || null,
+      notes: orderNotes,
+      terms_conditions: termsConditions,
+      expected_delivery_date: expectedDeliveryDate || null
+    };
+    
     // Build item prices array with catalog item linking
-    const pricesArray = selectedItemIndices.map(idx => ({
+    const pricesArray = orderData.selected_items.map(idx => ({
       index: idx,
       unit_price: parseFloat(itemPrices[idx]) || 0,
-      catalog_item_id: catalogPrices[idx]?.catalog_item_id || null
+      catalog_item_id: catalogPrices[idx]?.catalog_item_id || selectedRequest.items[idx]?.catalog_item_id || null
     }));
     
     setSubmitting(true);
     try {
       const response = await axios.post(`${API_V2_URL}/orders/from-request`, { 
-        request_id: selectedRequest.id, 
-        supplier_id: selectedSupplierId || null,
-        supplier_name: supplierName, 
-        selected_items: selectedItemIndices,
-        item_prices: pricesArray,
-        category_id: selectedCategoryId || null,  // Budget category
-        notes: orderNotes,
-        terms_conditions: termsConditions,
-        expected_delivery_date: expectedDeliveryDate || null
+        ...orderData,
+        item_prices: pricesArray
       }, getAuthHeaders());
       toast.success("تم إصدار أمر الشراء بنجاح");
       setOrderDialogOpen(false);
+      setUnlinkedItemsDialog(false);
       setSelectedSupplierId("");
       setSupplierName("");
       setOrderNotes("");
@@ -1220,6 +1265,8 @@ const ProcurementDashboard = () => {
       setItemPrices({});
       setSelectedCategoryId("");
       setSelectedRequest(null);
+      setPendingOrderData(null);
+      setUnlinkedItems([]);
       
       // Refresh data and open the new order for viewing/approval
       await fetchData();
@@ -1243,6 +1290,69 @@ const ProcurementDashboard = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+  
+  // Add unlinked item to catalog and link it
+  const handleAddUnlinkedItemToCatalog = async (itemIndex) => {
+    const item = unlinkedItems.find(i => i.index === itemIndex);
+    if (!item) return;
+    
+    if (!item.item_code.trim()) {
+      toast.error("الرجاء إدخال كود الصنف");
+      return;
+    }
+    if (!item.category_id) {
+      toast.error("الرجاء اختيار التصنيف");
+      return;
+    }
+    
+    try {
+      // Add item to catalog
+      const response = await axios.post(`${API_V2_URL}/catalog/items`, {
+        item_code: item.item_code.trim(),
+        name: item.name,
+        unit: item.unit,
+        price: parseFloat(itemPrices[itemIndex]) || 0,
+        category_name: item.category_id,
+        currency: "SAR",
+        supplier_name: supplierName || null
+      }, getAuthHeaders());
+      
+      // Link the item
+      const newCatalogItemId = response.data.id;
+      setCatalogPrices(prev => ({
+        ...prev,
+        [itemIndex]: {
+          catalog_item_id: newCatalogItemId,
+          price: parseFloat(itemPrices[itemIndex]) || 0,
+          name: item.name
+        }
+      }));
+      
+      // Remove from unlinked list
+      setUnlinkedItems(prev => prev.filter(i => i.index !== itemIndex));
+      
+      toast.success(`تم إضافة "${item.name}" للكتالوج وربطه`);
+      
+      // If all items are now linked, proceed with order
+      if (unlinkedItems.length === 1) {
+        // Last item was just linked
+        setTimeout(() => {
+          if (pendingOrderData) {
+            proceedWithOrderCreation(pendingOrderData);
+          }
+        }, 500);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "فشل في إضافة الصنف للكتالوج");
+    }
+  };
+  
+  // Update unlinked item field
+  const updateUnlinkedItem = (itemIndex, field, value) => {
+    setUnlinkedItems(prev => prev.map(item => 
+      item.index === itemIndex ? { ...item, [field]: value } : item
+    ));
   };
 
   const handleApproveOrder = async (orderId) => {
