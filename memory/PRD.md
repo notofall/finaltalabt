@@ -221,6 +221,42 @@
 
 ---
 
+## الإصلاحات المُنجزة (22 يناير 2026)
+
+### 1. إصلاح وتحسين نظام النسخ الاحتياطي ✅
+- **المشكلة**: خطأ `AttributeError: 'Supplier' object has no attribute 'code'` عند النسخ الاحتياطي
+- **الحل**: تصحيح حقول جميع الجداول في وظيفة النسخ الاحتياطي
+- **التحسينات**:
+  - إضافة جداول جديدة: `material_request_items`, `purchase_order_items`, `delivery_records`, `audit_logs`
+  - النسخة الاحتياطية تشمل الآن 14 جدول
+  - إضافة معلومات كاملة للمشاريع (owner_name, created_by, etc.)
+
+### 2. تحسين وظيفة استعادة البيانات ✅
+- **المشكلة**: خطأ `NOT NULL constraint failed` عند الاستعادة
+- **الحل**: إضافة الحقول المطلوبة (created_by, created_by_name) للجداول
+- **الجداول المدعومة للاستعادة**:
+  - Users, Projects, Suppliers
+  - Default Budget Categories, System Settings
+  - Price Catalog Items
+
+### 3. تحسين وظيفة تنظيف البيانات ✅
+- **الجداول المضافة للتنظيف**:
+  - `delivery_records`
+  - `default_budget_categories`
+  - `price_catalog`
+  - `planned_quantities`
+- **التحقق**: يحتفظ فقط بمستخدم مدير النظام الحالي
+
+### APIs المحدثة
+```
+GET /api/v2/system/backup          - النسخ الاحتياطي (14 جدول)
+POST /api/v2/system/restore        - استعادة البيانات
+POST /api/v2/system/clean-data     - تنظيف البيانات
+GET /api/v2/system/database-stats  - إحصائيات قاعدة البيانات
+```
+
+---
+
 ## الروابط
 - **Preview URL**: https://project-code-mgmt.preview.emergentagent.com
 - **Test Reports**: `/app/test_reports/iteration_1.json`
