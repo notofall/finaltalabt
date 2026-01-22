@@ -366,7 +366,13 @@ const ProcurementDashboard = () => {
 
   // Delete Catalog Item - Using V2 API
   const handleDeleteCatalogItem = async (itemId) => {
-    if (!window.confirm("هل تريد تعطيل هذا الصنف؟")) return;
+    const confirmed = await confirm({
+      title: "تعطيل الصنف",
+      description: "هل تريد تعطيل هذا الصنف؟",
+      confirmText: "تعطيل",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     try {
       await axios.delete(`${API_V2_URL}/catalog/items/${itemId}`, getAuthHeaders());
       toast.success("تم تعطيل الصنف");
@@ -394,7 +400,13 @@ const ProcurementDashboard = () => {
 
   // Delete Item Alias - Using V2 API
   const handleDeleteAlias = async (aliasId) => {
-    if (!window.confirm("هل تريد حذف هذا الربط؟")) return;
+    const confirmed = await confirm({
+      title: "حذف الربط",
+      description: "هل تريد حذف هذا الربط؟",
+      confirmText: "حذف",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     try {
       await axios.delete(`${API_V2_URL}/catalog/aliases/${aliasId}`, getAuthHeaders());
       toast.success("تم حذف الربط");
