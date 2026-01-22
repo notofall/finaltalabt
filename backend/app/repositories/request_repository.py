@@ -135,7 +135,8 @@ class RequestRepository(BaseRepository[MaterialRequest]):
                 "name": item.name,
                 "quantity": item.quantity or 0,
                 "unit": item.unit or "قطعة",
-                "estimated_price": item.estimated_price
+                "estimated_price": item.estimated_price,
+                "catalog_item_id": item.catalog_item_id
             }
             for item in items
         ]
