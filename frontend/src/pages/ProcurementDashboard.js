@@ -892,7 +892,13 @@ const ProcurementDashboard = () => {
   };
 
   const handleDeleteCategory = async (categoryId) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذا التصنيف؟")) return;
+    const confirmed = await confirm({
+      title: "حذف التصنيف",
+      description: "هل أنت متأكد من حذف هذا التصنيف؟",
+      confirmText: "حذف",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     try {
       await axios.delete(`${API_V2_URL}/budget/categories/${categoryId}`, getAuthHeaders());
       toast.success("تم حذف التصنيف بنجاح");
