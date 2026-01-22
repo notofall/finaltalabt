@@ -273,9 +273,10 @@ async def create_backup(
     result = await session.execute(select(Supplier))
     for supplier in result.scalars().all():
         backup_data["suppliers"].append({
-            "id": supplier.id, "name": supplier.name, "code": supplier.code,
+            "id": supplier.id, "name": supplier.name,
             "contact_person": supplier.contact_person, "phone": supplier.phone,
-            "email": supplier.email, "is_active": supplier.is_active
+            "email": supplier.email, "address": supplier.address,
+            "notes": supplier.notes
         })
     
     # Budget Categories
