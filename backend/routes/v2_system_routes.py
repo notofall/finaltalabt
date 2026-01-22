@@ -248,6 +248,8 @@ async def create_backup(
         "material_request_items": [],
         "purchase_orders": [],
         "purchase_order_items": [],
+        "delivery_records": [],
+        "audit_logs": [],
         "system_settings": [],
         "price_catalog": [],
         "planned_quantities": []
