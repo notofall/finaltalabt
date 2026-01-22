@@ -1099,26 +1099,73 @@ const ProcurementDashboard = () => {
       setSelectedItemIndices(remaining.map(item => item.index));
       
       // Pre-fill item prices from estimated_price or catalog price
+      // AND pre-fill catalogPrices from items that already have catalog_item_id
       const initialPrices = {};
-      remaining.forEach(item => {
+      const initialCatalogPrices = {};
+      
+      for (const item of remaining) {
         if (item.estimated_price && item.estimated_price > 0) {
           initialPrices[item.index] = item.estimated_price.toString();
         }
-      });
+        
+        // If item already has catalog_item_id (linked by supervisor), fetch catalog info
+        if (item.catalog_item_id) {
+          try {
+            const catalogRes = await axios.get(
+              `${API_V2_URL}/catalog/items/${item.catalog_item_id}`,
+              getAuthHeaders()
+            );
+            if (catalogRes.data) {
+              initialCatalogPrices[item.index] = {
+                catalog_item_id: item.catalog_item_id,
+                price: catalogRes.data.price || item.estimated_price || 0,
+                name: catalogRes.data.name,
+                supplier_name: catalogRes.data.supplier_name
+              };
+              // Auto-fill price from catalog if not already set
+              if (!initialPrices[item.index] && catalogRes.data.price) {
+                initialPrices[item.index] = catalogRes.data.price.toString();
+              }
+            }
+          } catch (e) {
+            // If catalog item not found, mark as linked but no details
+            initialCatalogPrices[item.index] = {
+              catalog_item_id: item.catalog_item_id,
+              price: item.estimated_price || 0,
+              name: item.name
+            };
+          }
+        }
+      }
+      
       setItemPrices(initialPrices);
+      setCatalogPrices(initialCatalogPrices);
     } catch (error) {
-      // If API fails, show all items
-      setRemainingItems(request.items.map((item, idx) => ({ index: idx, ...item })));
-      setSelectedItemIndices(request.items.map((_, idx) => idx));
+      // If API fails, show all items from request
+      const items = request.items || [];
+      setRemainingItems(items.map((item, idx) => ({ index: idx, ...item })));
+      setSelectedItemIndices(items.map((_, idx) => idx));
       
       // Pre-fill from original request items
       const initialPrices = {};
-      request.items.forEach((item, idx) => {
+      const initialCatalogPrices = {};
+      
+      items.forEach((item, idx) => {
         if (item.estimated_price && item.estimated_price > 0) {
           initialPrices[idx] = item.estimated_price.toString();
         }
+        // Pre-fill catalog info if exists
+        if (item.catalog_item_id) {
+          initialCatalogPrices[idx] = {
+            catalog_item_id: item.catalog_item_id,
+            price: item.estimated_price || 0,
+            name: item.name
+          };
+        }
       });
+      
       setItemPrices(initialPrices);
+      setCatalogPrices(initialCatalogPrices);
     } finally {
       setLoadingItems(false);
     }
