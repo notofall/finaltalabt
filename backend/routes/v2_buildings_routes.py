@@ -287,6 +287,79 @@ async def enable_project_for_buildings(
     return {"message": "تم تفعيل المشروع في نظام الكميات بنجاح"}
 
 
+@router.get("/my-supply-tracking")
+async def get_my_supply_tracking(
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """
+    Get supply tracking for projects assigned to the current user (supervisor/engineer)
+    تتبع التوريد للمشاريع المرتبطة بالمستخدم الحالي
+    """
+    from database.models import SupplyTracking
+    
+    user_id = str(current_user.id)
+    user_role = current_user.role
+    
+    # Build query based on user role
+    if user_role == "supervisor":
+        # Get projects where user is supervisor
+        projects_query = select(Project).where(
+            Project.supervisor_id == user_id,
+            Project.status == "active"
+        )
+    elif user_role == "engineer":
+        # Get projects where user is engineer
+        projects_query = select(Project).where(
+            Project.engineer_id == user_id,
+            Project.status == "active"
+        )
+    else:
+        # For other roles, show all active projects
+        projects_query = select(Project).where(Project.status == "active")
+    
+    projects_result = await session.execute(projects_query.order_by(Project.created_at.desc()))
+    projects = projects_result.scalars().all()
+    
+    # Get supply tracking for each project
+    result = []
+    for project in projects:
+        supply_result = await session.execute(
+            select(SupplyTracking).where(SupplyTracking.project_id == str(project.id))
+        )
+        supply_items = supply_result.scalars().all()
+        
+        # Calculate totals
+        total_required = sum(item.required_quantity for item in supply_items)
+        total_received = sum(item.received_quantity or 0 for item in supply_items)
+        
+        project_data = {
+            "project_id": str(project.id),
+            "project_name": project.name,
+            "project_code": project.code,
+            "items_count": len(supply_items),
+            "total_required": total_required,
+            "total_received": total_received,
+            "completion_percentage": round((total_received / total_required * 100) if total_required > 0 else 0, 1),
+            "supply_items": [
+                {
+                    "id": str(item.id),
+                    "item_name": item.item_name,
+                    "item_code": item.item_code,
+                    "unit": item.unit,
+                    "required_quantity": item.required_quantity,
+                    "received_quantity": item.received_quantity or 0,
+                    "remaining_quantity": item.required_quantity - (item.received_quantity or 0),
+                    "completion_percentage": round(((item.received_quantity or 0) / item.required_quantity * 100) if item.required_quantity > 0 else 0, 1)
+                }
+                for item in supply_items
+            ]
+        }
+        result.append(project_data)
+    
+    return result
+
+
 @router.get("/dashboard")
 async def get_buildings_dashboard(
     current_user = Depends(get_current_user),
