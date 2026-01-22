@@ -326,7 +326,13 @@ const QuantityEngineerDashboard = () => {
 
   // Delete planned item
   const handleDeleteItem = async (itemId) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذا العنصر؟")) return;
+    const confirmed = await confirm({
+      title: "حذف العنصر",
+      description: "هل أنت متأكد من حذف هذا العنصر؟",
+      confirmText: "حذف",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     
     try {
       const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
