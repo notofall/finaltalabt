@@ -293,7 +293,7 @@ async def create_backup(
     for cat in result.scalars().all():
         backup_data["default_budget_categories"].append({
             "id": cat.id, "name": cat.name, "code": cat.code,
-            "description": cat.description
+            "default_budget": cat.default_budget
         })
     
     # Material Requests
