@@ -33,7 +33,6 @@ const SupervisorDashboard = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deliveryDialogOpen, setDeliveryDialogOpen] = useState(false);
-  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [selectedDelivery, setSelectedDelivery] = useState(null);
@@ -56,10 +55,6 @@ const SupervisorDashboard = () => {
   const [reason, setReason] = useState("");
   const [engineerId, setEngineerId] = useState("");
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("");
-
-  // Project form state
-  const [newProject, setNewProject] = useState({ name: "", code: "", owner_name: "", description: "", location: "" });
-  const [editingProject, setEditingProject] = useState(null);
 
   // Catalog suggestions state - اقتراحات الكتالوج
   const [catalogSuggestions, setCatalogSuggestions] = useState([]);
