@@ -269,7 +269,14 @@ async def create_backup(
         for project in result.scalars().all():
             backup_data["projects"].append({
                 "id": project.id, "name": project.name, "code": project.code,
-                "description": project.description, "status": project.status
+                "description": project.description, "status": project.status,
+                "owner_name": project.owner_name, "location": project.location,
+                "supervisor_id": project.supervisor_id, "supervisor_name": project.supervisor_name,
+                "engineer_id": project.engineer_id, "engineer_name": project.engineer_name,
+                "created_by": project.created_by, "created_by_name": project.created_by_name,
+                "created_at": project.created_at.isoformat() if project.created_at else None,
+                "total_area": project.total_area, "floors_count": project.floors_count,
+                "steel_factor": project.steel_factor, "is_building_project": project.is_building_project
             })
         
         # Suppliers
