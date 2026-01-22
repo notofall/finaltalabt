@@ -246,8 +246,25 @@ const ProcurementDashboard = () => {
   // Quick refresh function for real-time updates
   const handleRefresh = async () => {
     setRefreshing(true);
+    
+    // Clear all caches
+    try {
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      localStorage.clear();
+      if (token) localStorage.setItem('token', token);
+      if (user) localStorage.setItem('user', user);
+      sessionStorage.clear();
+    } catch (e) {
+      console.log('Cache clear error:', e);
+    }
+    
     await fetchData();
-    toast.success("تم تحديث البيانات");
+    toast.success("تم تحديث البيانات ومسح الذاكرة المؤقتة");
   };
 
   // Fetch Price Catalog - Using V2 API
