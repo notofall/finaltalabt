@@ -230,21 +230,6 @@ const EngineerDashboard = () => {
           </Card>
         </div>
 
-        {/* Supply Tracking Section - قسم تتبع التوريد */}
-        <Card className="mb-4 border-green-200">
-          <CardHeader className="p-3 border-b bg-gradient-to-l from-green-50 to-white">
-            <CardTitle className="text-base flex items-center justify-between">
-              <span className="flex items-center gap-2">
-                <Truck className="w-5 h-5 text-green-600" />
-                <span>تتبع التوريد</span>
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3">
-            <SupplyTrackingView />
-          </CardContent>
-        </Card>
-
         {/* Requests Section */}
         <div className="mb-4">
           <div className="flex flex-col gap-3 mb-3">
