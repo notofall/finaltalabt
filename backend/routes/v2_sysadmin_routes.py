@@ -2,15 +2,22 @@
 V2 Sysadmin Routes - System administration with proper layering
 Uses: SettingsService -> SettingsRepository
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from typing import Dict, Optional
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+import os
+import uuid
+from pathlib import Path
 
 from database import get_postgres_session
 from app.repositories.settings_repository import SettingsRepository
 from app.services.settings_service import SettingsService
 from routes.v2_auth_routes import get_current_user, UserRole
+
+# مجلد رفع الملفات
+UPLOAD_DIR = Path(__file__).parent.parent / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
 
 
 router = APIRouter(
