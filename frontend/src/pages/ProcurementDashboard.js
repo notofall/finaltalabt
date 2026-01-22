@@ -803,7 +803,13 @@ const ProcurementDashboard = () => {
   };
 
   const handleDeleteProject = async (projectId) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذا المشروع؟")) return;
+    const confirmed = await confirm({
+      title: "حذف المشروع",
+      description: "هل أنت متأكد من حذف هذا المشروع؟",
+      confirmText: "حذف",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     
     try {
       await axios.delete(`${API_V2_URL}/projects/${projectId}`, getAuthHeaders());
