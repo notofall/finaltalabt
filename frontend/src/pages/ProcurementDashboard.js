@@ -2662,416 +2662,136 @@ const ProcurementDashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Create Order Dialog - Shows only remaining items */}
-      <Dialog open={orderDialogOpen} onOpenChange={setOrderDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto p-0" dir="rtl">
-          {/* Header - Simplified with Close Button */}
-          <div className="sticky top-0 z-10 bg-white border-b px-4 py-3">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-base font-bold text-slate-800">
-                إصدار أمر شراء
-              </DialogTitle>
-              <div className="flex items-center gap-3">
-                {selectedRequest && (
-                  <span className="text-sm font-normal text-slate-500">{selectedRequest.request_number}</span>
-                )}
-                <button 
-                  onClick={() => setOrderDialogOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-red-100 hover:text-red-600 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            {selectedRequest && (
-              <p className="text-xs text-slate-500 mt-1">{selectedRequest.project_name}</p>
-            )}
-          </div>
+      {/* Create Order Dialog - Redesigned Mobile-First Component */}
+      <OrderCreationDialog
+        open={orderDialogOpen}
+        onOpenChange={setOrderDialogOpen}
+        request={selectedRequest}
+        remainingItems={remainingItems}
+        loadingItems={loadingItems}
+        suppliers={suppliers}
+        budgetCategories={budgetCategories}
+        catalogItems={catalogItems}
+        defaultCategories={defaultCategories}
+        onAddSupplier={() => setSupplierDialogOpen(true)}
+        onSearchCatalog={async (itemName, itemIndex) => {
+          try {
+            const res = await axios.get(
+              `${API_V2_URL}/catalog/aliases/suggest/${encodeURIComponent(itemName)}`,
+              getAuthHeaders()
+            );
+            if (res.data.found && res.data.catalog_item) {
+              toast.success(`تم العثور على "${res.data.catalog_item.name}" في الكتالوج`);
+              return res.data.catalog_item;
+            }
+            toast.info("لم يتم العثور على الصنف في الكتالوج");
+            return null;
+          } catch (error) {
+            console.log("Catalog search error:", error);
+            return null;
+          }
+        }}
+        onCreateOrder={async (orderData, hasUnlinked, dialogCatalogPrices, dialogItemPrices) => {
+          // Update parent state with dialog data
+          setSelectedSupplierId(orderData.supplier_id || "");
+          setSupplierName(orderData.supplier_name);
+          setSelectedCategoryId(orderData.category_id || "");
+          setOrderNotes(orderData.notes || "");
+          setTermsConditions(orderData.terms_conditions || "");
+          setExpectedDeliveryDate(orderData.expected_delivery_date || "");
+          setSelectedItemIndices(orderData.selected_items);
           
-          {selectedRequest && (
-            <div className="p-4 space-y-4">
-              {/* Items Section - MOVED TO TOP */}
-              <div className="bg-slate-50 rounded-lg border">
-                <div className="p-3 border-b bg-slate-100 rounded-t-lg">
-                  <p className="font-semibold text-slate-700 text-sm">الأصناف المتبقية</p>
-                </div>
-                <div className="p-3">
-                  {loadingItems ? (
-                    <div className="text-center py-6">
-                      <div className="w-8 h-8 border-3 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                      <p className="text-slate-500 text-sm mt-3">جاري تحميل الأصناف...</p>
-                    </div>
-                  ) : remainingItems.length === 0 ? (
-                    <div className="text-center py-6 bg-green-50 rounded-lg">
-                      <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-2" />
-                      <p className="text-green-700 font-semibold">تم إصدار أوامر شراء لجميع الأصناف</p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="text-slate-600 text-sm">{remainingItems.length} صنف متبقي</span>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={selectAllItems} className="h-7 text-xs px-3 bg-white">تحديد الكل</Button>
-                          <Button size="sm" variant="outline" onClick={deselectAllItems} className="h-7 text-xs px-3 bg-white">إلغاء</Button>
-                        </div>
-                      </div>
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {remainingItems.map((item) => (
-                          <div 
-                            key={item.index} 
-                            className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                              selectedItemIndices.includes(item.index) 
-                                ? 'bg-green-50 border-green-400 shadow-sm' 
-                                : 'bg-white border-slate-200 hover:border-slate-300'
-                            }`}
-                            onClick={() => toggleItemSelection(item.index)}
-                          >
-                            <div className="flex items-center gap-3">
-                              <Checkbox 
-                                checked={selectedItemIndices.includes(item.index)}
-                                onCheckedChange={() => toggleItemSelection(item.index)}
-                                className="h-5 w-5"
-                              />
-                              <span className="font-medium text-sm">{item.name}</span>
-                            </div>
-                            <span className="text-slate-600 text-sm font-medium">{item.quantity} {item.unit}</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="text-center mt-3 py-2 bg-orange-50 rounded-lg">
-                        <span className="text-orange-700 font-medium text-sm">
-                          تم اختيار {selectedItemIndices.length} من {remainingItems.length} صنف
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-              
-              {remainingItems.length > 0 && (
-                <>
-                  {/* Supplier Selection */}
-                  <div className="bg-slate-50 rounded-lg border p-3 space-y-3">
-                    <Label className="text-sm font-semibold text-slate-700">المورد</Label>
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <SearchableSelect
-                          options={suppliers}
-                          value={selectedSupplierId}
-                          onChange={(value, supplier) => {
-                            setSelectedSupplierId(value);
-                            if (supplier) setSupplierName(supplier.name);
-                            else setSupplierName("");
-                          }}
-                          placeholder="اختر من القائمة"
-                          searchPlaceholder="ابحث في الموردين..."
-                          displayKey="name"
-                          valueKey="id"
-                        />
-                      </div>
-                      <Button type="button" variant="outline" size="sm" onClick={() => setSupplierDialogOpen(true)} className="h-10 px-3 bg-white">
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <Input 
-                      placeholder="أو اكتب اسم المورد يدوياً" 
-                      value={supplierName} 
-                      onChange={(e) => { setSupplierName(e.target.value); setSelectedSupplierId(""); }} 
-                      className="h-10 bg-white" 
-                    />
-                  </div>
-
-                  {/* Budget Category Selection */}
-                  <div className="bg-slate-50 rounded-lg border p-3 space-y-3">
-                    <Label className="text-sm font-semibold text-slate-700">تصنيف الميزانية</Label>
-                    <SearchableSelect
-                      options={budgetCategories.filter(c => c.project_id === selectedRequest?.project_id || c.project_name === selectedRequest?.project_name)}
-                      value={selectedCategoryId}
-                      onChange={(value) => setSelectedCategoryId(value)}
-                      placeholder="-- اختر التصنيف (اختياري) --"
-                      searchPlaceholder="ابحث في التصنيفات..."
-                      displayKey="name"
-                      valueKey="id"
-                      renderOption={(c) => (
-                        <div className="flex justify-between items-center">
-                          <span>{c.name}</span>
-                          <span className="text-xs text-green-600">متبقي: {(c.remaining || 0).toLocaleString('ar-SA')} ر.س</span>
-                        </div>
-                      )}
-                    />
-                    {selectedCategoryId && (() => {
-                      const cat = budgetCategories.find(c => c.id === selectedCategoryId);
-                      if (!cat) return null;
-                      const total = calculateTotal();
-                      const willExceed = total > cat.remaining;
-                      return (
-                        <div className={`text-xs p-2 rounded ${willExceed ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
-                          {willExceed 
-                            ? `⚠️ تجاوز الميزانية بـ ${(total - cat.remaining).toLocaleString('ar-SA')} ر.س`
-                            : `✓ ضمن الميزانية - سيتبقى ${(cat.remaining - total).toLocaleString('ar-SA')} ر.س`
-                          }
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Item Prices with Catalog Suggestions */}
-                  {selectedItemIndices.length > 0 && (
-                    <div className="bg-slate-50 rounded-lg border">
-                      <div className="p-3 border-b bg-slate-100 rounded-t-lg">
-                        <Label className="text-sm font-semibold text-slate-700">أسعار الأصناف المختارة</Label>
-                      </div>
-                      <div className="p-3 space-y-3 max-h-60 overflow-y-auto">
-                        {selectedItemIndices.map(idx => {
-                          const item = remainingItems.find(i => i.index === idx);
-                          if (!item) return null;
-                          const catalogInfo = catalogPrices[idx];
-                          return (
-                            <div key={idx} className={`p-3 rounded-lg border-2 ${catalogInfo ? 'bg-green-50 border-green-300' : 'bg-white border-slate-200'}`}>
-                              <div className="flex items-center gap-3 mb-2">
-                                <div className="flex-1">
-                                  <p className="text-sm font-semibold text-slate-800">{item.name}</p>
-                                  <p className="text-xs text-slate-500">{item.quantity} {item.unit}</p>
-                                </div>
-                                <div className="flex items-center gap-1 bg-white rounded-lg border px-2">
-                                  <Input 
-                                    type="number" 
-                                    min="0" 
-                                    step="0.01"
-                                    placeholder="0.00"
-                                    value={itemPrices[idx] || ""}
-                                    onChange={(e) => {
-                                      const newPrice = e.target.value;
-                                      setItemPrices({...itemPrices, [idx]: newPrice});
-                                      // Check for better price when price changes
-                                      if (newPrice && parseFloat(newPrice) > 0) {
-                                        checkBestPrice(item.name, idx, parseFloat(newPrice));
-                                      }
-                                    }}
-                                    className={`w-24 h-9 text-sm text-center border-0 focus:ring-0 ${catalogInfo ? 'bg-green-50' : ''} ${bestPriceAlerts[idx] ? 'bg-yellow-50 border-yellow-300' : ''}`}
-                                  />
-                                  <span className="text-xs text-slate-500 font-medium">ر.س</span>
-                                  {/* Best Price Alert */}
-                                  {bestPriceAlerts[idx] && (
-                                    <div className="absolute -bottom-6 right-0 left-0 z-10">
-                                      <div className="bg-yellow-100 border border-yellow-300 rounded px-2 py-1 text-xs text-yellow-800 flex items-center gap-1">
-                                        <AlertTriangle className="h-3 w-3" />
-                                        <span>سعر أقل متاح!</span>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                                {/* Best Price Details */}
-                                {bestPriceAlerts[idx] && (
-                                  <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-                                    <p className="font-medium text-yellow-800 mb-1">
-                                      <AlertTriangle className="h-3 w-3 inline ml-1" />
-                                      تنبيه: يوجد مورد آخر بسعر أقل
-                                    </p>
-                                    <div className="space-y-1">
-                                      {bestPriceAlerts[idx].better_options?.slice(0, 2).map((option, optIdx) => (
-                                        <div key={optIdx} className="flex justify-between items-center text-yellow-700">
-                                          <span>{option.supplier_name}</span>
-                                          <span className="font-bold text-green-600">{option.price.toLocaleString()} ر.س</span>
-                                          <span className="text-green-600">(-{option.savings_percent}%)</span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                              
-                              {/* Catalog linking - searchable dropdown */}
-                              <div className="mt-3 pt-3 border-t border-slate-200">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs font-semibold text-slate-600">ربط بالكتالوج:</span>
-                                  {!catalogInfo && (
-                                    <Button 
-                                      variant="ghost" 
-                                      size="sm"
-                                      onClick={() => searchCatalogPrice(item.name, idx)}
-                                      className="text-blue-600 h-7 px-2 text-xs"
-                                      title="بحث تلقائي"
-                                    >
-                                      <Search className="w-3 h-3 ml-1" />
-                                      بحث تلقائي
-                                    </Button>
-                                  )}
-                                </div>
-                                <SearchableSelect
-                                  options={catalogItems.map(cat => ({
-                                    id: cat.id,
-                                    name: `${cat.item_code || ''} - ${cat.name}`.trim().replace(/^- /, ''),
-                                    price: cat.price,
-                                    item_code: cat.item_code,
-                                    supplier_name: cat.supplier_name
-                                  }))}
-                                  value={catalogInfo?.catalog_item_id || ""}
-                                  onChange={(selectedId) => {
-                                    if (selectedId) {
-                                      const catalogItem = catalogItems.find(c => c.id === selectedId);
-                                      if (catalogItem) {
-                                        setCatalogPrices(prev => ({
-                                          ...prev,
-                                          [idx]: {
-                                            catalog_item_id: catalogItem.id,
-                                            price: catalogItem.price,
-                                            name: catalogItem.name,
-                                            supplier_name: catalogItem.supplier_name
-                                          }
-                                        }));
-                                        setItemPrices(prev => ({
-                                          ...prev,
-                                          [idx]: catalogItem.price?.toString() || ""
-                                        }));
-                                        toast.success(`تم ربط "${item.name}" بـ "${catalogItem.name}" - السعر: ${catalogItem.price?.toLocaleString()} ر.س`);
-                                      }
-                                    } else {
-                                      setCatalogPrices(prev => {
-                                        const newPrices = {...prev};
-                                        delete newPrices[idx];
-                                        return newPrices;
-                                      });
-                                    }
-                                  }}
-                                  placeholder="اختر صنف من الكتالوج"
-                                  searchPlaceholder="ابحث بالكود أو الاسم..."
-                                  displayKey="name"
-                                  valueKey="id"
-                                />
-                              </div>
-                              
-                              {catalogInfo && (
-                                <div className="mt-2 flex items-center justify-between text-xs">
-                                  <div className="flex items-center gap-1 text-green-700">
-                                    <CheckCircle className="w-3 h-3" />
-                                    <span>مربوط بـ: {catalogInfo.name}</span>
-                                  </div>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => {
-                                      setCatalogPrices(prev => {
-                                        const newPrices = {...prev};
-                                        delete newPrices[idx];
-                                        return newPrices;
-                                      });
-                                    }}
-                                    className="text-red-500 h-6 px-1 text-xs"
-                                  >
-                                    إلغاء الربط
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <div className="p-3 border-t bg-gradient-to-l from-orange-50 to-orange-100 rounded-b-lg">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-semibold text-slate-700">الإجمالي:</span>
-                          <span className="text-xl font-bold text-orange-600">{formatCurrency(calculateTotal())}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Collapsible Additional Info Section */}
-                  <div className="border rounded-lg overflow-hidden">
-                    <button
-                      type="button"
-                      onClick={() => setShowAdditionalInfo && setShowAdditionalInfo(!showAdditionalInfo)}
-                      className="w-full flex items-center justify-between p-3 bg-slate-100 hover:bg-slate-200 transition-colors"
-                    >
-                      <span className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-slate-500" />
-                        معلومات إضافية (تاريخ التسليم، ملاحظات، شروط)
-                      </span>
-                      <ChevronDown className={`w-5 h-5 text-slate-500 transition-transform ${showAdditionalInfo ? 'rotate-180' : ''}`} />
-                    </button>
-                    
-                    {showAdditionalInfo && (
-                      <div className="p-3 space-y-3 bg-white">
-                        {/* تاريخ التسليم */}
-                        <div>
-                          <Label className="text-xs font-medium text-slate-600 mb-1 block">تاريخ التسليم المتوقع</Label>
-                          <Input 
-                            type="date" 
-                            value={expectedDeliveryDate} 
-                            onChange={(e) => setExpectedDeliveryDate(e.target.value)} 
-                            className="h-10 text-sm" 
-                          />
-                        </div>
-                        
-                        {/* الملاحظات */}
-                        <div>
-                          <Label className="text-xs font-medium text-slate-600 mb-1 block">ملاحظات (اختياري)</Label>
-                          <Textarea 
-                            placeholder="أضف أي ملاحظات..." 
-                            value={orderNotes} 
-                            onChange={(e) => setOrderNotes(e.target.value)} 
-                            rows={2} 
-                            className="resize-none text-sm"
-                          />
-                        </div>
-                        
-                        {/* الشروط والأحكام */}
-                        <div>
-                          <Label className="text-xs font-medium text-slate-600 mb-1 block">الشروط والأحكام (اختياري)</Label>
-                          <Textarea 
-                            placeholder="شروط الدفع، التسليم..." 
-                            value={termsConditions} 
-                            onChange={(e) => setTermsConditions(e.target.value)} 
-                            rows={2} 
-                            className="resize-none text-sm"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Submit Button */}
-                  <div className="sticky bottom-0 bg-white pt-3 pb-1 border-t mt-4">
-                    <Button 
-                      className="w-full h-12 bg-gradient-to-l from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-base font-semibold shadow-lg" 
-                      onClick={handleCreateOrder} 
-                      disabled={submitting || selectedItemIndices.length === 0}
-                    >
-                      {submitting ? (
-                        <span className="flex items-center gap-2">
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                          جاري الإصدار...
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-2">
-                          <ShoppingCart className="w-5 h-5" />
-                          إصدار أمر شراء ({selectedItemIndices.length} صنف)
-                          <span className="bg-white/20 px-2 py-0.5 rounded">{formatCurrency(calculateTotal())}</span>
-                        </span>
-                      )}
-                    </Button>
-                    
-                    {/* RFQ Button */}
-                    <Button 
-                      variant="outline"
-                      className="w-full h-10 mt-2 border-indigo-300 text-indigo-600 hover:bg-indigo-50" 
-                      onClick={() => {
-                        setOrderDialogOpen(false);
-                        navigate(`/rfq?request_id=${selectedRequest.id}`);
-                      }}
-                    >
-                      <span className="flex items-center gap-2">
-                        <FileText className="w-4 h-4" />
-                        إصدار طلب عرض سعر (RFQ) للمقارنة
-                      </span>
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          // Update catalog prices and item prices from dialog
+          if (dialogCatalogPrices) setCatalogPrices(dialogCatalogPrices);
+          if (dialogItemPrices) setItemPrices(dialogItemPrices);
+          
+          // Check for unlinked items
+          const unlinkedItemsList = [];
+          orderData.selected_items.forEach(idx => {
+            const item = selectedRequest?.items?.[idx];
+            const hasCatalogLink = dialogCatalogPrices?.[idx]?.catalog_item_id || item?.catalog_item_id;
+            
+            if (!hasCatalogLink) {
+              unlinkedItemsList.push({
+                index: idx,
+                name: item?.name || remainingItems.find(i => i.index === idx)?.name,
+                unit: item?.unit || "قطعة",
+                item_code: "",
+                category_id: ""
+              });
+            }
+          });
+          
+          // If there are unlinked items, show dialog to add them to catalog
+          if (unlinkedItemsList.length > 0) {
+            setUnlinkedItems(unlinkedItemsList);
+            setPendingOrderData({
+              request_id: selectedRequest?.id,
+              supplier_id: orderData.supplier_id || null,
+              supplier_name: orderData.supplier_name,
+              selected_items: orderData.selected_items,
+              category_id: orderData.category_id || null,
+              notes: orderData.notes,
+              terms_conditions: orderData.terms_conditions,
+              expected_delivery_date: orderData.expected_delivery_date || null
+            });
+            setOrderDialogOpen(false);
+            setUnlinkedItemsDialog(true);
+            return;
+          }
+          
+          // All items are linked, proceed with order creation
+          const pricesArray = orderData.selected_items.map(idx => ({
+            index: idx,
+            unit_price: parseFloat(dialogItemPrices?.[idx]) || 0,
+            catalog_item_id: dialogCatalogPrices?.[idx]?.catalog_item_id || selectedRequest?.items?.[idx]?.catalog_item_id || null
+          }));
+          
+          setSubmitting(true);
+          try {
+            const response = await axios.post(`${API_V2_URL}/orders/from-request`, { 
+              request_id: selectedRequest?.id,
+              supplier_id: orderData.supplier_id || null,
+              supplier_name: orderData.supplier_name,
+              selected_items: orderData.selected_items,
+              category_id: orderData.category_id || null,
+              notes: orderData.notes,
+              terms_conditions: orderData.terms_conditions,
+              expected_delivery_date: orderData.expected_delivery_date || null,
+              item_prices: pricesArray
+            }, getAuthHeaders());
+            toast.success("تم إصدار أمر الشراء بنجاح");
+            setOrderDialogOpen(false);
+            
+            // Refresh data
+            await fetchData();
+            
+            // Show the newly created order
+            if (response.data.order_id) {
+              try {
+                const orderRes = await axios.get(`${API_V2_URL}/orders/${response.data.order_id}`, getAuthHeaders());
+                if (orderRes.data) {
+                  setSelectedOrder(orderRes.data);
+                  setViewOrderDialogOpen(true);
+                  toast.info("يمكنك الآن مراجعة أمر الشراء واعتماده", { duration: 5000 });
+                }
+              } catch (err) {
+                console.error("Error fetching new order:", err);
+              }
+            }
+          } catch (error) {
+            toast.error(error.response?.data?.detail || "فشل في إصدار أمر الشراء");
+          } finally {
+            setSubmitting(false);
+          }
+        }}
+        onCreateRFQ={(orderData) => {
+          setOrderDialogOpen(false);
+          navigate(`/rfq?request_id=${selectedRequest?.id}`);
+        }}
+        API_V2_URL={API_V2_URL}
+        getAuthHeaders={getAuthHeaders}
+      />
 
       {/* Projects Management Dialog - مكون منفصل */}
       <ProjectManagement
