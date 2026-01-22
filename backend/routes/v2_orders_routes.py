@@ -433,16 +433,21 @@ async def create_order_from_request(
             total_price = unit_price * req_item.quantity
             total_amount += total_price
             
-            # Check if item name has an alias linked to catalog
-            catalog_item_id = None
+            # First check if request item already has catalog_item_id
+            catalog_item_id = req_item.catalog_item_id if hasattr(req_item, 'catalog_item_id') else None
             item_code = None
-            alias_result = await session.execute(
-                select(ItemAlias).where(ItemAlias.alias_name == req_item.name)
-            )
-            alias = alias_result.scalar_one_or_none()
-            if alias:
-                catalog_item_id = alias.catalog_item_id
-                # Get item_code from catalog
+            
+            # If not linked, check if item name has an alias linked to catalog
+            if not catalog_item_id:
+                alias_result = await session.execute(
+                    select(ItemAlias).where(ItemAlias.alias_name == req_item.name)
+                )
+                alias = alias_result.scalar_one_or_none()
+                if alias:
+                    catalog_item_id = alias.catalog_item_id
+            
+            # Get item_code from catalog if we have catalog_item_id
+            if catalog_item_id:
                 from database import PriceCatalogItem
                 cat_result = await session.execute(
                     select(PriceCatalogItem).where(PriceCatalogItem.id == catalog_item_id)
