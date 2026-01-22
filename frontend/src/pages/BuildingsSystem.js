@@ -573,7 +573,15 @@ const BuildingsSystem = () => {
   };
 
   const deleteAreaMaterial = async (materialId) => {
-    if (!selectedProject || !window.confirm("هل أنت متأكد من الحذف؟")) return;
+    if (!selectedProject) return;
+    
+    const confirmed = await confirm({
+      title: "تأكيد الحذف",
+      description: "هل أنت متأكد من حذف هذه المادة؟",
+      confirmText: "حذف",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     
     try {
       await axios.delete(
