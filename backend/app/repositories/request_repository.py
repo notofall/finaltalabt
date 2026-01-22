@@ -248,7 +248,8 @@ class RequestRepository(BaseRepository[MaterialRequest]):
                 quantity=item.get("quantity", 1),
                 unit=item.get("unit", "قطعة"),
                 estimated_price=item.get("estimated_price"),
-                item_index=idx
+                item_index=idx,
+                catalog_item_id=item.get("catalog_item_id")  # Link to catalog if provided
             )
             self.session.add(item_obj)
         
