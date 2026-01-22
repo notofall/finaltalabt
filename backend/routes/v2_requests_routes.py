@@ -406,8 +406,9 @@ async def get_remaining_items(
     """
     الحصول على العناصر المتبقية للطلب (التي لم تُصدر بأوامر شراء بعد)
     Get remaining items for a request (not yet included in purchase orders)
+    Includes automatic alias lookup for unlinked items
     """
-    from database import MaterialRequestItem, PurchaseOrderItem, PurchaseOrder
+    from database import MaterialRequestItem, PurchaseOrderItem, PurchaseOrder, ItemAlias
     from sqlalchemy import select, and_
     
     session = request_service.request_repo.session
@@ -443,13 +444,24 @@ async def get_remaining_items(
                 ordered_quantities[idx] = 0
             ordered_quantities[idx] += po_item.quantity
     
-    # Calculate remaining items
+    # Calculate remaining items with alias lookup
     remaining_items = []
     for item in request_items:
         ordered = ordered_quantities.get(item.item_index, 0)
         remaining_qty = item.quantity - ordered
         
         if remaining_qty > 0:
+            catalog_item_id = item.catalog_item_id
+            
+            # If no catalog_item_id, look for alias match
+            if not catalog_item_id:
+                alias_result = await session.execute(
+                    select(ItemAlias).where(ItemAlias.alias_name == item.name)
+                )
+                alias = alias_result.scalar_one_or_none()
+                if alias:
+                    catalog_item_id = alias.catalog_item_id
+            
             remaining_items.append({
                 "index": item.item_index,
                 "name": item.name,
@@ -458,7 +470,7 @@ async def get_remaining_items(
                 "ordered_quantity": ordered,
                 "unit": item.unit,
                 "estimated_price": item.estimated_price,
-                "catalog_item_id": item.catalog_item_id  # Include catalog link!
+                "catalog_item_id": catalog_item_id  # Include catalog link from item or alias!
             })
     
     return {
