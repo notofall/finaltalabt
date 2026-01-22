@@ -13,6 +13,7 @@ import QuantityEngineerDashboard from "./pages/QuantityEngineerDashboard";
 import BuildingsSystem from "./pages/BuildingsSystem";
 import RFQManagement from "./pages/RFQManagement";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import { ConfirmDialogProvider } from "./components/ui/confirm-dialog";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import "./App.css";
 
