@@ -425,6 +425,9 @@ const SupervisorDashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={handleRefresh} disabled={refreshing} className="text-slate-300 hover:text-white h-8 px-2">
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              </Button>
               <Button variant="ghost" size="sm" onClick={() => setPasswordDialogOpen(true)} className="text-slate-300 hover:text-white h-8 px-2">
                 <KeyRound className="w-4 h-4" />
               </Button>
