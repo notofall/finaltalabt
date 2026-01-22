@@ -88,6 +88,7 @@ class RequestItemCreate(BaseModel):
     quantity: int
     unit: str = "قطعة"
     estimated_price: Optional[float] = None
+    catalog_item_id: Optional[str] = None  # Link to catalog item
 
 
 class RequestCreate(BaseModel):
