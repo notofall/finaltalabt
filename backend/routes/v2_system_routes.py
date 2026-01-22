@@ -526,7 +526,8 @@ async def restore_backup(
                 if not existing.scalar_one_or_none():
                     new_cat = DefaultBudgetCategory(
                         id=cat_data["id"], name=cat_data["name"],
-                        code=cat_data.get("code"), default_budget=cat_data.get("default_budget", 0)
+                        code=cat_data.get("code"), default_budget=cat_data.get("default_budget", 0),
+                        created_by=current_user.id, created_by_name=current_user.name
                     )
                     session.add(new_cat)
                     restored["default_budget_categories"] += 1
