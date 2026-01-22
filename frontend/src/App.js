@@ -203,7 +203,8 @@ function App() {
           <PWAInstallPrompt />
         </BrowserRouter>
       </div>
-    </AuthProvider>
+    </ConfirmDialogProvider>
+  </AuthProvider>
   );
 }
 
