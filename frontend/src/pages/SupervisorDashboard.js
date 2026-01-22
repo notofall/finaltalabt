@@ -107,6 +107,7 @@ const SupervisorDashboard = () => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
+    setRefreshKey(prev => prev + 1); // Trigger child components refresh
     await fetchData();
     toast.success("تم تحديث البيانات");
   };
