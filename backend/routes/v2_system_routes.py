@@ -408,20 +408,26 @@ async def create_backup(
             "status": pq.status, "priority": pq.priority, "notes": pq.notes
         })
     
-    # Create JSON
-    json_content = json.dumps(backup_data, ensure_ascii=False, indent=2)
+        # Create JSON
+        json_content = json.dumps(backup_data, ensure_ascii=False, indent=2)
+        
+        filename = f"backup_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
+        
+        # Use Response instead of StreamingResponse for better compatibility
+        return Response(
+            content=json_content.encode('utf-8'),
+            media_type="application/json",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Content-Length": str(len(json_content.encode('utf-8')))
+            }
+        )
     
-    filename = f"backup_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
-    
-    # Use Response instead of StreamingResponse for better compatibility
-    return Response(
-        content=json_content.encode('utf-8'),
-        media_type="application/json",
-        headers={
-            "Content-Disposition": f"attachment; filename={filename}",
-            "Content-Length": str(len(json_content.encode('utf-8')))
-        }
-    )
+    except Exception as e:
+        import traceback
+        error_msg = f"Backup error: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
+        raise HTTPException(status_code=500, detail=f"فشل في إنشاء النسخة الاحتياطية: {str(e)}")
 
 
 @router.post("/restore")
