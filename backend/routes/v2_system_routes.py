@@ -566,7 +566,8 @@ async def restore_backup(
                         supplier_name=item_data.get("supplier_name"),
                         category_id=item_data.get("category_id"),
                         category_name=item_data.get("category_name"),
-                        is_active=item_data.get("is_active", True)
+                        is_active=item_data.get("is_active", True),
+                        created_by=current_user.id
                     )
                     session.add(new_item)
                     restored["price_catalog"] += 1
