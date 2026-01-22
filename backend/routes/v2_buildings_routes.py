@@ -295,23 +295,31 @@ async def get_my_supply_tracking(
     """
     Get supply tracking for projects assigned to the current user (supervisor/engineer)
     تتبع التوريد للمشاريع المرتبطة بالمستخدم الحالي
+    If no projects assigned, show all active projects for supervisors/engineers
     """
     from database.models import SupplyTracking
+    from sqlalchemy import or_
     
     user_id = str(current_user.id)
     user_role = current_user.role
     
     # Build query based on user role
     if user_role == "supervisor":
-        # Get projects where user is supervisor
+        # Get projects where user is supervisor OR supervisor_id is null (backwards compatibility)
         projects_query = select(Project).where(
-            Project.supervisor_id == user_id,
+            or_(
+                Project.supervisor_id == user_id,
+                Project.supervisor_id == None  # noqa: E711
+            ),
             Project.status == "active"
         )
     elif user_role == "engineer":
-        # Get projects where user is engineer
+        # Get projects where user is engineer OR engineer_id is null (backwards compatibility)
         projects_query = select(Project).where(
-            Project.engineer_id == user_id,
+            or_(
+                Project.engineer_id == user_id,
+                Project.engineer_id == None  # noqa: E711
+            ),
             Project.status == "active"
         )
     else:
