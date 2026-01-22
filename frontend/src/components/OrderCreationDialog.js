@@ -4,7 +4,7 @@
  * Features: Accordion sections, Progress bar, Sticky footer
  */
 import { useState, useEffect, useMemo } from "react";
-import { Dialog, DialogContent } from "./ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -12,6 +12,7 @@ import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
 import { Checkbox } from "./ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { 
   X, ChevronDown, ChevronUp, Package, User, DollarSign, 
   FileText, CheckCircle, AlertCircle, Plus, Loader2,
