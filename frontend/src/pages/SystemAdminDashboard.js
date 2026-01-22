@@ -571,7 +571,7 @@ export default function SystemAdminDashboard() {
     formData.append("file", file);
 
     try {
-      const res = await axios.post(`${API_URL_LEGACY}/sysadmin/company-logo`, formData, {
+      const res = await axios.post(`${API_V2}/sysadmin/company-logo`, formData, {
         ...getAuthHeaders(),
         headers: { ...getAuthHeaders().headers, "Content-Type": "multipart/form-data" }
       });
