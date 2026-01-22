@@ -516,8 +516,21 @@ async def restore_backup(
                 if not existing.scalar_one_or_none():
                     new_project = Project(
                         id=project_data["id"], name=project_data["name"],
-                        code=project_data.get("code"), description=project_data.get("description"),
-                        status=project_data.get("status", "active")
+                        code=project_data.get("code", "PRJ001"),
+                        description=project_data.get("description"),
+                        status=project_data.get("status", "active"),
+                        owner_name=project_data.get("owner_name", current_user.name),
+                        location=project_data.get("location", ""),
+                        supervisor_id=project_data.get("supervisor_id"),
+                        supervisor_name=project_data.get("supervisor_name"),
+                        engineer_id=project_data.get("engineer_id"),
+                        engineer_name=project_data.get("engineer_name"),
+                        created_by=project_data.get("created_by", current_user.id),
+                        created_by_name=project_data.get("created_by_name", current_user.name),
+                        total_area=project_data.get("total_area", 0),
+                        floors_count=project_data.get("floors_count", 1),
+                        steel_factor=project_data.get("steel_factor", 100),
+                        is_building_project=project_data.get("is_building_project", False)
                     )
                     session.add(new_project)
                     restored["projects"] += 1
