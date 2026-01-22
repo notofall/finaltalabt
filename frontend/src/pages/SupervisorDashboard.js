@@ -324,51 +324,6 @@ const SupervisorDashboard = () => {
     setShowSuggestions(false);
   };
 
-  // Project management functions
-  const handleCreateProject = async () => {
-    if (!newProject.name || !newProject.owner_name || !newProject.code) {
-      toast.error("الرجاء إدخال اسم المشروع وكود المشروع واسم المالك");
-      return;
-    }
-    try {
-      await axios.post(`${API_V2_URL}/projects/`, newProject, getAuthHeaders());
-      toast.success("تم إنشاء المشروع بنجاح");
-      setNewProject({ name: "", code: "", owner_name: "", description: "", location: "" });
-      fetchData();
-    } catch (error) {
-      toast.error(getErrorMessage(error, "فشل في إنشاء المشروع"));
-    }
-  };
-
-  const handleUpdateProject = async () => {
-    if (!editingProject) return;
-    try {
-      await axios.put(`${API_V2_URL}/projects/${editingProject.id}`, {
-        name: editingProject.name,
-        owner_name: editingProject.owner_name,
-        description: editingProject.description,
-        location: editingProject.location,
-        status: editingProject.status
-      }, getAuthHeaders());
-      toast.success("تم تحديث المشروع بنجاح");
-      setEditingProject(null);
-      fetchData();
-    } catch (error) {
-      toast.error(getErrorMessage(error, "فشل في تحديث المشروع"));
-    }
-  };
-
-  const handleDeleteProject = async (projectId) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذا المشروع؟")) return;
-    try {
-      await axios.delete(`${API_V2_URL}/projects/${projectId}`, getAuthHeaders());
-      toast.success("تم حذف المشروع بنجاح");
-      fetchData();
-    } catch (error) {
-      toast.error(getErrorMessage(error, "فشل في حذف المشروع"));
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (items.length === 0) { toast.error("الرجاء إضافة صنف واحد على الأقل"); return; }
