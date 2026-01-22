@@ -3,7 +3,7 @@ V2 System Routes - System management, backup, restore, logs
 Uses: Direct DB and file operations
 """
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 from typing import Optional, List
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
