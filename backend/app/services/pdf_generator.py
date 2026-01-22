@@ -206,9 +206,8 @@ class RFQPDFGenerator:
             self.subtitle_style
         ))
         
-        # Table header
+        # Table header - بدون السعر التقديري (لا يُرسل للموردين)
         items_header = [
-            self._process_arabic('السعر التقديري'),
             self._process_arabic('الوحدة'),
             self._process_arabic('الكمية'),
             self._process_arabic('الوصف'),
@@ -220,7 +219,6 @@ class RFQPDFGenerator:
         
         for idx, item in enumerate(rfq_data.get('items', []), 1):
             row = [
-                f"{item.get('estimated_price', 0):,.2f}" if item.get('estimated_price') else '-',
                 self._process_arabic(item.get('unit', 'قطعة')),
                 f"{item.get('quantity', 0):,.0f}",
                 self._process_arabic(item.get('description', '') or '-'),
@@ -229,7 +227,7 @@ class RFQPDFGenerator:
             ]
             items_data.append(row)
         
-        items_table = Table(items_data, colWidths=[2.5*cm, 2*cm, 2*cm, 4*cm, 4.5*cm, 1*cm])
+        items_table = Table(items_data, colWidths=[2.5*cm, 2*cm, 5*cm, 5.5*cm, 1*cm])
         items_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), ARABIC_FONT),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
