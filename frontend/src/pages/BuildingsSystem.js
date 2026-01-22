@@ -446,7 +446,15 @@ const BuildingsSystem = () => {
   };
 
   const deleteTemplate = async (templateId) => {
-    if (!selectedProject || !window.confirm("هل أنت متأكد من الحذف؟")) return;
+    if (!selectedProject) return;
+    
+    const confirmed = await confirm({
+      title: "تأكيد الحذف",
+      description: "هل أنت متأكد من حذف هذا النموذج؟",
+      confirmText: "حذف",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     
     try {
       await axios.delete(
