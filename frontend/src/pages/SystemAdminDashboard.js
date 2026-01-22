@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
+import { confirm } from "../components/ui/confirm-dialog";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -250,7 +251,13 @@ export default function SystemAdminDashboard() {
       return;
     }
     
-    if (!confirm(`هل تريد رفع وتطبيق التحديث من الملف: ${file.name}؟`)) {
+    const confirmed = await confirm({
+      title: "تأكيد رفع التحديث",
+      description: `هل تريد رفع وتطبيق التحديث من الملف: ${file.name}؟`,
+      confirmText: "رفع التحديث",
+      cancelText: "إلغاء"
+    });
+    if (!confirmed) {
       e.target.value = '';
       return;
     }
@@ -418,7 +425,14 @@ export default function SystemAdminDashboard() {
 
   // Reset Domain
   const handleResetDomain = async () => {
-    if (!confirm("هل أنت متأكد من إعادة تعيين إعدادات الدومين؟ سيتم حذف جميع الإعدادات وشهادات SSL.")) {
+    const confirmed = await confirm({
+      title: "إعادة تعيين الدومين",
+      description: "هل أنت متأكد من إعادة تعيين إعدادات الدومين؟ سيتم حذف جميع الإعدادات وشهادات SSL.",
+      confirmText: "إعادة تعيين",
+      cancelText: "إلغاء",
+      variant: "destructive"
+    });
+    if (!confirmed) {
       return;
     }
     
@@ -442,7 +456,14 @@ export default function SystemAdminDashboard() {
 
   // Clear Old Logs
   const handleClearOldLogs = async (daysToKeep = 30) => {
-    if (!confirm(`هل أنت متأكد من حذف السجلات الأقدم من ${daysToKeep} يوم؟`)) return;
+    const confirmed = await confirm({
+      title: "حذف السجلات القديمة",
+      description: `هل أنت متأكد من حذف السجلات الأقدم من ${daysToKeep} يوم؟`,
+      confirmText: "حذف",
+      cancelText: "إلغاء",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     
     try {
       const response = await axios.delete(`${API_V2}/system/logs/clear?days_to_keep=${daysToKeep}`, getAuthHeaders());
@@ -525,7 +546,14 @@ export default function SystemAdminDashboard() {
   };
 
   const handleDeleteUser = async (userId, userName) => {
-    if (!confirm(`هل أنت متأكد من حذف المستخدم: ${userName}؟`)) return;
+    const confirmed = await confirm({
+      title: "حذف المستخدم",
+      description: `هل أنت متأكد من حذف المستخدم: ${userName}؟`,
+      confirmText: "حذف",
+      cancelText: "إلغاء",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     
     try {
       await axios.delete(`${API_V2}/admin/users/${userId}`, getAuthHeaders());
