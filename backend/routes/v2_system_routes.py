@@ -591,11 +591,15 @@ async def clean_all_data(
         )
     
     deleted = {
+        "delivery_records": 0,
         "purchase_order_items": 0,
         "purchase_orders": 0,
         "material_request_items": 0,
         "material_requests": 0,
         "budget_categories": 0,
+        "default_budget_categories": 0,
+        "price_catalog": 0,
+        "planned_quantities": 0,
         "suppliers": 0,
         "projects": 0,
         "users": 0,
@@ -603,43 +607,75 @@ async def clean_all_data(
     }
     
     try:
-        # Delete in order (foreign keys)
+        # Delete in order (foreign keys first)
+        
+        # 1. Delivery Records
+        result = await session.execute(select(DeliveryRecord))
+        for rec in result.scalars().all():
+            await session.delete(rec)
+            deleted["delivery_records"] += 1
+        
+        # 2. Purchase Order Items
         result = await session.execute(select(PurchaseOrderItem))
         for item in result.scalars().all():
             await session.delete(item)
             deleted["purchase_order_items"] += 1
         
+        # 3. Purchase Orders
         result = await session.execute(select(PurchaseOrder))
         for order in result.scalars().all():
             await session.delete(order)
             deleted["purchase_orders"] += 1
         
+        # 4. Material Request Items
         result = await session.execute(select(MaterialRequestItem))
         for item in result.scalars().all():
             await session.delete(item)
             deleted["material_request_items"] += 1
         
+        # 5. Material Requests
         result = await session.execute(select(MaterialRequest))
         for req in result.scalars().all():
             await session.delete(req)
             deleted["material_requests"] += 1
         
+        # 6. Budget Categories
         result = await session.execute(select(BudgetCategory))
         for cat in result.scalars().all():
             await session.delete(cat)
             deleted["budget_categories"] += 1
         
+        # 7. Default Budget Categories
+        result = await session.execute(select(DefaultBudgetCategory))
+        for cat in result.scalars().all():
+            await session.delete(cat)
+            deleted["default_budget_categories"] += 1
+        
+        # 8. Price Catalog
+        result = await session.execute(select(PriceCatalogItem))
+        for item in result.scalars().all():
+            await session.delete(item)
+            deleted["price_catalog"] += 1
+        
+        # 9. Planned Quantities
+        result = await session.execute(select(PlannedQuantity))
+        for pq in result.scalars().all():
+            await session.delete(pq)
+            deleted["planned_quantities"] += 1
+        
+        # 10. Suppliers
         result = await session.execute(select(Supplier))
         for supplier in result.scalars().all():
             await session.delete(supplier)
             deleted["suppliers"] += 1
         
+        # 11. Projects
         result = await session.execute(select(Project))
         for project in result.scalars().all():
             await session.delete(project)
             deleted["projects"] += 1
         
-        # Delete users except admin
+        # 12. Delete users except admin
         result = await session.execute(
             select(User).where(User.email != preserve_admin_email)
         )
@@ -647,7 +683,7 @@ async def clean_all_data(
             await session.delete(user)
             deleted["users"] += 1
         
-        # Delete audit logs
+        # 13. Delete audit logs
         result = await session.execute(select(AuditLog))
         for log in result.scalars().all():
             await session.delete(log)
@@ -658,7 +694,8 @@ async def clean_all_data(
         return {
             "message": "تم تنظيف البيانات بنجاح",
             "deleted": deleted,
-            "preserved_admin": preserve_admin_email
+            "preserved_admin": preserve_admin_email,
+            "note": "تم حذف جميع البيانات ما عدا مستخدم مدير النظام المحدد"
         }
         
     except Exception as e:
