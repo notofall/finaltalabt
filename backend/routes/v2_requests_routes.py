@@ -397,6 +397,77 @@ async def edit_request(
     }
 
 
+@router.get("/{request_id}/remaining-items")
+async def get_remaining_items(
+    request_id: UUID,
+    request_service: RequestService = Depends(get_request_service),
+    current_user = Depends(get_current_user)
+):
+    """
+    الحصول على العناصر المتبقية للطلب (التي لم تُصدر بأوامر شراء بعد)
+    Get remaining items for a request (not yet included in purchase orders)
+    """
+    from database import MaterialRequestItem, PurchaseOrderItem, PurchaseOrder
+    from sqlalchemy import select, and_
+    
+    session = request_service.request_repo.session
+    
+    # Get request
+    request = await request_service.get_request(request_id)
+    if not request:
+        raise HTTPException(status_code=404, detail="الطلب غير موجود")
+    
+    # Get all request items with catalog_item_id
+    items_result = await session.execute(
+        select(MaterialRequestItem)
+        .where(MaterialRequestItem.request_id == str(request_id))
+        .order_by(MaterialRequestItem.item_index)
+    )
+    request_items = items_result.scalars().all()
+    
+    # Get all purchase orders for this request
+    orders_result = await session.execute(
+        select(PurchaseOrder).where(PurchaseOrder.request_id == str(request_id))
+    )
+    orders = orders_result.scalars().all()
+    
+    # Get all PO items and track ordered quantities per item index
+    ordered_quantities = {}
+    for order in orders:
+        po_items_result = await session.execute(
+            select(PurchaseOrderItem).where(PurchaseOrderItem.order_id == order.id)
+        )
+        for po_item in po_items_result.scalars().all():
+            idx = po_item.item_index
+            if idx not in ordered_quantities:
+                ordered_quantities[idx] = 0
+            ordered_quantities[idx] += po_item.quantity
+    
+    # Calculate remaining items
+    remaining_items = []
+    for item in request_items:
+        ordered = ordered_quantities.get(item.item_index, 0)
+        remaining_qty = item.quantity - ordered
+        
+        if remaining_qty > 0:
+            remaining_items.append({
+                "index": item.item_index,
+                "name": item.name,
+                "quantity": remaining_qty,
+                "original_quantity": item.quantity,
+                "ordered_quantity": ordered,
+                "unit": item.unit,
+                "estimated_price": item.estimated_price,
+                "catalog_item_id": item.catalog_item_id  # Include catalog link!
+            })
+    
+    return {
+        "request_id": str(request_id),
+        "request_number": request.request_number,
+        "remaining_items": remaining_items
+    }
+
+
 @router.post("/{request_id}/approve")
 async def approve_request(
     request_id: UUID,
