@@ -22,6 +22,7 @@ const EngineerDashboard = () => {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // For refreshing child components
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
