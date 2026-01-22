@@ -16,6 +16,7 @@ import { Package, Plus, LogOut, FileText, Clock, CheckCircle, XCircle, RefreshCw
 import { exportRequestToPDF, exportRequestsTableToPDF, fetchAndCacheCompanySettings } from "../utils/pdfExport";
 import ChangePasswordDialog from "../components/ChangePasswordDialog";
 import PlannedQuantitiesView from "../components/PlannedQuantitiesView";
+import SupplyTrackingView from "../components/SupplyTrackingView";
 import { SupervisorReports } from "../components/DashboardReports";
 
 const UNITS = ["قطعة", "طن", "كيلو", "متر", "متر مربع", "متر مكعب", "كيس", "لتر", "علبة", "رول"];
