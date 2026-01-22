@@ -301,8 +301,12 @@ async def create_backup(
     for req in result.scalars().all():
         backup_data["material_requests"].append({
             "id": req.id, "request_number": req.request_number,
-            "project_id": req.project_id, "status": req.status,
-            "notes": req.notes
+            "request_seq": req.request_seq,
+            "project_id": req.project_id, "project_name": req.project_name,
+            "reason": req.reason, "supervisor_id": req.supervisor_id,
+            "supervisor_name": req.supervisor_name, "engineer_id": req.engineer_id,
+            "engineer_name": req.engineer_name, "status": req.status,
+            "expected_delivery_date": req.expected_delivery_date
         })
     
     # Purchase Orders
