@@ -328,7 +328,13 @@ const RFQManagement = () => {
   
   // Delete RFQ
   const deleteRfq = async (rfqId) => {
-    if (!window.confirm("هل أنت متأكد من حذف طلب عرض السعر؟")) return;
+    const confirmed = await confirm({
+      title: "حذف طلب عرض السعر",
+      description: "هل أنت متأكد من حذف طلب عرض السعر؟",
+      confirmText: "حذف",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     
     try {
       const config = getAuthHeaders();
