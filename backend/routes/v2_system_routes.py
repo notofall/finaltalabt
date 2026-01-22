@@ -336,6 +336,43 @@ async def create_backup(
             "notes": order.notes
         })
     
+    # Purchase Order Items
+    result = await session.execute(select(PurchaseOrderItem))
+    for item in result.scalars().all():
+        backup_data["purchase_order_items"].append({
+            "id": item.id, "order_id": item.order_id,
+            "name": item.name, "quantity": item.quantity,
+            "unit": item.unit, "unit_price": item.unit_price,
+            "total_price": item.total_price, "delivered_quantity": item.delivered_quantity,
+            "item_index": item.item_index, "catalog_item_id": item.catalog_item_id,
+            "item_code": item.item_code
+        })
+    
+    # Delivery Records
+    result = await session.execute(select(DeliveryRecord))
+    for rec in result.scalars().all():
+        backup_data["delivery_records"].append({
+            "id": rec.id, "order_id": rec.order_id,
+            "items_delivered": rec.items_delivered,
+            "delivery_date": rec.delivery_date,
+            "delivered_by": rec.delivered_by, "received_by": rec.received_by,
+            "notes": rec.notes
+        })
+    
+    # Audit Logs (last 1000 only to keep backup size reasonable)
+    result = await session.execute(
+        select(AuditLog).order_by(AuditLog.timestamp.desc()).limit(1000)
+    )
+    for log in result.scalars().all():
+        backup_data["audit_logs"].append({
+            "id": log.id, "entity_type": log.entity_type,
+            "entity_id": log.entity_id, "action": log.action,
+            "changes": log.changes, "user_id": log.user_id,
+            "user_name": log.user_name, "user_role": log.user_role,
+            "description": log.description,
+            "timestamp": log.timestamp.isoformat() if log.timestamp else None
+        })
+    
     # System Settings
     result = await session.execute(select(SystemSetting))
     for setting in result.scalars().all():
