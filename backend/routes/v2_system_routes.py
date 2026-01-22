@@ -311,6 +311,16 @@ async def create_backup(
             "expected_delivery_date": req.expected_delivery_date
         })
     
+    # Material Request Items
+    result = await session.execute(select(MaterialRequestItem))
+    for item in result.scalars().all():
+        backup_data["material_request_items"].append({
+            "id": item.id, "request_id": item.request_id,
+            "name": item.name, "quantity": item.quantity,
+            "unit": item.unit, "estimated_price": item.estimated_price,
+            "item_index": item.item_index
+        })
+    
     # Purchase Orders
     result = await session.execute(select(PurchaseOrder))
     for order in result.scalars().all():
