@@ -421,6 +421,9 @@ async def create_order_from_request(
     session.add(order)
     await session.flush()
     
+    # Import ItemAlias for alias lookup
+    from database import ItemAlias
+    
     # Create order items from selected request items
     total_amount = 0
     for idx in selected_indices:
@@ -429,6 +432,24 @@ async def create_order_from_request(
             unit_price = price_map.get(idx, 0)
             total_price = unit_price * req_item.quantity
             total_amount += total_price
+            
+            # Check if item name has an alias linked to catalog
+            catalog_item_id = None
+            item_code = None
+            alias_result = await session.execute(
+                select(ItemAlias).where(ItemAlias.alias_name == req_item.name)
+            )
+            alias = alias_result.scalar_one_or_none()
+            if alias:
+                catalog_item_id = alias.catalog_item_id
+                # Get item_code from catalog
+                from database import PriceCatalogItem
+                cat_result = await session.execute(
+                    select(PriceCatalogItem).where(PriceCatalogItem.id == catalog_item_id)
+                )
+                cat_item = cat_result.scalar_one_or_none()
+                if cat_item:
+                    item_code = cat_item.item_code
             
             order_item = PurchaseOrderItem(
                 id=str(uuid_lib.uuid4()),
@@ -439,7 +460,9 @@ async def create_order_from_request(
                 unit_price=unit_price,
                 total_price=total_price,
                 delivered_quantity=0,
-                item_index=idx
+                item_index=idx,
+                catalog_item_id=catalog_item_id,
+                item_code=item_code
             )
             session.add(order_item)
     
