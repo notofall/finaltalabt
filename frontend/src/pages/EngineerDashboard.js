@@ -446,6 +446,19 @@ const EngineerDashboard = () => {
         <div className="mt-6">
           <PlannedQuantitiesView showProjectFilter={true} />
         </div>
+
+        {/* Supply Tracking Section - قسم تتبع التوريد */}
+        <Card className="mt-6 border-green-200">
+          <CardHeader className="p-3 border-b bg-gradient-to-l from-green-50 to-white">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Truck className="w-5 h-5 text-green-600" />
+              <span>تتبع التوريد</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3">
+            <SupplyTrackingView />
+          </CardContent>
+        </Card>
       </main>
 
       {/* View Dialog */}
