@@ -458,7 +458,7 @@ const EngineerDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3">
-            <SupplyTrackingView />
+            <SupplyTrackingView key={refreshKey} />
           </CardContent>
         </Card>
       </main>
