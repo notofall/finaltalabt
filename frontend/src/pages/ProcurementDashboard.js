@@ -746,7 +746,13 @@ const ProcurementDashboard = () => {
   };
 
   const handleDeleteSupplier = async (supplierId) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذا المورد؟")) return;
+    const confirmed = await confirm({
+      title: "حذف المورد",
+      description: "هل أنت متأكد من حذف هذا المورد؟",
+      confirmText: "حذف",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     
     try {
       await axios.delete(`${API_V2_URL}/suppliers/${supplierId}`, getAuthHeaders());
