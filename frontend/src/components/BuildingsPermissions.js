@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
+import { confirm } from "../components/ui/confirm-dialog";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -92,7 +93,14 @@ const BuildingsPermissions = ({ onClose }) => {
   };
 
   const revokePermission = async (permissionId) => {
-    if (!window.confirm("هل أنت متأكد من إلغاء هذه الصلاحية؟")) return;
+    const confirmed = await confirm({
+      title: "إلغاء الصلاحية",
+      description: "هل أنت متأكد من إلغاء هذه الصلاحية؟",
+      confirmText: "إلغاء الصلاحية",
+      cancelText: "تراجع",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     
     try {
       await axios.delete(`${API_V2_URL}/buildings/permissions/${permissionId}`, getAuthHeaders());

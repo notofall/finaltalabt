@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import { confirm } from "../ui/confirm-dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -152,7 +153,14 @@ const ProjectManagement = ({
   };
 
   const handleDeleteProject = async (projectId) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذا المشروع؟")) return;
+    const confirmed = await confirm({
+      title: "حذف المشروع",
+      description: "هل أنت متأكد من حذف هذا المشروع؟",
+      confirmText: "حذف",
+      cancelText: "إلغاء",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     
     try {
       await axios.delete(`${API_V2_URL}/projects/${projectId}`, getAuthHeaders());

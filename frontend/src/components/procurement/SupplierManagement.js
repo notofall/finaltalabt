@@ -5,6 +5,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import { confirm } from "../ui/confirm-dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -147,7 +148,14 @@ const SupplierManagement = ({
   };
 
   const handleDeleteSupplier = async (supplierId) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذا المورد؟")) return;
+    const confirmed = await confirm({
+      title: "حذف المورد",
+      description: "هل أنت متأكد من حذف هذا المورد؟",
+      confirmText: "حذف",
+      cancelText: "إلغاء",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     
     try {
       await axios.delete(`${API_V2_URL}/suppliers/${supplierId}`, getAuthHeaders());

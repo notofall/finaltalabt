@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import { confirm } from "../ui/confirm-dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -153,7 +154,14 @@ const CatalogManagement = ({
   };
 
   const handleDeleteCatalogItem = async (itemId) => {
-    if (!window.confirm("هل تريد تعطيل هذا الصنف؟")) return;
+    const confirmed = await confirm({
+      title: "تعطيل الصنف",
+      description: "هل تريد تعطيل هذا الصنف؟",
+      confirmText: "تعطيل",
+      cancelText: "إلغاء",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     try {
       await axios.delete(`${API_V2_URL}/catalog/items/${itemId}`, getAuthHeaders());
       toast.success("تم تعطيل الصنف");
@@ -180,7 +188,14 @@ const CatalogManagement = ({
   };
 
   const handleDeleteAlias = async (aliasId) => {
-    if (!window.confirm("هل تريد حذف هذا الربط؟")) return;
+    const confirmed = await confirm({
+      title: "حذف الربط",
+      description: "هل تريد حذف هذا الربط؟",
+      confirmText: "حذف",
+      cancelText: "إلغاء",
+      variant: "destructive"
+    });
+    if (!confirmed) return;
     try {
       await axios.delete(`${API_V2_URL}/catalog/aliases/${aliasId}`, getAuthHeaders());
       toast.success("تم حذف الربط");
