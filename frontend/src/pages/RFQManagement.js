@@ -408,7 +408,12 @@ const RFQManagement = () => {
   
   // Approve quotation as winner
   const approveQuotationAsWinner = async (quotationId) => {
-    if (!window.confirm("هل أنت متأكد من اعتماد هذا العرض كفائز؟ سيتم رفض العروض الأخرى تلقائياً.")) return;
+    const confirmed = await confirm({
+      title: "اعتماد العرض كفائز",
+      description: "هل أنت متأكد من اعتماد هذا العرض كفائز؟ سيتم رفض العروض الأخرى تلقائياً.",
+      confirmText: "اعتماد"
+    });
+    if (!confirmed) return;
     
     try {
       const config = getAuthHeaders();
@@ -426,7 +431,12 @@ const RFQManagement = () => {
   
   // Create order from quotation
   const createOrderFromQuotation = async (quotationId) => {
-    if (!window.confirm("هل تريد إصدار أمر شراء من هذا العرض؟ سيتم تحديث أسعار الكتالوج تلقائياً.")) return;
+    const confirmed = await confirm({
+      title: "إصدار أمر شراء",
+      description: "هل تريد إصدار أمر شراء من هذا العرض؟ سيتم تحديث أسعار الكتالوج تلقائياً.",
+      confirmText: "إصدار"
+    });
+    if (!confirmed) return;
     
     try {
       const config = getAuthHeaders();
