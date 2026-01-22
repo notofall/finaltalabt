@@ -412,10 +412,14 @@ async def create_backup(
     
     filename = f"backup_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
     
-    return StreamingResponse(
-        io.BytesIO(json_content.encode('utf-8')),
+    # Use Response instead of StreamingResponse for better compatibility
+    return Response(
+        content=json_content.encode('utf-8'),
         media_type="application/json",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Content-Length": str(len(json_content.encode('utf-8')))
+        }
     )
 
 
