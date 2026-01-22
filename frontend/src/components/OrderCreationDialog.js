@@ -218,19 +218,20 @@ const ItemCard = ({
                 <span className="text-sm text-green-800 font-medium truncate">{catalogInfo.name}</span>
               </div>
             ) : (
-              <Select onValueChange={(val) => onCatalogSelect(val)}>
-                <SelectTrigger className="h-9 text-sm bg-white">
-                  <SelectValue placeholder="اختر صنف من الكتالوج" />
-                </SelectTrigger>
-                <SelectContent>
-                  {catalogItems.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      <span className="text-xs text-slate-500 ml-1">{cat.item_code}</span>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={catalogItems.map(cat => ({
+                  id: cat.id,
+                  name: `${cat.item_code || ''} - ${cat.name}`.trim().replace(/^- /, ''),
+                  item_code: cat.item_code,
+                  price: cat.price
+                }))}
+                value=""
+                onChange={(val) => onCatalogSelect(val)}
+                placeholder="اختر صنف من الكتالوج"
+                searchPlaceholder="ابحث بالكود أو الاسم..."
+                displayKey="name"
+                valueKey="id"
+              />
             )}
           </div>
         </div>
