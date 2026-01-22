@@ -5,6 +5,7 @@ PostgreSQL Backend - Clean Version
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from pathlib import Path
 import os
@@ -14,12 +15,19 @@ import logging
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# إنشاء مجلد uploads
+UPLOADS_DIR = ROOT_DIR / "uploads"
+UPLOADS_DIR.mkdir(exist_ok=True)
+
 # Create the main app
 app = FastAPI(
     title="نظام إدارة طلبات المواد",
     description="Material Request Management System - PostgreSQL Backend",
     version="2.0.0"
 )
+
+# Mount uploads directory for static files
+app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 # Health check endpoint at root level (for Kubernetes)
 @app.get("/health")
