@@ -4666,15 +4666,57 @@ const ProcurementDashboard = () => {
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3">
+                  {/* التصنيف أولاً */}
                   <div>
-                    <Label className="text-xs">كود الصنف *</Label>
+                    <Label className="text-xs">التصنيف *</Label>
+                    <Select
+                      value={item.category_id}
+                      onValueChange={async (value) => {
+                        // تحديث التصنيف
+                        updateUnlinkedItem(item.index, 'category_id', value);
+                        
+                        // توليد الكود تلقائياً حسب التصنيف
+                        const selectedCategory = defaultCategories.find(cat => cat.name === value);
+                        if (selectedCategory?.code) {
+                          try {
+                            const response = await axios.get(
+                              `${API_V2_URL}/catalog/suggest-code?category_code=${encodeURIComponent(selectedCategory.code)}`,
+                              getAuthHeaders()
+                            );
+                            if (response.data.suggested_code) {
+                              updateUnlinkedItem(item.index, 'item_code', response.data.suggested_code);
+                            }
+                          } catch (error) {
+                            console.error("Error fetching suggested code:", error);
+                          }
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="اختر التصنيف" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {defaultCategories.map((cat) => (
+                          <SelectItem key={cat.id || cat.name} value={cat.name}>
+                            {cat.code ? `${cat.code} - ` : ''}{cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* كود الصنف - يُولّد تلقائياً */}
+                  <div>
+                    <Label className="text-xs">كود الصنف * (تلقائي)</Label>
                     <Input
                       value={item.item_code}
                       onChange={(e) => updateUnlinkedItem(item.index, 'item_code', e.target.value)}
-                      placeholder="أدخل كود الصنف"
+                      placeholder={item.category_id ? "تم التوليد تلقائياً" : "اختر التصنيف أولاً"}
                       className="h-9"
+                      readOnly={!item.category_id}
                     />
                   </div>
+                  
                   <div>
                     <Label className="text-xs">اسم الصنف *</Label>
                     <Input
@@ -4691,24 +4733,6 @@ const ProcurementDashboard = () => {
                       className="h-9"
                     />
                   </div>
-                  <div>
-                    <Label className="text-xs">التصنيف *</Label>
-                    <Select
-                      value={item.category_id}
-                      onValueChange={(value) => updateUnlinkedItem(item.index, 'category_id', value)}
-                    >
-                      <SelectTrigger className="h-9">
-                        <SelectValue placeholder="اختر التصنيف" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {defaultCategories.map((cat) => (
-                          <SelectItem key={cat.id || cat.name} value={cat.name}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
                 
                 <div className="flex justify-end">
@@ -4716,6 +4740,7 @@ const ProcurementDashboard = () => {
                     size="sm"
                     className="bg-green-600 hover:bg-green-700 gap-1"
                     onClick={() => handleAddUnlinkedItemToCatalog(item.index)}
+                    disabled={!item.category_id || !item.item_code}
                   >
                     <Plus className="w-4 h-4" />
                     إضافة للكتالوج وربط
