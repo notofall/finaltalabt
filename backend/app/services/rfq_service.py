@@ -851,11 +851,15 @@ class RFQService(BaseService):
         created_by_name: str,
         category_name: str = None,
         category_code: str = None,
-        unit: str = "قطعة"
+        unit: str = "قطعة",
+        used_codes: set = None
     ):
         """Update or create catalog item with new price"""
         from sqlalchemy import select, func
         from database.models import PriceCatalogItem
+        
+        if used_codes is None:
+            used_codes = set()
         
         # Try to find existing catalog item by name
         result = await self.session.execute(
@@ -874,22 +878,25 @@ class RFQService(BaseService):
         else:
             # Generate item code based on category code or default
             item_code = None
-            if category_code:
-                # Count items with this prefix pattern
-                count_result = await self.session.execute(
-                    select(func.count(PriceCatalogItem.id))
-                    .where(PriceCatalogItem.item_code.like(f"{category_code}-%"))
-                )
-                count = count_result.scalar_one() or 0
-                item_code = f"{category_code}-{count + 1:04d}"
-            else:
-                # Use generic code if no category
-                count_result = await self.session.execute(
-                    select(func.count(PriceCatalogItem.id))
-                    .where(PriceCatalogItem.item_code.like("0-%"))
-                )
-                count = count_result.scalar_one() or 0
-                item_code = f"0-{count + 1:04d}"
+            prefix = category_code if category_code else "0"
+            
+            # Count items with this prefix pattern
+            count_result = await self.session.execute(
+                select(func.count(PriceCatalogItem.id))
+                .where(PriceCatalogItem.item_code.like(f"{prefix}-%"))
+            )
+            count = count_result.scalar_one() or 0
+            
+            # Generate unique code (considering codes used in this batch)
+            next_num = count + 1
+            item_code = f"{prefix}-{next_num:04d}"
+            
+            # Make sure the code is unique (not used in current batch)
+            while item_code in used_codes:
+                next_num += 1
+                item_code = f"{prefix}-{next_num:04d}"
+            
+            used_codes.add(item_code)
             
             # Create new catalog item with code
             new_item = PriceCatalogItem(
