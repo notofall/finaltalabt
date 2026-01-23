@@ -3,11 +3,30 @@ import axios from "axios";
 
 const AuthContext = createContext(null);
 
+// Auto-detect backend URL based on current location
+const getBackendUrl = () => {
+  // If env variable is set and we're on that domain, use it
+  if (process.env.REACT_APP_BACKEND_URL) {
+    // Check if we're on the preview domain
+    if (window.location.hostname.includes('preview.emergentagent.com')) {
+      return process.env.REACT_APP_BACKEND_URL;
+    }
+    // Check if we're on localhost (development)
+    if (window.location.hostname === 'localhost') {
+      return process.env.REACT_APP_BACKEND_URL;
+    }
+  }
+  // Otherwise, use the current origin (for production deployment)
+  return window.location.origin;
+};
+
+const BACKEND_URL = getBackendUrl();
+
 // Legacy PostgreSQL APIs (v1) - للتوافق مع الكود القديم
-const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api/pg`;
+const API_URL = `${BACKEND_URL}/api/pg`;
 
 // New V2 APIs with Service/Repository pattern - الموصى به
-const API_V2_URL = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+const API_V2_URL = `${BACKEND_URL}/api/v2`;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
