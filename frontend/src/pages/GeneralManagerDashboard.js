@@ -146,7 +146,23 @@ export default function GeneralManagerDashboard() {
       const headers = { Authorization: `Bearer ${token}` };
       // Using V2 API for settings
       const res = await axios.get(`${API_URL}/api/v2/settings`, { headers });
-      setSettings(res.data);
+      let settingsData = res.data;
+      
+      // تأكد من وجود إعداد حد الموافقة
+      const hasApprovalLimit = settingsData.some(s => s.key === 'approval_limit');
+      if (!hasApprovalLimit) {
+        // إضافة إعداد حد الموافقة الافتراضي
+        settingsData = [
+          {
+            key: 'approval_limit',
+            value: '20000',
+            description: 'حد الموافقة للمدير العام'
+          },
+          ...settingsData
+        ];
+      }
+      
+      setSettings(settingsData);
       setShowSettingsDialog(true);
     } catch (error) {
       toast.error('حدث خطأ في تحميل الإعدادات');
