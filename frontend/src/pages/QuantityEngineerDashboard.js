@@ -93,7 +93,7 @@ const QuantityEngineerDashboard = () => {
   // Fetch initial data
   const fetchData = useCallback(async () => {
     try {
-      const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+      const API_V2 = API_V2_URL;
       const [statsRes, projectsRes, categoriesRes] = await Promise.all([
         axios.get(`${API_V2}/quantity/dashboard/stats`, getAuthHeaders()),
         axios.get(`${API_V2}/projects/`, getAuthHeaders()),
@@ -117,7 +117,7 @@ const QuantityEngineerDashboard = () => {
   // Fetch planned items
   const fetchPlannedItems = useCallback(async () => {
     try {
-      const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+      const API_V2 = API_V2_URL;
       const params = new URLSearchParams();
       params.append("page", currentPage);
       params.append("page_size", pageSize);
@@ -137,7 +137,7 @@ const QuantityEngineerDashboard = () => {
   // Fetch catalog items for selection
   const fetchCatalogItems = useCallback(async () => {
     try {
-      const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+      const API_V2 = API_V2_URL;
       const params = new URLSearchParams();
       params.append("page", catalogPage);
       params.append("page_size", 20);
@@ -155,7 +155,7 @@ const QuantityEngineerDashboard = () => {
   // Fetch reports
   const fetchReports = useCallback(async () => {
     try {
-      const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+      const API_V2 = API_V2_URL;
       const params = reportProject ? `?project_id=${reportProject}` : "";
       const res = await axios.get(`${API_V2}/quantity/reports/summary${params}`, getAuthHeaders());
       setReportData(res.data);
@@ -167,7 +167,7 @@ const QuantityEngineerDashboard = () => {
   // Fetch alerts
   const fetchAlerts = useCallback(async () => {
     try {
-      const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+      const API_V2 = API_V2_URL;
       const res = await axios.get(`${API_V2}/quantity/alerts?days_threshold=7`, getAuthHeaders());
       setAlerts(res.data);
     } catch (error) {
@@ -198,7 +198,7 @@ const QuantityEngineerDashboard = () => {
     
     setLoadingCategories(true);
     try {
-      const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+      const API_V2 = API_V2_URL;
       const res = await axios.get(`${API_V2}/quantity/budget-categories/${projectId}`, getAuthHeaders());
       setProjectCategories(res.data || []);
     } catch (error) {
@@ -236,7 +236,7 @@ const QuantityEngineerDashboard = () => {
     
     setLoadingEditCategories(true);
     try {
-      const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+      const API_V2 = API_V2_URL;
       const res = await axios.get(`${API_V2}/quantity/budget-categories/${projectId}`, getAuthHeaders());
       setEditCategories(res.data || []);
     } catch (error) {
@@ -273,7 +273,7 @@ const QuantityEngineerDashboard = () => {
     }
     
     try {
-      const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+      const API_V2 = API_V2_URL;
       await axios.post(`${API_V2}/quantity/planned`, {
         ...newPlan,
         planned_quantity: parseFloat(newPlan.planned_quantity)
@@ -305,7 +305,7 @@ const QuantityEngineerDashboard = () => {
     if (!editingItem) return;
     
     try {
-      const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+      const API_V2 = API_V2_URL;
       await axios.put(`${API_V2}/quantity/planned/${editingItem.id}`, {
         planned_quantity: parseFloat(editingItem.planned_quantity),
         expected_order_date: editingItem.expected_order_date,
@@ -336,7 +336,7 @@ const QuantityEngineerDashboard = () => {
     if (!confirmed) return;
     
     try {
-      const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+      const API_V2 = API_V2_URL;
       await axios.delete(`${API_V2}/quantity/planned/${itemId}`, getAuthHeaders());
       toast.success("تم حذف العنصر بنجاح");
       fetchPlannedItems();
@@ -349,7 +349,7 @@ const QuantityEngineerDashboard = () => {
   // Export to Excel
   const handleExport = async () => {
     try {
-      const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+      const API_V2 = API_V2_URL;
       const params = filterProject ? `?project_id=${filterProject}` : "";
       const response = await axios.get(`${API_V2}/quantity/planned/export${params}`, {
         ...getAuthHeaders(),
@@ -377,7 +377,7 @@ const QuantityEngineerDashboard = () => {
   // Download template
   const handleDownloadTemplate = async () => {
     try {
-      const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+      const API_V2 = API_V2_URL;
       const response = await axios.get(`${API_V2}/quantity/planned/template`, {
         ...getAuthHeaders(),
         responseType: 'blob'
@@ -411,7 +411,7 @@ const QuantityEngineerDashboard = () => {
     formData.append('file', file);
     
     try {
-      const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+      const API_V2 = API_V2_URL;
       const response = await axios.post(`${API_V2}/quantity/planned/import`, formData, {
         headers: {
           ...getAuthHeaders().headers,
@@ -440,7 +440,7 @@ const QuantityEngineerDashboard = () => {
   // Export report
   const handleExportReport = async (format = 'excel') => {
     try {
-      const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+      const API_V2 = API_V2_URL;
       const params = reportProject ? `?project_id=${reportProject}&format=${format}` : `?format=${format}`;
       const response = await axios.get(`${API_V2}/quantity/reports/export${params}`, {
         ...getAuthHeaders(),
