@@ -5,7 +5,7 @@ APIs for delivery tracking dashboard
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func, desc, and_, or_
@@ -196,7 +196,7 @@ async def confirm_receipt(
     if order.status not in ["approved", "printed", "shipped", "partially_delivered"]:
         raise HTTPException(status_code=400, detail="حالة أمر الشراء لا تسمح بتسجيل الاستلام")
     
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     
     # Update supplier receipt number
     order.supplier_receipt_number = receipt_data.supplier_receipt_number

@@ -5,7 +5,7 @@ For System Admin role only
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 import uuid
@@ -283,7 +283,7 @@ async def configure_domain(
         "ssl_enabled": domain_config.enable_ssl,
         "ssl_mode": domain_config.ssl_mode,
         "admin_email": domain_config.admin_email,
-        "configured_at": datetime.utcnow().isoformat(),
+        "configured_at": datetime.now(timezone.utc).isoformat(),
         "configured_by": current_user.name
     }
     save_domain_config(config)
@@ -295,7 +295,7 @@ async def configure_domain(
         f.write(docker_compose_content)
     
     # Save setting to database
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     result = await session.execute(
         select(SystemSetting).where(SystemSetting.key == "domain_config")
     )
@@ -369,7 +369,7 @@ async def upload_ssl_certificate(
     
     # Update config
     config = load_domain_config()
-    config["ssl_uploaded_at"] = datetime.utcnow().isoformat()
+    config["ssl_uploaded_at"] = datetime.now(timezone.utc).isoformat()
     config["ssl_uploaded_by"] = current_user.name
     save_domain_config(config)
     

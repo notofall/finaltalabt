@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func, desc, and_, or_
@@ -66,7 +66,7 @@ async def create_supplier(
         raise HTTPException(status_code=403, detail="فقط مدير المشتريات يمكنه إدارة الموردين")
     
     supplier_id = str(uuid.uuid4())
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     
     new_supplier = Supplier(
         id=supplier_id,

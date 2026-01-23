@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, field_validator
 from typing import Optional, List, Union, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func
@@ -122,7 +122,7 @@ async def update_company_settings(
     """Update company settings"""
     require_system_admin(current_user)
     
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     updates = settings_data.dict(exclude_none=True)
     
     for key, value in updates.items():
@@ -174,7 +174,7 @@ async def upload_company_logo(
     base64_image = base64.b64encode(content).decode('utf-8')
     logo_data = f"data:{file.content_type};base64,{base64_image}"
     
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     
     result = await session.execute(
         select(SystemSetting).where(SystemSetting.key == "company_logo")
@@ -215,7 +215,7 @@ async def create_backup(
     
     backup_data = {
         "backup_info": {
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "created_by": current_user.name,
             "version": "1.0"
         },
@@ -342,7 +342,7 @@ async def create_backup(
         io.BytesIO(json_content.encode('utf-8')),
         media_type="application/json",
         headers={
-            "Content-Disposition": f"attachment; filename=backup_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+            "Content-Disposition": f"attachment; filename=backup_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
         }
     )
 

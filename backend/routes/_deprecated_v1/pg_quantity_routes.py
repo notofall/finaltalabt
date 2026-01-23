@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func, desc, and_, or_
@@ -497,7 +497,7 @@ async def update_planned_quantity(
                 item.category_id = category.id
                 item.category_name = category.name
     
-    item.updated_at = datetime.utcnow()
+    item.updated_at = datetime.now(timezone.utc)
     item.updated_by = current_user.id
     item.updated_by_name = current_user.name
     
@@ -586,7 +586,7 @@ async def deduct_quantity_from_plan(
         else:
             planned_item.status = "partially_ordered"
         
-        planned_item.updated_at = datetime.utcnow()
+        planned_item.updated_at = datetime.now(timezone.utc)
     
     await session.commit()
     
@@ -663,7 +663,7 @@ async def get_quantity_dashboard_stats(
     )
     catalog_count = catalog_result.scalar()
     
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     overdue = len([i for i in items if i.expected_order_date and i.expected_order_date < now and i.remaining_quantity > 0])
     due_soon = len([i for i in items if i.expected_order_date and now <= i.expected_order_date <= now + timedelta(days=10) and i.remaining_quantity > 0])
     
@@ -712,7 +712,7 @@ async def get_quantity_summary_report(
     for item in items:
         status_counts[item.status] = status_counts.get(item.status, 0) + 1
     
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     
     # الأصناف المتأخرة
     overdue_items = [
@@ -799,7 +799,7 @@ async def get_supervisor_alerts(
     if current_user.role not in allowed_roles:
         raise HTTPException(status_code=403, detail="غير مصرح لك بهذا الإجراء")
     
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     threshold_date = now + timedelta(days=days_threshold)
     
     # الأصناف المتأخرة
@@ -1418,7 +1418,7 @@ async def export_quantity_report(
     result = await session.execute(query)
     items = result.scalars().all()
     
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     
     # Calculate summary
     total_planned = sum(item.planned_quantity for item in items)
@@ -1574,7 +1574,7 @@ async def get_quantities_by_role(
     result = await session.execute(query)
     items = result.scalars().all()
     
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     
     return {
         "items": [

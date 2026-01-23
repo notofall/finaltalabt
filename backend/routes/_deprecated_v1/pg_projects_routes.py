@@ -5,7 +5,7 @@ Migrated from MongoDB to PostgreSQL
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func, desc
@@ -93,7 +93,7 @@ async def create_project(
         raise HTTPException(status_code=403, detail="فقط المشرف يمكنه إنشاء المشاريع")
     
     project_id = str(uuid.uuid4())
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     
     new_project = Project(
         id=project_id,

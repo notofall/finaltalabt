@@ -5,7 +5,7 @@ Migrated from MongoDB to PostgreSQL
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import func, desc
@@ -109,7 +109,7 @@ async def create_default_budget_category(
         raise HTTPException(status_code=400, detail="يوجد تصنيف بنفس الاسم")
     
     category_id = str(uuid.uuid4())
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     
     new_category = DefaultBudgetCategory(
         id=category_id,
@@ -264,7 +264,7 @@ async def create_budget_category(
         raise HTTPException(status_code=404, detail="المشروع غير موجود")
     
     category_id = str(uuid.uuid4())
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     
     # توليد كود التصنيف تلقائياً إذا لم يُعطى
     category_code = category_data.code
@@ -412,7 +412,7 @@ async def apply_default_categories_to_project(
     )
     existing_names = {r[0] for r in existing_result.fetchall()}
     
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     added_count = 0
     
     for default_cat in default_categories:
