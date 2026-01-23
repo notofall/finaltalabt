@@ -195,9 +195,11 @@ async def test_database_connection(config: DatabaseConfig):
             "error_type": "auth_failed"
         }
     except Exception as e:
+        # 🔒 Security: Log error internally, return generic message
+        logger.error(f"Database connection failed: {str(e)}")
         return {
             "success": False,
-            "message": f"فشل الاتصال: {str(e)}",
+            "message": "فشل الاتصال بقاعدة البيانات. تحقق من البيانات وحاول مرة أخرى.",
             "error_type": "connection_failed"
         }
 
