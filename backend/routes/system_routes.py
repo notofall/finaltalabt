@@ -74,7 +74,7 @@ class UpdateInfo(BaseModel):
 def log_error(source: str, message: str, details: str = None):
     """Log an error to the error log file"""
     log_entry = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "level": "ERROR",
         "source": source,
         "message": message,
@@ -91,7 +91,7 @@ def log_error(source: str, message: str, details: str = None):
 def log_warning(source: str, message: str, details: str = None):
     """Log a warning"""
     log_entry = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "level": "WARNING",
         "source": source,
         "message": message,
@@ -108,7 +108,7 @@ def log_warning(source: str, message: str, details: str = None):
 def log_info(source: str, message: str, details: str = None):
     """Log info"""
     log_entry = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "level": "INFO",
         "source": source,
         "message": message,
@@ -155,7 +155,7 @@ async def get_system_info(current_user = Depends(get_current_user)):
             "disk_used_gb": round(disk.used / (1024**3), 2),
             "disk_percent": round(disk.percent, 1)
         },
-        "uptime": datetime.utcnow().isoformat()
+        "uptime": datetime.now(timezone.utc).isoformat()
     }
 
 
@@ -511,7 +511,7 @@ async def get_system_logs(
         "errors": len([l for l in all_logs if l.get("level") == "ERROR"]),
         "warnings": len([l for l in all_logs if l.get("level") == "WARNING"]),
         "info": len([l for l in all_logs if l.get("level") == "INFO"]),
-        "today": len([l for l in all_logs if l.get("timestamp", "")[:10] == datetime.utcnow().strftime("%Y-%m-%d")])
+        "today": len([l for l in all_logs if l.get("timestamp", "")[:10] == datetime.now(timezone.utc).strftime("%Y-%m-%d")])
     }
     
     return {
@@ -550,7 +550,7 @@ async def clear_old_logs(
     if not ERROR_LOG_FILE.exists():
         return {"success": True, "deleted": 0, "remaining": 0}
     
-    cutoff_date = datetime.utcnow() - timedelta(days=days_to_keep)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_to_keep)
     
     # Read all logs
     remaining_logs = []
