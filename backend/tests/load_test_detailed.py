@@ -72,7 +72,7 @@ async def user_simulation(user_id):
             (f"{BASE_URL}/api/v2/admin/stats", "Stats"),
             (f"{BASE_URL}/api/v2/admin/users", "Users"),
             (f"{BASE_URL}/api/v2/projects", "Projects"),
-            (f"{BASE_URL}/api/v2/catalog/suppliers", "Suppliers"),
+            (f"{BASE_URL}/api/v2/suppliers", "Suppliers"),
         ]
         
         for _ in range(REQUESTS_PER_USER):
