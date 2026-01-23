@@ -303,15 +303,15 @@ const ProcurementDashboard = () => {
 
   // Create Catalog Item - Using V2 API
   const handleCreateCatalogItem = async () => {
-    if (!newCatalogItem.name || !newCatalogItem.price) {
-      toast.error("الرجاء إدخال اسم الصنف والسعر");
+    if (!newCatalogItem.name) {
+      toast.error("الرجاء إدخال اسم الصنف");
       return;
     }
     try {
       await axios.post(`${API_V2_URL}/catalog/items`, {
         name: newCatalogItem.name,
         unit: newCatalogItem.unit || "قطعة",
-        price: parseFloat(newCatalogItem.price),
+        price: parseFloat(newCatalogItem.price) || 0,  // السعر اختياري - القيمة الافتراضية 0
         item_code: newCatalogItem.item_code || null,  // Let backend generate if empty
         category_name: newCatalogItem.category_id,
         category_code: newCatalogItem.category_code || null,  // Pass category code for code generation
