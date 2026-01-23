@@ -126,7 +126,7 @@ class AdminRepository:
         total_requests = requests_result.scalar() or 0
         
         # Active users (last 7 days)
-        week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        week_ago = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=7)
         active_result = await self.session.execute(
             select(func.count()).select_from(User)
             .where(User.updated_at >= week_ago)
@@ -157,7 +157,7 @@ class AdminRepository:
         query = select(AuditLog)
         
         # Date filter
-        since = datetime.now(timezone.utc) - timedelta(days=days)
+        since = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
         query = query.where(AuditLog.created_at >= since)
         
         if entity_type:
