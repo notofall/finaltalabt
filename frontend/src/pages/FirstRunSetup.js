@@ -11,8 +11,9 @@ import {
   Loader2, Eye, EyeOff, ArrowRight, ArrowLeft, Package,
   User, Mail, Lock, Wifi, Globe, HardDrive
 } from 'lucide-react';
+import { BACKEND_URL } from '../config/api';
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = BACKEND_URL;
 
 export default function FirstRunSetup() {
   const navigate = useNavigate();
