@@ -128,3 +128,18 @@ frontend/node_modules/.cache/default-development/5.pack
 # Environment files
 *.env
 *.env.*
+
+# Database files - CRITICAL: Never track these!
+*.db
+*.sqlite
+*.sqlite3
+backend/data/talabat.db
+backend/data/*.db
+
+# Uploaded files
+backend/uploads/
+uploads/
+
+# Keep config template but ignore actual config
+backend/data/config.json
+!backend/data/config.json.example
