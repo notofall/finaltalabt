@@ -556,7 +556,8 @@ async def import_catalog(
                     errors.append(f"Row {row_num}: {str(e)}")
     
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error reading file: {str(e)}")
+        logger.error(f"Error reading import file: {str(e)}")
+        raise HTTPException(status_code=400, detail="فشل في قراءة الملف. تأكد من صحة صيغة الملف.")
     
     return {
         "message": f"تم استيراد {imported} صنف",
@@ -677,7 +678,8 @@ async def export_catalog_excel(
             }
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error exporting: {str(e)}")
+        logger.error(f"Error exporting catalog: {str(e)}")
+        raise HTTPException(status_code=500, detail="فشل في تصدير البيانات. حاول مرة أخرى.")
 
 
 @router.post("/validate-items")
