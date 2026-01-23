@@ -158,7 +158,7 @@ async def pg_health_check(session: AsyncSession = Depends(get_postgres_session))
         count = result.scalar()
         return {"status": "healthy", "database": "postgresql", "users_count": count}
     except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Database error: {str(e)}")
+        raise HTTPException(status_code=503, detail="حدث خطأ. حاول مرة أخرى.")
 
 
 @pg_auth_router.get("/setup/check")

@@ -553,7 +553,7 @@ async def import_catalog(
                     errors.append(f"خطأ في السطر {row_num}: {str(e)}")
                     
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"فشل في قراءة ملف Excel: {str(e)}")
+            raise HTTPException(status_code=400, detail="حدث خطأ. حاول مرة أخرى.")
     
     # Handle CSV files
     elif filename.endswith('.csv'):

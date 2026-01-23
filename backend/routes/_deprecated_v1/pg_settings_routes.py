@@ -1347,7 +1347,7 @@ async def export_summary_report(
             headers={"Content-Disposition": "attachment; filename=summary_report.xlsx"}
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"فشل في تصدير التقرير: {str(e)}")
+        raise HTTPException(status_code=500, detail="حدث خطأ. حاول مرة أخرى.")
 
 
 @pg_settings_router.get("/reports/advanced/approval-analytics/export")
@@ -1455,7 +1455,7 @@ async def export_approval_report(
             headers={"Content-Disposition": "attachment; filename=approval_report.xlsx"}
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"فشل في تصدير التقرير: {str(e)}")
+        raise HTTPException(status_code=500, detail="حدث خطأ. حاول مرة أخرى.")
 
 
 @pg_settings_router.get("/reports/advanced/supplier-performance/export")
@@ -1555,7 +1555,7 @@ async def export_supplier_report(
             headers={"Content-Disposition": "attachment; filename=supplier_report.xlsx"}
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"فشل في تصدير التقرير: {str(e)}")
+        raise HTTPException(status_code=500, detail="حدث خطأ. حاول مرة أخرى.")
 
 
 # ==================== AUDIT LOG ROUTES ====================

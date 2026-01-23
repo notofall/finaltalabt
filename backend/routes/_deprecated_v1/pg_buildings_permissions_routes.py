@@ -486,7 +486,7 @@ async def import_project_data(
         }
         
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"فشل في قراءة الملف: {str(e)}")
+        raise HTTPException(status_code=400, detail="حدث خطأ. حاول مرة أخرى.")
 
 
 # ==================== تقارير متقدمة ====================

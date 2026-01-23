@@ -472,7 +472,7 @@ async def restore_backup(
     
     except Exception as e:
         await session.rollback()
-        raise HTTPException(status_code=500, detail=f"خطأ في استعادة النسخة الاحتياطية: {str(e)}")
+        raise HTTPException(status_code=500, detail="حدث خطأ. حاول مرة أخرى.")
 
 
 # ==================== DATA CLEANUP ====================
