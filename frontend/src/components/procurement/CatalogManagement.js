@@ -327,16 +327,35 @@ const CatalogManagement = ({
                   <Plus className="w-4 h-4" /> إضافة صنف جديد
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {/* التصنيف أولاً */}
+                  <div className="col-span-2">
+                    <Label className="text-xs">التصنيف *</Label>
+                    <select
+                      data-testid="new-item-category"
+                      value={newCatalogItem.category_id}
+                      onChange={(e) => setNewCatalogItem({...newCatalogItem, category_id: e.target.value})}
+                      className="w-full h-9 mt-1 px-3 rounded-md border border-slate-300 text-sm"
+                    >
+                      <option value="">اختر التصنيف</option>
+                      {defaultCategories.map(cat => (
+                        <option key={cat.id} value={cat.name}>{cat.name}</option>
+                      ))}
+                    </select>
+                    <span className="text-xs text-gray-500">يُولّد الكود تلقائياً بناءً على التصنيف</span>
+                  </div>
+                  {/* الكود */}
                   <div>
                     <Label className="text-xs">كود الصنف</Label>
                     <Input 
                       data-testid="new-item-code"
-                      placeholder="اختياري"
+                      placeholder="يُولّد تلقائياً"
                       value={newCatalogItem.item_code}
                       onChange={(e) => setNewCatalogItem({...newCatalogItem, item_code: e.target.value})}
                       className="h-9 mt-1"
+                      disabled
                     />
                   </div>
+                  {/* اسم الصنف */}
                   <div>
                     <Label className="text-xs">اسم الصنف *</Label>
                     <Input 
@@ -347,6 +366,18 @@ const CatalogManagement = ({
                       className="h-9 mt-1"
                     />
                   </div>
+                  {/* الوصف */}
+                  <div className="col-span-2">
+                    <Label className="text-xs">الوصف</Label>
+                    <Input 
+                      data-testid="new-item-description"
+                      placeholder="وصف اختياري"
+                      value={newCatalogItem.description}
+                      onChange={(e) => setNewCatalogItem({...newCatalogItem, description: e.target.value})}
+                      className="h-9 mt-1"
+                    />
+                  </div>
+                  {/* الوحدة */}
                   <div>
                     <Label className="text-xs">الوحدة</Label>
                     <Input 
@@ -357,6 +388,7 @@ const CatalogManagement = ({
                       className="h-9 mt-1"
                     />
                   </div>
+                  {/* السعر - اختياري */}
                   <div>
                     <Label className="text-xs">السعر (اختياري)</Label>
                     <Input 
@@ -365,30 +397,6 @@ const CatalogManagement = ({
                       placeholder="يُحدّث لاحقاً"
                       value={newCatalogItem.price}
                       onChange={(e) => setNewCatalogItem({...newCatalogItem, price: e.target.value})}
-                      className="h-9 mt-1"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Label className="text-xs">التصنيف</Label>
-                    <select
-                      data-testid="new-item-category"
-                      value={newCatalogItem.category_id}
-                      onChange={(e) => setNewCatalogItem({...newCatalogItem, category_id: e.target.value})}
-                      className="w-full h-9 mt-1 px-3 rounded-md border border-slate-300 text-sm"
-                    >
-                      <option value="">بدون تصنيف</option>
-                      {defaultCategories.map(cat => (
-                        <option key={cat.id} value={cat.name}>{cat.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-span-2">
-                    <Label className="text-xs">الوصف</Label>
-                    <Input 
-                      data-testid="new-item-description"
-                      placeholder="وصف اختياري"
-                      value={newCatalogItem.description}
-                      onChange={(e) => setNewCatalogItem({...newCatalogItem, description: e.target.value})}
                       className="h-9 mt-1"
                     />
                   </div>
