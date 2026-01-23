@@ -335,5 +335,5 @@ GET /api/v2/system/database-stats  - إحصائيات قاعدة البيانا�
 ---
 
 ## الروابط
-- **Preview URL**: https://supply-track-6.preview.emergentagent.com
+- **Preview URL**: https://lightsail-deploy.preview.emergentagent.com
 - **Test Reports**: `/app/test_reports/iteration_6.json`

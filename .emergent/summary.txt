@@ -1,95 +1,72 @@
 <analysis>**original_problem_statement:**
-The user provided a new set of requirements to be implemented in the procurement management application:
-1.  **UI/UX Improvements:**
-    *   Replace all native browser  alerts with a custom, in-app confirmation dialog for a more integrated user experience.
-    *   On the Buildings System page, improve the mobile responsiveness of the various tabs (, , etc.) to prevent layout issues on small screens.
-2.  **Feature Changes:**
-    *   Remove the Add Project functionality entirely from the Supervisor's dashboard, as an enhanced version exists elsewhere.
-    *   When sending RFQ (Request for Quotation) documents to suppliers, the estimated price field must be hidden from the generated PDF.
-3.  **Bug Fix / Logic Enhancement:**
-    *   When a procurement manager links an item from a purchase order to a master catalog item, the original item's name should be automatically saved as an alias.
-    *   Subsequently, when a supervisor creates a new request using an item name that has a known alias, the system should automatically link it to the correct master catalog item, so the procurement manager doesn't have to link it again.
-
-This new set of requests took priority over the previous task of deploying the application to an AWS server.
+The user's primary goal for this session was to continue a series of high-priority tasks, including a complete redesign of the Create Purchase Order dialog. During the session, the user also requested several new features and bug fixes:
+1.  **UI Enhancements:**
+    *   Make the catalog linking dropdown in the new PO dialog searchable and editable.
+    *   In the Add Unlinked Item to Catalog modal, reorder fields to have Category first and then auto-generate the item code based on the selection.
+    *   Add a Projects button to the mobile menu for the Procurement Manager.
+2.  **Bug Fixes:**
+    *   An attempt to create a Purchase Order from an RFQ was failing with a  error in the database.
+    *   **CRITICAL:** The application database () and user configuration () were being tracked in Git, causing all production data to be overwritten with every . This also caused user passwords to reset and newly created users to disappear.
+3.  **Deployment Support:**
+    *   The user requested definitive, step-by-step instructions for deploying the application from scratch on a new AWS Lightsail server using PostgreSQL.
+    *   The user encountered a series of deployment issues, including CORS errors, missing Python dependencies, incorrect database password formats, Nginx permission errors, and a critical application crash on the new server.
 
 **User's preferred language**: العربية (Arabic). The next agent MUST respond in Arabic.
 
 **what currently exists?**
-The agent successfully addressed a critical bug in the System Admin dashboard concerning the Backup, Restore, and Clean Data features. This involved an extensive rewrite of the backend logic in  to correctly handle all relevant database tables and their relationships, fixing data serialization issues, and ensuring data integrity during these operations.
-
-Following that, the agent began implementing the user's new list of requests. It has:
-*   Created a new reusable confirmation dialog component () and integrated its provider into the main .
-*   Removed the project management section from the  and started replacing  calls.
-*   Modified the backend PDF generation service () to exclude the estimated price from RFQ documents.
-*   Updated the backend logic in  to automatically find and apply item aliases when creating purchase orders from requests.
-*   Applied a CSS fix to the  page to make the tabs scrollable on mobile devices.
+The agent successfully completed all development tasks and provided extensive deployment support.
+*   **Create PO Dialog:** The dialog redesign was completed, integrated, and validated with the testing agent. User-requested enhancements (searchable select) were also added.
+*   **Bug Fixes:** The RFQ-to-PO bug was fixed by ensuring unique item codes are generated within a single transaction. The critical data-loss bug was resolved by adding  and  to  and removing the files from the Git index.
+*   **Feature Implementation:** The GM's dashboard was updated with a new setting for PO approval limits. The mobile menu was fixed.
+*   **Deployment Refactor:** The frontend was refactored to use a dynamic backend URL, permanently fixing CORS issues on any deployment environment.
+*   **Deployment Support:** The agent provided comprehensive deployment scripts for AWS Lightsail with PostgreSQL and actively debugged numerous issues with the user, including Python installation, missing packages, database connection strings, and Nginx file permissions. The application is now successfully running on the user's new server, but a new bug has emerged.
 
 **Last working item**:
-- **Last item agent was working:** The agent was systematically replacing all  calls across the application with the new custom  hook. It had just completed this refactoring for the  and  files.
+- **Last item agent was working:** The agent was helping the user troubleshoot a  that occurs on the newly deployed production server when the application tries to load dashboard statistics. The user provided logs, and the agent identified the root cause.
 - **Status:** IN PROGRESS
 - **Agent Testing Done:** N
-- **Which testing method agent to use?** Frontend testing agent. The agent should verify that all actions previously using  (e.g., deleting items, canceling requests) now correctly trigger the new custom dialog across all relevant pages.
-- **User Testing Done:** N
+- **Which testing method agent to use?** The agent must debug the backend code. No direct testing is possible on the user's server. The agent needs to locate the faulty code, fix it, and provide the user with  and restart commands.
+- **User Testing Done:** N (User is blocked by this error).
 
 **All Pending/In progress Issue list**:
-- **Issue 1: Verify alias auto-linking logic (P1)**
-    - **Description:** The user reported that when a supervisor creates a request with an item name that has an existing alias, the procurement manager still sees the item as unlinked. The backend logic was updated to address this, but it requires thorough testing.
-    - **Attempted fixes:** The agent added logic to  in the  function to automatically look up an alias and populate the  when an order is generated.
+- **Issue 1: PostgreSQL Timezone Mismatch Error (P0)**
+    - **Description:** The application crashes when querying  on the new server. Logs show a . This is a classic bug when migrating from SQLite to PostgreSQL. The Python code is passing a timezone-aware  object to a query that compares it against a timezone-naive  column in PostgreSQL.
+    - **Status:** IN PROGRESS
+    - **Attempted fixes:** None. The issue was just identified from logs.
     - **Next debug checklist:**
-        1.  Log in as a supervisor and create a material request with a unique item name (e.g., صنبور مطبخ موديل X).
-        2.  Log in as a procurement manager, generate a PO from that request, and manually link صنبور مطبخ موديل X to a catalog item (e.g., صنبور). This action should create the alias.
-        3.  Log in as a supervisor again and create a *new* material request using the exact same name (صنبور مطبخ موديل X).
-        4.  Log in as the procurement manager and view the newly generated request/PO. Verify that the item is now **automatically marked as linked** to the صنبور catalog item.
-        5.  If the issue persists, review the backend logic in  and the frontend rendering logic in  that determines the linked status.
-    - **Status:** TESTING PENDING
-    - **Is recurring issue?** Y
-    - **Should Test frontend/backend/both after fix?** Both.
+        1.   the backend codebase for files containing . This is likely in a service or repository file related to dashboards or reports.
+        2.  Locate the line where a  object is used as a parameter in the query. It is likely being generated with timezone info (e.g., ).
+        3.  Modify the code to make the  object timezone-naive before passing it to the query, for instance by using .
+    - **Why fix this issue and what will be achieved with the fix?** This is a critical blocker. The application is unusable on the user's new production server until this is resolved.
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Backend.
 
 **In progress Task List**:
-- **Task 1: Complete UI/UX refactoring (P0)**
-    - **Description:** Finalize the implementation of all UI/UX changes requested by the user.
-    - **Where to resume:** Continue replacing  calls in the remaining frontend pages.
-    - **What will be achieved with this?** A consistent, modern user experience for all confirmation actions and improved usability on mobile.
-    - **Status:** IN PROGRESS
-    - **Blocked on something:** None.
-    - **Sub-tasks:**
-        - **Finish replacing :** Grep for  in  and replace all instances with the  hook. Files to check include , , and . (IN PROGRESS)
-        - **Verify mobile view:** Manually check the Buildings System page on a narrow viewport to confirm the tabs are scrollable. (DONE, VERIFICATION PENDING)
-        - **Verify RFQ PDF:** Generate an RFQ PDF and confirm the 'estimated price' column is gone. (DONE, VERIFICATION PENDING)
-        - **Verify Supervisor Dashboard:** Confirm the project management UI is removed. (DONE, VERIFICATION PENDING)
-    - **Should Test frontend/backend/both after fix?** Frontend.
+- None.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks:**
-    - **P1: Fix Arabic Font in Buildings System PDFs:** PDFs from the Buildings System don't render Arabic correctly. Replicate the font loading from the Purchase Order PDF generator.
-    - **P2: Re-style Quotation PDF to Match PO PDF:** Redesign the Quotation PDF layout to match the Purchase Order PDF style.
-    - **P3: Add GM Approval Limit Setting:** Implement a UI for the General Manager to set a PO approval value limit for the Procurement Manager.
+    - **P1: Fix Arabic Font in Buildings System PDFs:** PDFs generated from the Buildings System do not render Arabic text correctly.
+    - **P2: Re-style Quotation PDF to Match PO PDF:** Redesign the Quotation PDF layout to match the more polished Purchase Order PDF style.
 
 - **Future Tasks:**
-    - **P1: Complete AWS Lightsail Deployment:** Resume guiding the user through the deployment process, including resolving git conflicts and running the data migration to PostgreSQL.
-    - **P2: Enhance Backup/Restore for All Data:** The restore logic for nested items (, , etc.) is likely incomplete. It needs to be fully implemented and verified to ensure 100% data fidelity on restore.
-    - **P3: Import Material Factors from Excel:** Implement a feature to parse an Excel file to populate the material factors library.
-    - **P4: Batch Assignment Feature:** Add a feature to assign a supervisor/engineer to all unassigned projects at once.
+    - **P1: Enhance Backup/Restore for All Data:** The restore logic for nested items needs to be fully verified.
+    - **P2: Import Material Factors from Excel:** Implement a feature to parse an Excel file.
+    - **P3: Batch Assignment Feature:** Add a feature to assign a supervisor/engineer to all unassigned projects at once.
 
 **Completed work in this session**
-- **System Admin Features (Backup/Restore/Clean):**
-    - **Fixed and Enhanced Backup:** Rewrote the backup function () to include all critical tables (, , , , , etc.) and fix incorrect data mappings.
-    - **Fixed and Enhanced Restore:** Overhauled the restore function () to correctly handle dependencies and insert data into the database from a backup file, fixing multiple crashes related to missing fields.
-    - **Diagnosed Ingress Timeout:** Identified that a  error when downloading backups via the public URL is an external proxy/ingress issue, as the endpoint works correctly when called internally.
-- **New Feature Implementation:**
-    - **Custom Confirmation Dialog:** Created a reusable  component and  to replace all  calls.
-    - **Removed Supervisor Project Management:** Successfully deleted the UI and related logic for project management from the  page.
-    - **Hid Price in RFQ PDF:** Removed the Estimated Price column from the RFQ PDF generation logic in .
-    - **Improved Mobile UI:** Made the tabs in  horizontally scrollable for better mobile viewing.
-    - **Updated PRD:** The  file was updated to reflect the completion of the backup/restore fixes.
+- **Create Purchase Order Dialog Redesign:** Completed the refactoring and redesign, including user-requested UI enhancements.
+- **Bug Fix (RFQ to PO):** Fixed a bug causing duplicate catalog item codes when creating a PO from an RFQ.
+- **Critical Data Loss Bug Fix:** Prevented the live database () and  from being overwritten by  by adding them to .
+- **GM Approval Limit Feature:** Implemented the UI for the General Manager to set a PO approval limit.
+- **Mobile UI Fix:** Fixed a non-working Projects button in the Procurement Dashboard mobile menu.
+- **Deployment CORS Fix:** Refactored the frontend to dynamically determine the backend URL, resolving deployment-related CORS errors.
+- **Full Deployment Guide:** Created and refined a complete deployment script for a new AWS Lightsail server with PostgreSQL.
+- **Live Deployment Debugging:** Successfully resolved multiple production server issues: missing Python PPA, missing  dependency, incorrect DB password encoding ( character), and Nginx  errors.
 
 **Earlier issues found/mentioned but not fixed**
 - **Issue 1: K8s Ingress Timeout**
-    - **Description:** API endpoints that return large amounts of data (like ) fail with a  error when accessed via the external preview URL. The issue is with the platform's reverse proxy and is outside the agent's control.
-    - **Debug checklist:** None. This is an infrastructure issue. The workaround is to test such endpoints via internal  calls to .
-    - **Why to solve this issue and what will be achieved with this?** It would allow testing of large data downloads directly from the frontend UI.
-    - **Should Test frontend/backend/both after fix:** N/A
-    - **Is recurring issue?** Y
+    - **Description:** This was a platform-specific issue in the preview environment. It is not relevant to the user's self-hosted AWS Lightsail server.
 
 **Known issue recurrence from previous fork**
 - None.
@@ -98,67 +75,69 @@ Following that, the agent began implementing the user's new list of requests. It
 
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, SQLAlchemy, Asynchronous Python (/).
-- **Frontend:** React, React Hooks, , Tailwind CSS.
-- **Architecture:** Introduction of a React Context () to provide a global confirmation dialog service, replacing a browser-native function.
-- **Debugging:** Differentiating between application code errors and external infrastructure issues (e.g., proxy timeouts) by testing endpoints both internally and externally.
-- **Data Integrity:** Complex logic for serializing and deserializing a significant portion of the database for backup/restore functionality.
+- **Deployment & DevOps:** Extensive, hands-on debugging of a full-stack deployment on AWS Lightsail, covering Nginx, Systemd, PostgreSQL, Python environments, and file permissions.
+- **Database Migration Pitfalls:** Encountered and identified a critical timezone handling difference between SQLite and PostgreSQL, which is the source of the current P0 bug.
+- **Git Repository Hygiene:** Corrected a critical flaw by adding sensitive and environment-specific files (database, config) to  to prevent data loss.
+- **URL Encoding:** Resolved a database connection failure by correctly encoding special characters ( as ) in the connection URL.
 
 **key DB schema**
-- No schema changes were made. Logic was enhanced to better utilize the existing  table.
+- No changes made to the database schema in this session.
 
 **changes in tech stack**
-- None.
+- The user has provisioned their own production environment on **AWS Lightsail** using **PostgreSQL** as the database, moving away from the SQLite setup used in the development environment.
 
 **All files of reference**
-- : Core logic for backup, restore, and data cleaning.
-- : The new custom confirmation dialog component.
-- : Where the  is integrated.
-- : UI where project management was removed and  was replaced.
-- : UI where mobile view was improved and  was replaced.
-- : Logic for auto-linking items via aliases.
-- : PDF generation logic where estimated price was removed.
-- : Project requirements document.
+- : Fixed the duplicate item code bug.
+- : Contains the new, redesigned UI for creating Purchase Orders.
+- : Integrates the new dialog and contains the mobile menu fix.
+- : Critically important file that now correctly ignores the database.
+- **File to be investigated:** The file causing the timezone error. The agent must  for  in the  directory to find it.
+
+**Areas that need refactoring**:
+- None. The previous refactoring task was completed successfully.
 
 **key api endpoints**
-- : (HEAVILY MODIFIED) Now backs up most application tables.
-- : (HEAVILY MODIFIED) Restores data from a backup file.
-- : (MODIFIED) Now attempts to auto-link items using saved aliases.
-- : (MODIFIED) PDF generation logic no longer includes the estimated price.
+- : The backend logic for this endpoint was fixed.
 
 **Critical Info for New Agent**
-- The user's priorities have shifted from AWS deployment to a new list of features and UI improvements. Focus on completing the tasks in the In progress Task List first.
-- The refactoring to replace  is incomplete. You must find and replace all remaining instances to ensure UI consistency.
-- The fix for the item alias logic has been implemented on the backend but needs to be thoroughly tested via the full user workflow to confirm it solves the problem.
-- Do not waste time debugging the  error when downloading the backup file from the frontend. It is a known platform issue. Test the backup endpoint with  against  if needed.
-- The agent tested the clean data function, which deleted data that was then restored. The integrity of the restored data for complex items (like purchase orders) is not guaranteed and might be a source of future bugs.
+- **Priority 1 is the production server.** The user has successfully deployed the app but is blocked by the timezone bug. Fixing this is the absolute top priority.
+- **The database is now PostgreSQL.** All database-related code must be compatible with PostgreSQL. The current bug is a direct result of this migration.
+- **Communicate clearly in Arabic.** The user requires precise, copy-pasteable shell commands for any server operations.
+- **Do not track database files.** The  fix is essential. Do not revert this change.
 
 **documents and test reports created in this job**
+- 
 -  (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-- **User (Chat 263):** Provided a comprehensive list of new tasks: replace , hide estimated price in RFQ PDFs, fix and automate item alias linking, remove project creation from the supervisor dashboard, and improve the mobile view of the buildings system. (Status: IN PROGRESS)
-- **User (Chat 253):** Acknowledged the agent's screenshot and prompted the agent to update the PRD and finish the task. (Status: COMPLETED)
-- **User (Chat 251):** Asked the agent to take a screenshot of the working UI. (Status: COMPLETED)
+10. **User:** Provided logs showing a  related to timezones when creating users. (Status: **PENDING FIX**)
+9.  **User:** Shared a screenshot of a generic Failed to load data error on the new server. (Status: **INVESTIGATING**)
+8.  **User:** Confirmed the backend is running after fixing the password issue. (Status: **RESOLVED**)
+7.  **User:** Reported the backend was failing again with a password authentication error. (Status: **RESOLVED**)
+6.  **User:** Provided logs showing the backend was failing due to . (Status: **RESOLVED**)
+5.  **User:** Asked for confirmation on how to complete the Nginx setup commands. (Status: **RESOLVED**)
+4.  **User:** Requested commands to delete everything and redeploy from scratch. (Status: **COMPLETED**)
+3.  **User:** After fixing Nginx permissions, asked what to do next. (Status: **RESOLVED**)
+2.  **User:** Provided logs showing an Nginx  error. (Status: **RESOLVED**)
+1.  **User:** Shared screenshot of a  error on the new server. (Status: **INVESTIGATING**)
 
 **Project Health Check:**
-- **Broken:** The backup download functionality is broken when accessed from the public preview URL due to a proxy/ingress issue.
+- **Broken:** The application is non-functional on the user's new production server due to the P0 timezone bug in the backend.
 - **Mocked:** None.
 
 **3rd Party Integrations**
 - None.
 
 **Testing status**
-- **Testing agent used after significant changes:** NO
+- **Testing agent used after significant changes:** YES, for the PO dialog redesign.
 - **Troubleshoot agent used after agent stuck in loop:** NO
 - **Test files created:** None.
-- **Known regressions:** None from the current session's work, but the data integrity is questionable after a clean data and restore cycle was performed during debugging.
+- **Known regressions:** The application's dashboard functionality has regressed on PostgreSQL due to the timezone incompatibility.
 
 **Credentials to test flow:**
 - **Admin:**  / 
-- **Supervisor:**  / 
 - **Procurement Manager:**  / 
+- (Note: These are for the preview environment. The agent cannot access the user's production server.)
 
 **What agent forgot to execute**
-- The agent did not complete the full refactoring of replacing . It started the task but left several pages untouched, which will lead to an inconsistent UI.
-- The agent did not plan a verification test for the newly implemented item alias logic, which is critical to confirming the user's bug report is resolved.</analysis>
+- The agent correctly identified multiple, distinct deployment issues (dependencies, password encoding, file permissions). However, the final timezone bug was only identified at the very end of the session. The agent has not yet implemented the code fix for this final blocker.</analysis>

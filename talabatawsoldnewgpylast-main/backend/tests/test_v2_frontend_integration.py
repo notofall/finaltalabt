@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://supply-track-6.preview.emergentagent.com")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://lightsail-deploy.preview.emergentagent.com")
 
 # Test credentials
 ENGINEER_CREDS = {"email": "engineer1@test.com", "password": "123456"}
