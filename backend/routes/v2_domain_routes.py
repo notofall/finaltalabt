@@ -205,6 +205,13 @@ async def configure_domain(
     """Configure domain settings"""
     require_system_admin(current_user)
     
+    # 🔒 Security: Validate domain to prevent path injection
+    if not validate_domain(config_data.domain):
+        raise HTTPException(
+            status_code=400, 
+            detail="اسم الدومين غير صالح. يجب أن يحتوي فقط على حروف وأرقام ونقاط وشرطات."
+        )
+    
     ensure_directories()
     
     # Save configuration
