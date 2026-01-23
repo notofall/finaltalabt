@@ -98,8 +98,11 @@ def utc_now() -> datetime:
     Usage:
         from app.config import utc_now
         created_at = utc_now()
+    
+    Note: Returns timezone-naive datetime for PostgreSQL compatibility.
+    PostgreSQL TIMESTAMP columns store without timezone info.
     """
-    return datetime.now(timezone.utc)
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def to_iso_string(dt: datetime | None) -> str | None:
