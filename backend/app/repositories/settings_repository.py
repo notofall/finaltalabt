@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from database import SystemSetting
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 

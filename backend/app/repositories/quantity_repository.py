@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, and_, or_
 from database import PlannedQuantity, PriceCatalogItem, BudgetCategory, Project
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import uuid
 
 
