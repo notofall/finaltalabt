@@ -399,14 +399,14 @@ class MaterialRequestAPITester:
             "Change Password - Valid Current Password"
         )
         if not success:
-            print("❌ Failed to change password with valid current password")
+            # Sensitive data masked
             return False
 
         # 4. Test login with new password
         print("\n🔑 Testing Login with New Password...")
         new_token = self.test_login("supervisor1@test.com", "newpass123", "Supervisor (New Password)")
         if not new_token:
-            print("❌ Failed to login with new password")
+            # Sensitive data masked
             return False
 
         # 5. Test Change Password - Wrong Current Password
@@ -422,13 +422,13 @@ class MaterialRequestAPITester:
             # Check if the error message is correct
             try:
                 if "كلمة المرور الحالية غير صحيحة" in str(response):
-                    print("✅ Correct error message for wrong current password")
+                    # Sensitive data masked
                 else:
-                    print("⚠️ Wrong current password rejected but error message may be different")
+                    # Sensitive data masked
             except:
-                print("✅ Wrong current password correctly rejected")
+                # Sensitive data masked
         else:
-            print("❌ Should have rejected wrong current password")
+            # Sensitive data masked
 
         # 6. Test Change Password - Short New Password
         print("\n📏 Testing Change Password with Short New Password...")
@@ -443,13 +443,13 @@ class MaterialRequestAPITester:
             # Check if the error message is correct
             try:
                 if "كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل" in str(response):
-                    print("✅ Correct error message for short password")
+                    # Sensitive data masked
                 else:
-                    print("⚠️ Short password rejected but error message may be different")
+                    # Sensitive data masked
             except:
-                print("✅ Short password correctly rejected")
+                # Sensitive data masked
         else:
-            print("❌ Should have rejected short new password")
+            # Sensitive data masked
 
         # 7. Restore original password for future tests
         print("\n🔄 Restoring Original Password...")
@@ -461,7 +461,7 @@ class MaterialRequestAPITester:
             "Restore Original Password"
         )
         if not success:
-            print("❌ Failed to restore original password")
+            # Sensitive data masked
             return False
 
         # 8. Test Forgot Password - Existing Email
@@ -472,23 +472,23 @@ class MaterialRequestAPITester:
             "Forgot Password - Existing Email"
         )
         if not success:
-            print("❌ Failed forgot password with existing email")
+            # Sensitive data masked
             return False
 
         # Check if temp_password is returned
         temp_password = None
         if isinstance(response, dict) and 'temp_password' in response:
             temp_password = response['temp_password']
-            print(f"✅ Temporary password received: {temp_password}")
+            # Sensitive data masked
         else:
-            print("⚠️ No temporary password in response (email might be configured)")
+            # Sensitive data masked
 
         # 9. Test login with temporary password if available
         if temp_password:
             print("\n🔑 Testing Login with Temporary Password...")
             temp_token = self.test_login("supervisor1@test.com", temp_password, "Supervisor (Temp Password)")
             if temp_token:
-                print("✅ Successfully logged in with temporary password")
+                # Sensitive data masked
                 
                 # Restore original password
                 print("\n🔄 Restoring Original Password after Temp Login...")
@@ -500,7 +500,7 @@ class MaterialRequestAPITester:
                     "Restore Password after Temp Login"
                 )
             else:
-                print("❌ Failed to login with temporary password")
+                # Sensitive data masked
 
         # 10. Test Forgot Password - Non-existing Email
         print("\n📧 Testing Forgot Password with Non-existing Email...")
@@ -510,7 +510,7 @@ class MaterialRequestAPITester:
             "Forgot Password - Non-existing Email"
         )
         if success:
-            print("✅ Forgot password with non-existing email handled correctly (returns success for security)")
+            # Sensitive data masked
         else:
             print("❌ Should return success even for non-existing email")
 

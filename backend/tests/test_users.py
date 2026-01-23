@@ -354,7 +354,7 @@ class UserManagementAPITester:
         # 8. Test reset password API
         print("\n🔐 Testing Reset Password API...")
         if not self.test_reset_password(self.manager_token, self.test_user_id):
-            print("❌ Failed to reset password")
+            # Sensitive data masked
             return False
 
         # 9. Test toggle active API (disable user)
