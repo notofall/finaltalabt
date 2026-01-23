@@ -991,45 +991,85 @@ export default function GeneralManagerDashboard() {
       {showSettingsDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-slate-800">إعدادات النظام</h3>
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-gradient-to-l from-purple-50 to-white rounded-t-xl">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-purple-600" />
+                إعدادات النظام
+              </h3>
               <Button variant="ghost" size="sm" onClick={() => setShowSettingsDialog(false)}>
                 <XCircle className="w-5 h-5" />
               </Button>
             </div>
             <div className="p-4 space-y-4">
               {settings.map((setting) => (
-                <div key={setting.key} className="flex justify-between items-center">
+                <div key={setting.key} className="p-4 border rounded-xl bg-slate-50 space-y-3">
                   <div>
-                    <p className="font-medium text-slate-800">
-                      {setting.key === 'approval_limit' ? 'حد الموافقة' : setting.key}
+                    <p className="font-bold text-slate-800 flex items-center gap-2">
+                      {setting.key === 'approval_limit' && <DollarSign className="w-4 h-4 text-green-600" />}
+                      {setting.key === 'approval_limit' ? 'حد موافقة المدير العام' : 
+                       setting.key === 'company_name' ? 'اسم الشركة' : setting.key}
                     </p>
-                    <p className="text-xs text-slate-500">
-                      {setting.key === 'approval_limit' && 'أوامر الشراء التي تتجاوز هذا المبلغ تحتاج موافقتك'}
+                    <p className="text-xs text-slate-500 mt-1">
+                      {setting.key === 'approval_limit' 
+                        ? 'أوامر الشراء التي تتجاوز هذا المبلغ تحتاج موافقتك'
+                        : setting.key === 'company_name'
+                        ? 'اسم الشركة المعروض في التقارير والفواتير'
+                        : setting.description}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      value={setting.value}
-                      onChange={(e) => {
-                        const newSettings = settings.map(s => 
-                          s.key === setting.key ? {...s, value: parseInt(e.target.value)} : s
-                        );
-                        setSettings(newSettings);
-                      }}
-                      className="w-28 border border-slate-200 rounded px-2 py-1 text-sm"
-                    />
+                    {setting.key === 'approval_limit' ? (
+                      <div className="flex-1 flex items-center gap-2 bg-white rounded-lg border px-3 py-2">
+                        <input
+                          type="number"
+                          value={setting.value}
+                          onChange={(e) => {
+                            const newSettings = settings.map(s => 
+                              s.key === setting.key ? {...s, value: e.target.value} : s
+                            );
+                            setSettings(newSettings);
+                          }}
+                          className="flex-1 border-0 focus:ring-0 text-lg font-bold text-green-600"
+                          min="0"
+                          step="1000"
+                        />
+                        <span className="text-sm text-slate-500 font-medium">ر.س</span>
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        value={setting.value}
+                        onChange={(e) => {
+                          const newSettings = settings.map(s => 
+                            s.key === setting.key ? {...s, value: e.target.value} : s
+                          );
+                          setSettings(newSettings);
+                        }}
+                        className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                      />
+                    )}
                     <Button
                       size="sm"
                       onClick={() => updateSetting(setting.key, setting.value)}
-                      className="bg-purple-600 hover:bg-purple-700"
+                      className="bg-purple-600 hover:bg-purple-700 px-4"
                     >
                       حفظ
                     </Button>
                   </div>
+                  {setting.updated_by_name && (
+                    <p className="text-xs text-slate-400">
+                      آخر تحديث بواسطة: {setting.updated_by_name}
+                    </p>
+                  )}
                 </div>
               ))}
+              
+              {settings.length === 0 && (
+                <div className="text-center py-8 text-slate-500">
+                  <Settings className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>لا توجد إعدادات</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
