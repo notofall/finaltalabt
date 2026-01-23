@@ -8,8 +8,12 @@ from pydantic import BaseModel
 from datetime import datetime, timezone
 import json
 import os
+import re
+import logging
 from pathlib import Path
 import base64
+
+logger = logging.getLogger(__name__)
 
 from routes.v2_auth_routes import get_current_user, UserRole
 
@@ -28,6 +32,21 @@ CONFIG_FILE = DATA_DIR / "domain_config.json"
 
 
 # ==================== Pydantic Models ====================
+
+def validate_domain(domain: str) -> bool:
+    """Validate domain name to prevent path injection"""
+    # Only allow valid domain characters: alphanumeric, dots, and hyphens
+    # Must start with alphanumeric, max 253 chars
+    pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$'
+    if not domain or len(domain) > 253:
+        return False
+    if '..' in domain or domain.startswith('.') or domain.endswith('.'):
+        return False
+    # Prevent path traversal attempts
+    if '/' in domain or '\\' in domain or '..' in domain:
+        return False
+    return bool(re.match(pattern, domain))
+
 
 class DomainConfig(BaseModel):
     domain: str
