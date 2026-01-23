@@ -7,9 +7,11 @@ from pydantic import BaseModel
 from typing import Optional
 import os
 import json
+import logging
 from pathlib import Path
 from datetime import datetime, timezone
 
+logger = logging.getLogger(__name__)
 setup_router = APIRouter(prefix="/api/setup", tags=["Setup"])
 
 # Configuration file paths
