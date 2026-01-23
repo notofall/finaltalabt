@@ -9,8 +9,8 @@ import statistics
 from collections import defaultdict
 
 BASE_URL = "http://localhost:8001"
-NUM_USERS = 20
-REQUESTS_PER_USER = 5
+NUM_USERS = 30
+REQUESTS_PER_USER = 8
 
 results = {
     "by_endpoint": defaultdict(lambda: {"success": 0, "fail": 0, "times": [], "errors": []}),
