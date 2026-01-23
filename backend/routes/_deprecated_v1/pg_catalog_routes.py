@@ -244,7 +244,7 @@ async def update_catalog_item(
     for key, value in update_data.items():
         setattr(item, key, value)
     
-    item.updated_at = datetime.now(timezone.utc)
+    item.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     await session.commit()
     
@@ -271,7 +271,7 @@ async def delete_catalog_item(
     
     # Soft delete
     item.is_active = False
-    item.updated_at = datetime.now(timezone.utc)
+    item.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     await session.commit()
     
@@ -528,7 +528,7 @@ async def import_catalog(
                         existing_item.currency = currency
                         existing_item.category_name = category_name
                         existing_item.validity_until = validity_until
-                        existing_item.updated_at = datetime.now(timezone.utc)
+                        existing_item.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
                         updated += 1
                     else:
                         # Create new item

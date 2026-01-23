@@ -77,7 +77,7 @@ class CatalogService(BaseService):
             created_by=created_by,
             created_by_name=created_by_name,
             is_active=True,
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None)
         )
         return await self.catalog_repo.create_item(item)
     
@@ -119,7 +119,7 @@ class CatalogService(BaseService):
             alias_name=alias_name,
             catalog_item_id=catalog_item_id,
             created_by=created_by,
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None)
         )
         return await self.catalog_repo.create_alias(alias)
     

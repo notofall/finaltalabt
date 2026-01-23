@@ -550,7 +550,7 @@ async def clear_old_logs(
     if not ERROR_LOG_FILE.exists():
         return {"success": True, "deleted": 0, "remaining": 0}
     
-    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_to_keep)
+    cutoff_date = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days_to_keep)
     
     # Read all logs
     remaining_logs = []

@@ -415,7 +415,7 @@ async def create_order_from_request(
         notes=data.notes,
         terms_conditions=data.terms_conditions,
         expected_delivery_date=data.expected_delivery_date,
-        created_at=datetime.now(timezone.utc)
+        created_at=datetime.now(timezone.utc).replace(tzinfo=None)
     )
     
     session.add(order)
@@ -476,7 +476,7 @@ async def create_order_from_request(
     
     # Update request status
     request.status = "po_issued"
-    request.updated_at = datetime.now(timezone.utc)
+    request.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     await session.commit()
     
@@ -519,7 +519,7 @@ async def create_order(
         raise HTTPException(status_code=404, detail="المورد غير موجود")
     
     # Generate order number
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     order_number = f"PO-{now.strftime('%Y%m%d')}-{str(uuid_lib.uuid4())[:8].upper()}"
     
     # Calculate total
@@ -607,7 +607,7 @@ async def update_order(
             setattr(order, field, data[field])
     
     from datetime import datetime, timezone
-    order.updated_at = datetime.now(timezone.utc)
+    order.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     await session.commit()
     
     return {"message": "تم تحديث أمر الشراء بنجاح"}
@@ -674,7 +674,7 @@ async def link_item_to_catalog(
                         usage_count=1,
                         created_by=user_id,
                         created_by_name=user_name,
-                        created_at=datetime.now(timezone.utc)
+                        created_at=datetime.now(timezone.utc).replace(tzinfo=None)
                     )
                     session.add(new_alias)
     
@@ -727,7 +727,7 @@ async def sync_order_prices(
     order.total_amount = sum(item.total_price or 0 for item in items)
     
     from datetime import datetime, timezone
-    order.updated_at = datetime.now(timezone.utc)
+    order.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     await session.commit()
     
     return {
@@ -759,8 +759,8 @@ async def mark_order_printed(
     # Update print status
     from datetime import datetime, timezone
     order.is_printed = True
-    order.printed_at = datetime.now(timezone.utc)
-    order.updated_at = datetime.now(timezone.utc)
+    order.printed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    order.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     await session.commit()
     
     return {"message": "تم تسجيل الطباعة بنجاح"}
@@ -785,7 +785,7 @@ async def update_supplier_invoice(
     
     from datetime import datetime, timezone
     order.supplier_invoice_number = supplier_invoice_number
-    order.updated_at = datetime.now(timezone.utc)
+    order.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     await session.commit()
     
     return {"message": "تم تحديث رقم الفاتورة بنجاح"}

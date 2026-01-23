@@ -39,7 +39,7 @@ class AuthService(BaseService[User]):
     
     def create_access_token(self, user_id: str, role: str) -> str:
         """Create JWT access token"""
-        expire = datetime.now(timezone.utc) + timedelta(hours=self.ACCESS_TOKEN_EXPIRE_HOURS)
+        expire = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=self.ACCESS_TOKEN_EXPIRE_HOURS)
         payload = {
             "sub": user_id,
             "role": role,

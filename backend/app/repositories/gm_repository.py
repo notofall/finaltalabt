@@ -71,7 +71,7 @@ class GMRepository:
         user_name: str
     ) -> PurchaseOrder:
         """Approve order by GM"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         order.status = "approved"
         order.gm_approved_by = user_id
         order.gm_approved_by_name = user_name
@@ -88,7 +88,7 @@ class GMRepository:
         """Reject order by GM"""
         order.status = "rejected_by_gm"
         order.rejection_reason = reason
-        order.updated_at = datetime.now(timezone.utc)
+        order.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await self.session.commit()
         return order
     

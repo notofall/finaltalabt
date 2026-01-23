@@ -196,7 +196,7 @@ async def confirm_receipt(
     if order.status not in ["approved", "printed", "shipped", "partially_delivered"]:
         raise HTTPException(status_code=400, detail="حالة أمر الشراء لا تسمح بتسجيل الاستلام")
     
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     
     # Update supplier receipt number
     order.supplier_receipt_number = receipt_data.supplier_receipt_number

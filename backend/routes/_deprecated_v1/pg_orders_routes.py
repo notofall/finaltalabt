@@ -173,7 +173,7 @@ async def create_purchase_order(
     
     # Create order
     order_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     order_number, order_seq = await get_next_order_number(session)
     
     # Calculate total amount and create items
@@ -590,7 +590,7 @@ async def update_purchase_order(
             order.status = "pending_approval"
             changes["needs_gm_approval"] = {"old": True, "new": False, "reason": f"المبلغ {total_amount} أقل من حد الموافقة {approval_limit}"}
     
-    order.updated_at = datetime.now(timezone.utc)
+    order.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     if changes:
         await log_audit_pg(
@@ -618,7 +618,7 @@ async def approve_purchase_order(
     if not order:
         raise HTTPException(status_code=404, detail="أمر الشراء غير موجود")
     
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     approval_limit = await get_approval_limit(session)
     
     # Check approval requirements
@@ -694,7 +694,7 @@ async def gm_reject_order(
     
     order.status = "rejected_by_gm"
     order.rejection_reason = reject_data.reason
-    order.updated_at = datetime.now(timezone.utc)
+    order.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     await log_audit_pg(
         session, "order", order_id, "gm_reject", current_user,
@@ -727,7 +727,7 @@ async def print_purchase_order(
     if order.status != "approved":
         raise HTTPException(status_code=400, detail="أمر الشراء غير معتمد بعد")
     
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     order.status = "printed"
     order.printed_at = now
     order.updated_at = now
@@ -763,7 +763,7 @@ async def ship_purchase_order(
     if order.status != "printed":
         raise HTTPException(status_code=400, detail="يجب طباعة أمر الشراء أولاً")
     
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     order.status = "shipped"
     order.shipped_at = now
     order.updated_at = now
@@ -800,7 +800,7 @@ async def deliver_purchase_order(
     if order.status not in ["shipped", "printed", "partially_delivered"]:
         raise HTTPException(status_code=400, detail="حالة أمر الشراء لا تسمح بتسجيل التسليم")
     
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     order.status = "delivered"
     order.delivered_at = now
     order.updated_at = now
@@ -843,7 +843,7 @@ async def update_supplier_invoice(
     invoice_number = invoice_data.get("supplier_invoice_number")
     if invoice_number:
         order.supplier_invoice_number = invoice_number
-        order.updated_at = datetime.now(timezone.utc)
+        order.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         
         await log_audit_pg(
             session, "order", order_id, "update_invoice", current_user,
@@ -911,7 +911,7 @@ async def update_order_item_catalog_link(
     old_catalog_id = order_item.catalog_item_id
     order_item.catalog_item_id = update_data.catalog_item_id
     order_item.item_code = item_code
-    order.updated_at = datetime.now(timezone.utc)
+    order.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     await log_audit_pg(
         session, "order_item", item_id, "update_catalog_link", current_user,

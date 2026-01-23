@@ -102,7 +102,7 @@ def utc_now() -> datetime:
     Note: Returns timezone-naive datetime for PostgreSQL compatibility.
     PostgreSQL TIMESTAMP columns store without timezone info.
     """
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(timezone.utc).replace(tzinfo=None).replace(tzinfo=None)
 
 
 def to_iso_string(dt: datetime | None) -> str | None:

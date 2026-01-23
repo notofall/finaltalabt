@@ -76,7 +76,7 @@ class OrderService(BaseService[PurchaseOrder]):
             status="pending",
             notes=notes,
             created_by=created_by,
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None)
         )
         
         # Add items
@@ -102,7 +102,7 @@ class OrderService(BaseService[PurchaseOrder]):
         return await self.order_repo.update(order_id, {
             "status": "approved",
             "approved_by": approved_by,
-            "approved_at": datetime.now(timezone.utc)
+            "approved_at": datetime.now(timezone.utc).replace(tzinfo=None)
         })
     
     async def reject_order(
@@ -160,7 +160,7 @@ class OrderService(BaseService[PurchaseOrder]):
         new_status = "delivered" if all_delivered else "partially_delivered"
         return await self.order_repo.update(order_id, {
             "status": new_status,
-            "delivered_at": datetime.now(timezone.utc) if all_delivered else None
+            "delivered_at": datetime.now(timezone.utc).replace(tzinfo=None) if all_delivered else None
         })
     
     async def get_order_stats(self) -> dict:

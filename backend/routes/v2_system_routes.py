@@ -198,7 +198,7 @@ async def clear_old_logs(
     if not log_file.exists():
         return {"message": "لا توجد سجلات للحذف", "deleted": 0}
     
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days_to_keep)
+    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days_to_keep)
     kept_logs = []
     deleted_count = 0
     

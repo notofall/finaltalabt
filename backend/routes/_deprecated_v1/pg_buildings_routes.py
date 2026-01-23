@@ -102,7 +102,7 @@ async def create_unit_template(
         project_name=project.name,
         created_by=current_user.id,
         created_by_name=current_user.name,
-        created_at=datetime.now(timezone.utc)
+        created_at=datetime.now(timezone.utc).replace(tzinfo=None)
     )
     
     session.add(new_template)
@@ -139,7 +139,7 @@ async def update_unit_template(
         if key in template_data:
             setattr(template, key, template_data[key])
     
-    template.updated_at = datetime.now(timezone.utc)
+    template.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     await session.commit()
     
     return {"message": "تم التحديث بنجاح"}
@@ -411,7 +411,7 @@ async def add_area_material(
         tile_height=material_data.get("tile_height", 0),
         waste_percentage=material_data.get("waste_percentage", 0),
         notes=material_data.get("notes"),
-        created_at=datetime.now(timezone.utc)
+        created_at=datetime.now(timezone.utc).replace(tzinfo=None)
     )
     
     session.add(new_material)
@@ -736,7 +736,7 @@ async def sync_supply_tracking(
                 received_quantity=0,
                 unit_price=mat["unit_price"],
                 source="quantity",
-                created_at=datetime.now(timezone.utc)
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None)
             )
             session.add(new_item)
             added_count += 1
@@ -760,7 +760,7 @@ async def sync_supply_tracking(
                 received_quantity=0,
                 unit_price=mat["unit_price"],
                 source="area",
-                created_at=datetime.now(timezone.utc)
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None)
             )
             session.add(new_item)
             added_count += 1
@@ -795,7 +795,7 @@ async def update_supply_item(
     if "notes" in update_data:
         item.notes = update_data["notes"]
     
-    item.updated_at = datetime.now(timezone.utc)
+    item.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     await session.commit()
     
     return {"message": "تم التحديث بنجاح"}

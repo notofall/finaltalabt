@@ -93,7 +93,7 @@ class RFQRepository:
             if hasattr(rfq, key):
                 setattr(rfq, key, value)
         
-        rfq.updated_at = datetime.now(timezone.utc)
+        rfq.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await self.session.flush()
         return rfq
     
@@ -237,7 +237,7 @@ class RFQRepository:
             if hasattr(quotation, key):
                 setattr(quotation, key, value)
         
-        quotation.updated_at = datetime.now(timezone.utc)
+        quotation.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await self.session.flush()
         return quotation
     

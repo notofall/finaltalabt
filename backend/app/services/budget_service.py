@@ -43,7 +43,7 @@ class BudgetService(BaseService):
             default_budget=default_budget,
             created_by=created_by,
             created_by_name=created_by_name,
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None)
         )
         return await self.budget_repo.create_default_category(category)
     
@@ -97,7 +97,7 @@ class BudgetService(BaseService):
             code=code,
             created_by=created_by,
             created_by_name=created_by_name,
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None)
         )
         return await self.budget_repo.create_category(category)
     

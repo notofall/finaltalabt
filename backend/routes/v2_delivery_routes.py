@@ -306,7 +306,7 @@ async def confirm_receipt(
     all_fully_delivered = True
     items_updated = 0
     supply_updated = 0
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     
     for delivery_item in request.items:
         item_name = delivery_item.name

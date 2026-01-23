@@ -51,7 +51,7 @@ class DeliveryService(BaseService):
         """Mark order as shipped"""
         return await self.order_repo.update(order_id, {
             "status": "shipped",
-            "shipped_at": datetime.now(timezone.utc),
+            "shipped_at": datetime.now(timezone.utc).replace(tzinfo=None),
             "tracking_number": tracking_number
         })
     
@@ -99,7 +99,7 @@ class DeliveryService(BaseService):
         new_status = "delivered" if all_delivered else "partially_delivered"
         await self.order_repo.update(order_id, {
             "status": new_status,
-            "delivered_at": datetime.now(timezone.utc) if all_delivered else None
+            "delivered_at": datetime.now(timezone.utc).replace(tzinfo=None) if all_delivered else None
         })
         
         return {

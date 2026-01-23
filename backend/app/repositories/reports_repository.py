@@ -83,7 +83,7 @@ class ReportsRepository:
     
     async def count_recent_orders(self, days: int = 7) -> int:
         """Count orders in last N days"""
-        cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
+        cutoff = datetime.now(timezone.utc).replace(tzinfo=None).replace(tzinfo=None) - timedelta(days=days)
         result = await self.session.execute(
             select(func.count()).select_from(PurchaseOrder)
             .where(PurchaseOrder.created_at >= cutoff)

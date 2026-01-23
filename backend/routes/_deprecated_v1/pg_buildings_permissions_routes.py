@@ -164,7 +164,7 @@ async def grant_permission(
         can_export=permission_data.get("can_export", True),
         granted_by=current_user.id,
         granted_by_name=current_user.name,
-        granted_at=datetime.now(timezone.utc),
+        granted_at=datetime.now(timezone.utc).replace(tzinfo=None),
         is_active=True
     )
     
@@ -288,7 +288,7 @@ async def sync_supply_from_deliveries(
             if supply_item:
                 # تحديث الكمية المستلمة
                 supply_item.received_quantity = (supply_item.received_quantity or 0) + item.quantity
-                supply_item.updated_at = datetime.now(timezone.utc)
+                supply_item.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
                 updated_count += 1
     
     await session.commit()
@@ -461,7 +461,7 @@ async def import_project_data(
                         project_name=project.name,
                         created_by=current_user.id,
                         created_by_name=current_user.name,
-                        created_at=datetime.now(timezone.utc)
+                        created_at=datetime.now(timezone.utc).replace(tzinfo=None)
                     )
                     session.add(new_template)
                     results["templates_imported"] += 1

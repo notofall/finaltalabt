@@ -58,8 +58,8 @@ class AdminRepository:
         user = User(
             id=str(uuid.uuid4()),
             **data,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            updated_at=datetime.now(timezone.utc).replace(tzinfo=None)
         )
         self.session.add(user)
         await self.session.commit()
@@ -76,7 +76,7 @@ class AdminRepository:
             if hasattr(user, key) and value is not None:
                 setattr(user, key, value)
         
-        user.updated_at = datetime.now(timezone.utc)
+        user.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await self.session.commit()
         await self.session.refresh(user)
         return user
@@ -126,7 +126,7 @@ class AdminRepository:
         total_requests = requests_result.scalar() or 0
         
         # Active users (last 7 days)
-        week_ago = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=7)
+        week_ago = datetime.now(timezone.utc).replace(tzinfo=None).replace(tzinfo=None) - timedelta(days=7)
         active_result = await self.session.execute(
             select(func.count()).select_from(User)
             .where(User.updated_at >= week_ago)
@@ -157,7 +157,7 @@ class AdminRepository:
         query = select(AuditLog)
         
         # Date filter
-        since = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
+        since = datetime.now(timezone.utc).replace(tzinfo=None).replace(tzinfo=None) - timedelta(days=days)
         query = query.where(AuditLog.created_at >= since)
         
         if entity_type:

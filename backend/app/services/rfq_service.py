@@ -62,7 +62,7 @@ class RFQService(BaseService):
             "notes": notes,
             "created_by": created_by,
             "created_by_name": created_by_name,
-            "created_at": datetime.now(timezone.utc)
+            "created_at": datetime.now(timezone.utc).replace(tzinfo=None)
         }
         
         rfq = await self.repository.create_rfq(rfq_data)
@@ -236,7 +236,7 @@ class RFQService(BaseService):
         """Mark RFQ as sent"""
         update_data = {
             "status": "sent",
-            "sent_at": datetime.now(timezone.utc)
+            "sent_at": datetime.now(timezone.utc).replace(tzinfo=None)
         }
         return await self.update_rfq(rfq_id, update_data)
     
@@ -244,7 +244,7 @@ class RFQService(BaseService):
         """Close RFQ"""
         update_data = {
             "status": "closed",
-            "closed_at": datetime.now(timezone.utc)
+            "closed_at": datetime.now(timezone.utc).replace(tzinfo=None)
         }
         return await self.update_rfq(rfq_id, update_data)
     
@@ -363,7 +363,7 @@ class RFQService(BaseService):
         """Mark supplier as sent via WhatsApp"""
         update_data = {
             "sent_via_whatsapp": True,
-            "sent_at": datetime.now(timezone.utc)
+            "sent_at": datetime.now(timezone.utc).replace(tzinfo=None)
         }
         supplier = await self.repository.update_rfq_supplier(rfq_supplier_id, update_data)
         if not supplier:
@@ -374,7 +374,7 @@ class RFQService(BaseService):
         if rfq and rfq.status == "draft":
             await self.repository.update_rfq(rfq.id, {
                 "status": "sent",
-                "sent_at": datetime.now(timezone.utc)
+                "sent_at": datetime.now(timezone.utc).replace(tzinfo=None)
             })
         
         return {
@@ -444,7 +444,7 @@ class RFQService(BaseService):
             "notes": notes,
             "entered_by": entered_by,
             "entered_by_name": entered_by_name,
-            "created_at": datetime.now(timezone.utc)
+            "created_at": datetime.now(timezone.utc).replace(tzinfo=None)
         }
         
         quotation = await self.repository.create_supplier_quotation(quotation_data)
@@ -532,14 +532,14 @@ class RFQService(BaseService):
         """Accept a supplier quotation"""
         return await self.repository.update_supplier_quotation(
             quotation_id, 
-            {"status": "accepted", "updated_at": datetime.now(timezone.utc)}
+            {"status": "accepted", "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)}
         )
     
     async def reject_quotation(self, quotation_id: str) -> Optional[Dict[str, Any]]:
         """Reject a supplier quotation"""
         return await self.repository.update_supplier_quotation(
             quotation_id,
-            {"status": "rejected", "updated_at": datetime.now(timezone.utc)}
+            {"status": "rejected", "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)}
         )
     
     # ==================== Comparison ====================
@@ -683,10 +683,10 @@ class RFQService(BaseService):
         update_data = {
             "status": "accepted",
             "is_winner": True,
-            "approved_at": datetime.now(timezone.utc),
+            "approved_at": datetime.now(timezone.utc).replace(tzinfo=None),
             "approved_by": approved_by,
             "approved_by_name": approved_by_name,
-            "updated_at": datetime.now(timezone.utc)
+            "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)
         }
         
         await self.repository.update_supplier_quotation(quotation_id, update_data)
@@ -697,7 +697,7 @@ class RFQService(BaseService):
             if q.id != quotation_id and q.status == "pending":
                 await self.repository.update_supplier_quotation(q.id, {
                     "status": "rejected",
-                    "updated_at": datetime.now(timezone.utc)
+                    "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)
                 })
         
         return await self.get_quotation_details(quotation_id)
@@ -812,13 +812,13 @@ class RFQService(BaseService):
         await self.repository.update_supplier_quotation(quotation_id, {
             "order_id": order_id,
             "order_number": order_number,
-            "updated_at": datetime.now(timezone.utc)
+            "updated_at": datetime.now(timezone.utc).replace(tzinfo=None)
         })
         
         # Close RFQ
         await self.repository.update_rfq(rfq.id, {
             "status": "closed",
-            "closed_at": datetime.now(timezone.utc)
+            "closed_at": datetime.now(timezone.utc).replace(tzinfo=None)
         })
         
         # Update the original material request status to "issued"
@@ -829,7 +829,7 @@ class RFQService(BaseService):
             material_request = request_result.scalar_one_or_none()
             if material_request:
                 material_request.status = "issued"
-                material_request.updated_at = datetime.now(timezone.utc)
+                material_request.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         
         await self.session.flush()
         
@@ -878,7 +878,7 @@ class RFQService(BaseService):
             catalog_item.price = unit_price
             catalog_item.supplier_id = supplier_id
             catalog_item.supplier_name = supplier_name
-            catalog_item.updated_at = datetime.now(timezone.utc)
+            catalog_item.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         else:
             # Generate item code based on category code or default
             item_code = None
@@ -915,7 +915,7 @@ class RFQService(BaseService):
                 is_active=True,
                 created_by=created_by,
                 created_by_name=created_by_name,
-                created_at=datetime.now(timezone.utc)
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None)
             )
             self.session.add(new_item)
 

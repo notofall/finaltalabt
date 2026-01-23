@@ -44,7 +44,7 @@ class SettingsRepository:
         description: str = None
     ) -> SystemSetting:
         """Create or update a setting"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         setting = await self.get_setting(key)
         
         if setting:

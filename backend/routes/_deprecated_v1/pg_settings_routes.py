@@ -104,7 +104,7 @@ async def update_system_setting(
     setting.value = update_data.value
     setting.updated_by = current_user.id
     setting.updated_by_name = current_user.name
-    setting.updated_at = datetime.now(timezone.utc)
+    setting.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     # Log audit
     audit_log = AuditLog(
@@ -144,7 +144,7 @@ async def init_system_settings(
         {"key": "vat_rate", "value": "15", "description": "نسبة ضريبة القيمة المضافة"},
     ]
     
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     added = 0
     
     for setting_data in default_settings:
@@ -651,7 +651,7 @@ async def get_advanced_summary_report(
     # Monthly spending trend (last 6 months)
     monthly_spending = []
     from datetime import timedelta
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     for i in range(5, -1, -1):
         month_start = (now.replace(day=1) - timedelta(days=i*30)).replace(day=1)
         month_end = (month_start + timedelta(days=32)).replace(day=1)

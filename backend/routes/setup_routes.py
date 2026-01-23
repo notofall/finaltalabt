@@ -369,7 +369,7 @@ async def complete_full_setup(setup_config: FullSetupConfig):
                     ALGORITHM = "HS256"
                     ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
                     
-                    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+                    expire = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
                     token_data = {
                         "sub": setup_config.admin_user.email,
                         "user_id": user_id,

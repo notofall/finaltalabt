@@ -66,7 +66,7 @@ async def create_supplier(
         raise HTTPException(status_code=403, detail="فقط مدير المشتريات يمكنه إدارة الموردين")
     
     supplier_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     
     new_supplier = Supplier(
         id=supplier_id,

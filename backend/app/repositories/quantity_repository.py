@@ -134,8 +134,8 @@ class QuantityRepository:
         quantity = PlannedQuantity(
             id=str(uuid.uuid4()),
             **data,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            updated_at=datetime.now(timezone.utc).replace(tzinfo=None)
         )
         self.session.add(quantity)
         await self.session.commit()
@@ -156,7 +156,7 @@ class QuantityRepository:
             if hasattr(quantity, key) and value is not None:
                 setattr(quantity, key, value)
         
-        quantity.updated_at = datetime.now(timezone.utc)
+        quantity.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await self.session.commit()
         await self.session.refresh(quantity)
         return quantity
@@ -241,7 +241,7 @@ class QuantityRepository:
     
     async def get_alerts(self, days_threshold: int = 7) -> List[Dict]:
         """Get alerts for items needing attention"""
-        threshold_date = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=days_threshold)
+        threshold_date = datetime.now(timezone.utc).replace(tzinfo=None).replace(tzinfo=None) + timedelta(days=days_threshold)
         
         # Items with expected order date coming soon
         result = await self.session.execute(

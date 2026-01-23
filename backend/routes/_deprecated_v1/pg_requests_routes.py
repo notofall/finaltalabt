@@ -254,7 +254,7 @@ async def approve_request(
         raise HTTPException(status_code=403, detail="هذا الطلب غير موجه إليك")
     
     req.status = "approved_by_engineer"
-    req.updated_at = datetime.now(timezone.utc)
+    req.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     await log_audit_pg(
         session, "request", request_id, "approve", current_user,
@@ -293,7 +293,7 @@ async def reject_request(
     
     req.status = "rejected_by_engineer"
     req.rejection_reason = rejection_data.reason
-    req.updated_at = datetime.now(timezone.utc)
+    req.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     await log_audit_pg(
         session, "request", request_id, "reject", current_user,
@@ -329,7 +329,7 @@ async def reject_request_by_manager(
     
     req.status = "rejected_by_manager"
     req.rejection_reason = rejection_data.reason
-    req.updated_at = datetime.now(timezone.utc)
+    req.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     await log_audit_pg(
         session, "request", request_id, "reject_manager", current_user,

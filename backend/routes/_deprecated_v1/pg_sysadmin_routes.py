@@ -122,7 +122,7 @@ async def update_company_settings(
     """Update company settings"""
     require_system_admin(current_user)
     
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     updates = settings_data.dict(exclude_none=True)
     
     for key, value in updates.items():
@@ -174,7 +174,7 @@ async def upload_company_logo(
     base64_image = base64.b64encode(content).decode('utf-8')
     logo_data = f"data:{file.content_type};base64,{base64_image}"
     
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     
     result = await session.execute(
         select(SystemSetting).where(SystemSetting.key == "company_logo")

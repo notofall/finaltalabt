@@ -83,7 +83,7 @@ class BuildingsService(BaseService):
             description=description,
             created_by=created_by,
             created_by_name=created_by_name,
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None)
         )
         return await self.buildings_repo.create_template(template)
     
@@ -199,7 +199,7 @@ class BuildingsService(BaseService):
             tile_height=tile_height,
             waste_percentage=waste_percentage,
             notes=notes,
-            created_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None)
         )
         return await self.buildings_repo.create_area_material(material)
     

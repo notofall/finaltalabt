@@ -80,8 +80,8 @@ class ProjectService(BaseService[Project]):
             engineer_name=engineer_name,
             created_by=created_by or "system",
             created_by_name=created_by_name or "النظام",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            updated_at=datetime.now(timezone.utc).replace(tzinfo=None)
         )
         return await self.project_repo.create(project)
     

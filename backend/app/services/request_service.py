@@ -46,7 +46,7 @@ class RequestService(BaseService[MaterialRequest]):
         return await self.request_repo.update(request_id, {
             "status": "approved_by_engineer",
             "approved_by": approved_by,
-            "approved_at": datetime.now(timezone.utc)
+            "approved_at": datetime.now(timezone.utc).replace(tzinfo=None)
         })
     
     async def reject_request(
@@ -142,8 +142,8 @@ class RequestService(BaseService[MaterialRequest]):
             engineer_name=engineer_name,
             status="pending_engineer",
             expected_delivery_date=expected_delivery_date,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc)
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            updated_at=datetime.now(timezone.utc).replace(tzinfo=None)
         )
         
         return await self.request_repo.create(request)
@@ -162,7 +162,7 @@ class RequestService(BaseService[MaterialRequest]):
         data: dict
     ) -> Optional[MaterialRequest]:
         """Update a request"""
-        data["updated_at"] = datetime.now(timezone.utc)
+        data["updated_at"] = datetime.now(timezone.utc).replace(tzinfo=None)
         return await self.request_repo.update(request_id, data)
     
     async def update_request_items(
