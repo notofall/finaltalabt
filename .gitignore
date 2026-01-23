@@ -143,3 +143,7 @@ uploads/
 # Keep config template but ignore actual config
 backend/data/config.json
 !backend/data/config.json.example
+-e 
+# Environment files
+*.env
+*.env.*
