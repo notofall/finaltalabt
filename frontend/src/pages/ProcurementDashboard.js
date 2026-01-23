@@ -343,20 +343,31 @@ const ProcurementDashboard = () => {
   const handleCategoryChange = async (categoryName) => {
     // Find the category to get its code
     const selectedCategory = defaultCategories.find(cat => cat.name === categoryName);
-    const categoryCode = selectedCategory?.code || null;
+    // Trim the code to remove any extra spaces
+    const categoryCode = selectedCategory?.code?.trim() || null;
     
-    setNewCatalogItem(prev => ({ ...prev, category_id: categoryName, category_code: categoryCode }));
+    // Update state immediately with category info
+    setNewCatalogItem(prev => ({ 
+      ...prev, 
+      category_id: categoryName, 
+      category_code: categoryCode,
+      item_code: "" // Clear old code first
+    }));
     
     // Always generate new code based on category code when category changes
     if (categoryCode) {
-      // Fetch count of items with this category code prefix
       try {
         const response = await axios.get(
           `${API_V2_URL}/catalog/suggest-code?category_code=${encodeURIComponent(categoryCode)}`,
           getAuthHeaders()
         );
         if (response.data.suggested_code) {
-          setNewCatalogItem(prev => ({ ...prev, item_code: response.data.suggested_code, category_id: categoryName, category_code: categoryCode }));
+          setNewCatalogItem(prev => ({ 
+            ...prev, 
+            item_code: response.data.suggested_code, 
+            category_id: categoryName, 
+            category_code: categoryCode 
+          }));
         }
       } catch (error) {
         console.error("Error fetching suggested code:", error);
@@ -364,11 +375,20 @@ const ProcurementDashboard = () => {
     } else if (categoryName) {
       const suggestedCode = await fetchSuggestedCode(categoryName);
       if (suggestedCode) {
-        setNewCatalogItem(prev => ({ ...prev, item_code: suggestedCode, category_id: categoryName }));
+        setNewCatalogItem(prev => ({ 
+          ...prev, 
+          item_code: suggestedCode, 
+          category_id: categoryName 
+        }));
       }
     } else {
       // Clear code if no category selected
-      setNewCatalogItem(prev => ({ ...prev, item_code: "", category_id: "", category_code: "" }));
+      setNewCatalogItem(prev => ({ 
+        ...prev, 
+        item_code: "", 
+        category_id: "", 
+        category_code: "" 
+      }));
     }
   };
 
