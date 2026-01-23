@@ -8,7 +8,7 @@ from typing import Optional
 import os
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 setup_router = APIRouter(prefix="/api/setup", tags=["Setup"])
 
