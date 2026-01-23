@@ -358,11 +358,11 @@ const CatalogManagement = ({
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">السعر *</Label>
+                    <Label className="text-xs">السعر (اختياري)</Label>
                     <Input 
                       data-testid="new-item-price"
                       type="number"
-                      placeholder="0"
+                      placeholder="يُحدّث لاحقاً"
                       value={newCatalogItem.price}
                       onChange={(e) => setNewCatalogItem({...newCatalogItem, price: e.target.value})}
                       className="h-9 mt-1"
