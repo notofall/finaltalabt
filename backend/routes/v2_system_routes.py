@@ -434,7 +434,7 @@ async def create_backup(
         import traceback
         error_msg = f"Backup error: {str(e)}\n{traceback.format_exc()}"
         print(error_msg)
-        raise HTTPException(status_code=500, detail=f"فشل في إنشاء النسخة الاحتياطية: {str(e)}")
+        raise HTTPException(status_code=500, detail="فشل في إنشاء النسخة الاحتياطية. حاول مرة أخرى.")
 
 
 @router.post("/restore")
@@ -606,7 +606,7 @@ async def restore_backup(
         
     except Exception as e:
         await session.rollback()
-        raise HTTPException(status_code=500, detail=f"فشل في الاستعادة: {str(e)}")
+        raise HTTPException(status_code=500, detail="فشل في استعادة البيانات. تحقق من صحة الملف.")
 
 
 @router.post("/clean-data")
@@ -734,7 +734,7 @@ async def clean_all_data(
         
     except Exception as e:
         await session.rollback()
-        raise HTTPException(status_code=500, detail=f"فشل في التنظيف: {str(e)}")
+        raise HTTPException(status_code=500, detail="فشل في تنظيف البيانات. حاول مرة أخرى.")
 
 
 @router.get("/backups")

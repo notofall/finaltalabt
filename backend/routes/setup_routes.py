@@ -274,7 +274,7 @@ async def configure_database(config: DatabaseConfig):
         # Remove saved config on failure
         if CONFIG_FILE.exists():
             CONFIG_FILE.unlink()
-        raise HTTPException(status_code=500, detail=f"فشل في إنشاء الجداول: {str(e)}")
+        raise HTTPException(status_code=500, detail="فشل في إنشاء الجداول. تحقق من اتصال قاعدة البيانات.")
 
 
 @setup_router.post("/complete-setup")
@@ -406,7 +406,7 @@ async def complete_full_setup(setup_config: FullSetupConfig):
     except Exception as e:
         if CONFIG_FILE.exists():
             CONFIG_FILE.unlink()
-        raise HTTPException(status_code=500, detail=f"فشل في إعداد النظام: {str(e)}")
+        raise HTTPException(status_code=500, detail="فشل في إعداد النظام. حاول مرة أخرى.")
 
 
 @setup_router.delete("/reset")

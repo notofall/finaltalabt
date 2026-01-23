@@ -138,7 +138,7 @@ async def upload_company_logo(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"فشل في حفظ الملف: {str(e)}"
+            detail="فشل في حفظ الملف. حاول مرة أخرى."
         )
     
     # تحديث إعدادات الشركة

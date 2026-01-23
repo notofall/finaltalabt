@@ -380,7 +380,7 @@ async def upload_update_file(
     
     except Exception as e:
         log_error("Update", f"فشل رفع ملف التحديث: {e}")
-        raise HTTPException(status_code=500, detail=f"فشل رفع الملف: {str(e)}")
+        raise HTTPException(status_code=500, detail="فشل في رفع الملف. تأكد من صحة الملف.")
 
 
 @system_router.get("/update-status")
@@ -582,7 +582,7 @@ async def clear_old_logs(
             "remaining": len(remaining_logs)
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"فشل في حذف السجلات: {str(e)}")
+        raise HTTPException(status_code=500, detail="فشل في حذف السجلات. حاول مرة أخرى.")
 
 
 @system_router.get("/database-stats")
@@ -619,4 +619,4 @@ async def get_database_stats(current_user = Depends(get_current_user)):
                 }
             }
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"فشل في جلب إحصائيات قاعدة البيانات: {str(e)}")
+            raise HTTPException(status_code=500, detail="فشل في جلب الإحصائيات. حاول مرة أخرى.")
