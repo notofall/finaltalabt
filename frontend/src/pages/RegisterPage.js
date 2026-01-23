@@ -7,8 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 import { Package, ArrowLeft, Shield, Info, AlertCircle, User, Mail, Lock, Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
+import { BACKEND_URL } from "../config/api";
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = BACKEND_URL;
 
 const RegisterPage = () => {
   const navigate = useNavigate();
