@@ -28,7 +28,7 @@ MAX_LIMIT = PaginationConfig.MAX_PAGE_SIZE
 class CatalogItemCreate(BaseModel):
     name: str
     unit: str
-    price: float
+    price: Optional[float] = 0  # السعر اختياري - يُحدّث عند إصدار أمر الشراء
     category_name: Optional[str] = None
     category_code: Optional[str] = None  # كود التصنيف لتوليد كود الصنف
     item_code: Optional[str] = None
@@ -50,7 +50,7 @@ class CatalogItemResponse(BaseModel):
     item_code: Optional[str] = None
     name: str
     unit: str
-    price: float
+    price: Optional[float] = 0  # السعر قد يكون 0 حتى يُحدّث
     category_name: Optional[str] = None
     description: Optional[str] = None
     supplier_name: Optional[str] = None
