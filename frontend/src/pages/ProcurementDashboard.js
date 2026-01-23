@@ -1919,6 +1919,14 @@ const ProcurementDashboard = () => {
               <p className="text-xs text-slate-500 px-3 py-2 font-medium">إدارة البيانات</p>
               
               <button 
+                onClick={() => { setProjectsDialogOpen(true); setMobileMenuOpen(false); }}
+                className="w-full flex items-center gap-3 px-3 py-3 text-slate-300 hover:bg-slate-800 rounded-lg transition-colors"
+              >
+                <Building2 className="w-5 h-5 text-cyan-400" />
+                <span className="text-sm">المشاريع</span>
+              </button>
+              
+              <button 
                 onClick={() => { setBudgetDialogOpen(true); setMobileMenuOpen(false); }}
                 className="w-full flex items-center gap-3 px-3 py-3 text-slate-300 hover:bg-slate-800 rounded-lg transition-colors"
               >
