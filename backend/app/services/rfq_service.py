@@ -778,6 +778,9 @@ class RFQService(BaseService):
         )
         self.session.add(order)
         
+        # Track used codes in this batch to avoid duplicates
+        used_codes = set()
+        
         # Add order items
         for qi in quotation_items:
             order_item = PurchaseOrderItem(
@@ -801,7 +804,8 @@ class RFQService(BaseService):
                     supplier_id=quotation.supplier_id,
                     supplier_name=quotation.supplier_name,
                     created_by=created_by,
-                    created_by_name=created_by_name
+                    created_by_name=created_by_name,
+                    used_codes=used_codes
                 )
         
         # Update quotation with order info
