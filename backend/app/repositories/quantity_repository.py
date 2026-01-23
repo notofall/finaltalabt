@@ -134,8 +134,8 @@ class QuantityRepository:
         quantity = PlannedQuantity(
             id=str(uuid.uuid4()),
             **data,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         )
         self.session.add(quantity)
         await self.session.commit()
