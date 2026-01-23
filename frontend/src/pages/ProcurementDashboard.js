@@ -3739,50 +3739,60 @@ const ProcurementDashboard = () => {
               <div className="border rounded-lg p-3 bg-slate-50">
                 <h4 className="font-medium text-sm mb-2">إضافة صنف جديد</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {/* التصنيف أولاً */}
+                  <div className="col-span-2">
+                    <select
+                      value={newCatalogItem.category_id}
+                      onChange={(e) => handleCategoryChange(e.target.value)}
+                      className="border rounded px-2 py-2 text-sm w-full"
+                    >
+                      <option value="">-- اختر التصنيف أولاً --</option>
+                      {defaultCategories.map(cat => (
+                        <option key={cat.id} value={cat.name}>{cat.name}</option>
+                      ))}
+                    </select>
+                    <span className="text-xs text-slate-500 mt-0.5 block">يُولّد الكود تلقائياً بناءً على التصنيف</span>
+                  </div>
+                  {/* الكود - معطل */}
                   <div className="relative">
                     <Input 
                       placeholder="الكود (تلقائي)"
                       value={newCatalogItem.item_code}
-                      onChange={(e) => setNewCatalogItem({...newCatalogItem, item_code: e.target.value})}
+                      disabled
+                      className="bg-gray-100"
                     />
-                    <span className="text-xs text-slate-500 mt-0.5 block">يُولد تلقائياً</span>
                   </div>
+                  {/* اسم الصنف */}
                   <Input 
                     placeholder="اسم الصنف *"
                     value={newCatalogItem.name}
                     onChange={(e) => setNewCatalogItem({...newCatalogItem, name: e.target.value})}
                   />
+                  {/* الوصف */}
                   <Input 
                     placeholder="الوصف"
                     value={newCatalogItem.description}
                     onChange={(e) => setNewCatalogItem({...newCatalogItem, description: e.target.value})}
                   />
+                  {/* الوحدة */}
                   <Input 
                     placeholder="الوحدة"
                     value={newCatalogItem.unit}
                     onChange={(e) => setNewCatalogItem({...newCatalogItem, unit: e.target.value})}
                   />
+                  {/* السعر - اختياري */}
                   <Input 
                     type="number"
-                    placeholder="السعر *"
+                    placeholder="السعر (اختياري)"
                     value={newCatalogItem.price}
                     onChange={(e) => setNewCatalogItem({...newCatalogItem, price: e.target.value})}
                   />
+                  {/* اسم المورد */}
                   <Input 
                     placeholder="اسم المورد"
                     value={newCatalogItem.supplier_name}
                     onChange={(e) => setNewCatalogItem({...newCatalogItem, supplier_name: e.target.value})}
                   />
-                  <select
-                    value={newCatalogItem.category_id}
-                    onChange={(e) => handleCategoryChange(e.target.value)}
-                    className="border rounded px-2 py-2 text-sm"
-                  >
-                    <option value="">-- التصنيف --</option>
-                    {defaultCategories.map(cat => (
-                      <option key={cat.id} value={cat.name}>{cat.name}</option>
-                    ))}
-                  </select>
                 </div>
                 <Button onClick={handleCreateCatalogItem} size="sm" className="mt-2 bg-green-600 hover:bg-green-700">
                   <Plus className="w-4 h-4 ml-1" />
