@@ -7,11 +7,14 @@ Architecture: Route -> Service -> Repository
 from fastapi import APIRouter, HTTPException, Depends, status, Query
 from pydantic import BaseModel
 from typing import Optional, List
+import logging
 
 from app.services import CatalogService
 from app.dependencies import get_catalog_service
 from app.config import PaginationConfig
 from routes.v2_auth_routes import get_current_user, require_admin
+
+logger = logging.getLogger(__name__)
 
 # Create router
 router = APIRouter(prefix="/api/v2/catalog", tags=["V2 Catalog"])
