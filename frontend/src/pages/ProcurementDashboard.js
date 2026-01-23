@@ -347,8 +347,8 @@ const ProcurementDashboard = () => {
     
     setNewCatalogItem(prev => ({ ...prev, category_id: categoryName, category_code: categoryCode }));
     
-    // Generate code based on category code
-    if (!newCatalogItem.item_code && categoryCode) {
+    // Always generate new code based on category code when category changes
+    if (categoryCode) {
       // Fetch count of items with this category code prefix
       try {
         const response = await axios.get(
@@ -356,16 +356,19 @@ const ProcurementDashboard = () => {
           getAuthHeaders()
         );
         if (response.data.suggested_code) {
-          setNewCatalogItem(prev => ({ ...prev, item_code: response.data.suggested_code }));
+          setNewCatalogItem(prev => ({ ...prev, item_code: response.data.suggested_code, category_id: categoryName, category_code: categoryCode }));
         }
       } catch (error) {
         console.error("Error fetching suggested code:", error);
       }
-    } else if (!newCatalogItem.item_code) {
+    } else if (categoryName) {
       const suggestedCode = await fetchSuggestedCode(categoryName);
       if (suggestedCode) {
-        setNewCatalogItem(prev => ({ ...prev, item_code: suggestedCode }));
+        setNewCatalogItem(prev => ({ ...prev, item_code: suggestedCode, category_id: categoryName }));
       }
+    } else {
+      // Clear code if no category selected
+      setNewCatalogItem(prev => ({ ...prev, item_code: "", category_id: "", category_code: "" }));
     }
   };
 
