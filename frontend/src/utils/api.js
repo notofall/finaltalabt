@@ -4,10 +4,9 @@
  * Enables gradual migration from V1 to V2 APIs
  */
 import axios from "axios";
+import { BACKEND_URL, API_URL as API_V1, API_V2_URL as API_V2 } from "../config/api";
 
-const BASE_URL = process.env.REACT_APP_BACKEND_URL;
-const API_V1 = `${BASE_URL}/api/pg`;
-const API_V2 = `${BASE_URL}/api/v2`;
+const BASE_URL = BACKEND_URL;
 
 /**
  * Create axios instance with default config

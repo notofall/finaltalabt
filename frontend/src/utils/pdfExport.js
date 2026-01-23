@@ -1,7 +1,8 @@
 // PDF Export using Browser Print (Full Arabic Support)
 import axios from 'axios';
+import { BACKEND_URL } from '../config/api';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || '';
+const API_URL = BACKEND_URL;
 
 // Company settings cache
 let companySettingsCache = null;

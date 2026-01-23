@@ -6,8 +6,7 @@ import { Label } from "./ui/label";
 import { KeyRound, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import axios from "axios";
-
-const API_V2_URL = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+import { API_V2_URL } from "../config/api";
 
 const ChangePasswordDialog = ({ open, onOpenChange, token }) => {
   const [currentPassword, setCurrentPassword] = useState("");

@@ -11,8 +11,9 @@ import {
   Loader2, RefreshCw, Eye, EyeOff, Settings, ArrowLeft,
   User, Mail, Lock
 } from 'lucide-react';
+import { BACKEND_URL } from '../config/api';
 
-const API_BASE = process.env.REACT_APP_BACKEND_URL || '';
+const API_BASE = BACKEND_URL;
 
 export default function DatabaseSetupPage() {
   const navigate = useNavigate();

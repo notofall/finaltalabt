@@ -29,8 +29,9 @@ import AdvancedReports from '../components/AdvancedReports';
 import PlannedQuantitiesView from '../components/PlannedQuantitiesView';
 import { GMReports } from '../components/DashboardReports';
 import { exportPurchaseOrderToPDF, fetchAndCacheCompanySettings } from '../utils/pdfExport';
+import { BACKEND_URL } from '../config/api';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = BACKEND_URL;
 
 export default function GeneralManagerDashboard() {
   const navigate = useNavigate();

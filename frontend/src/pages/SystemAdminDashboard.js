@@ -19,12 +19,13 @@ import {
   Server, Activity, HardDrive, Cpu, MemoryStick, Clock,
   Terminal, CheckCircle2, XCircle, Info, Wrench, Globe, Lock, Copy, ExternalLink
 } from "lucide-react";
+import { API_V2_URL, API_URL } from "../config/api";
 
 export default function SystemAdminDashboard() {
   const { user, logout, getAuthHeaders } = useAuth();
-  const API_V2 = `${process.env.REACT_APP_BACKEND_URL}/api/v2`;
+  const API_V2 = API_V2_URL;
   // Legacy API for system updates (not yet migrated to V2)
-  const API_URL_LEGACY = `${process.env.REACT_APP_BACKEND_URL}/api/pg`;
+  const API_URL_LEGACY = API_URL;
   
   // Stats
   const [stats, setStats] = useState({
