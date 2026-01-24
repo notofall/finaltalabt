@@ -2905,9 +2905,8 @@ async def import_project_full(
         await session.flush()
     
     # ==================== استيراد الأدوار ====================
-    if "الأدوار" in wb.sheetnames:
-        ws_floors = wb["الأدوار"]
-        
+    ws_floors = find_sheet(wb, ["الأدوار", "بيانات الأدوار"])
+    if ws_floors:
         for row_idx, row in enumerate(ws_floors.iter_rows(min_row=3, values_only=True), start=3):
             if not row or row[0] is None:
                 continue
