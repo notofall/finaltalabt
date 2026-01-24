@@ -1453,55 +1453,61 @@ async def export_boq_pdf(
     
     # Unit Materials table
     if calc_data['materials']:
-        elements.append(Paragraph("Unit Materials", styles['Heading2']))
-        mat_data = [["Code", "Material", "Unit", "Qty", "Price", "Total"]]
+        elements.append(Paragraph(arabic("مواد الوحدات"), heading_style))
+        mat_data = [[arabic("الإجمالي"), arabic("السعر"), arabic("الكمية"), arabic("الوحدة"), arabic("المادة"), arabic("الكود")]]
         for mat in calc_data['materials']:
             mat_data.append([
-                mat.get('item_code', ''),
-                mat['item_name'][:30],
-                mat['unit'],
-                mat['quantity'],
-                mat['unit_price'],
-                mat['total_price']
+                f"{mat['total_price']:,.2f}",
+                str(mat['unit_price']),
+                str(mat['quantity']),
+                arabic(mat['unit']),
+                arabic(mat['item_name'][:30]),
+                mat.get('item_code', '')
             ])
-        mat_data.append(["", "", "", "", "Total:", f"{calc_data['total_unit_materials_cost']:,.2f}"])
+        mat_data.append([f"{calc_data['total_unit_materials_cost']:,.2f}", arabic("الإجمالي:"), "", "", "", ""])
         
-        mat_table = Table(mat_data, colWidths=[60, 150, 50, 60, 60, 80])
+        mat_table = Table(mat_data, colWidths=[80, 60, 60, 50, 150, 60])
         mat_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), 'Arabic'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0.18, 0.49, 0.2)),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
         ]))
         elements.append(mat_table)
         elements.append(Spacer(1, 30))
     
     # Area Materials table
     if calc_data['area_materials']:
-        elements.append(Paragraph("Area Materials", styles['Heading2']))
-        area_data = [["Material", "Unit", "Factor", "Waste%", "Qty", "Price", "Total"]]
+        elements.append(Paragraph(arabic("مواد المساحة"), heading_style))
+        area_data = [[arabic("الإجمالي"), arabic("السعر"), arabic("الكمية"), arabic("الهالك%"), arabic("المعامل"), arabic("الوحدة"), arabic("المادة")]]
         for mat in calc_data['area_materials']:
             area_data.append([
-                mat['item_name'][:25],
-                mat['unit'],
-                mat.get('factor', 0),
-                mat.get('waste_percentage', 0),
-                mat['quantity'],
-                mat['unit_price'],
-                mat['total_price']
+                f"{mat['total_price']:,.2f}",
+                str(mat['unit_price']),
+                str(mat['quantity']),
+                str(mat.get('waste_percentage', 0)),
+                str(mat.get('factor', 0)),
+                arabic(mat['unit']),
+                arabic(mat['item_name'][:25])
             ])
-        area_data.append(["", "", "", "", "", "Total:", f"{calc_data['total_area_materials_cost']:,.2f}"])
+        area_data.append([f"{calc_data['total_area_materials_cost']:,.2f}", arabic("الإجمالي:"), "", "", "", "", ""])
         
-        area_table = Table(area_data, colWidths=[120, 40, 50, 50, 60, 60, 80])
+        area_table = Table(area_data, colWidths=[80, 60, 60, 50, 50, 50, 110])
         area_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), 'Arabic'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0.18, 0.49, 0.2)),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
         ]))
         elements.append(area_table)
     
@@ -1510,7 +1516,7 @@ async def export_boq_pdf(
     
     from urllib.parse import quote
     safe_filename = f"BOQ_{project_id[:8]}.pdf"
-    encoded_filename = quote(f"BOQ_{project.name}.pdf")
+    encoded_filename = quote(f"جدول_كميات_{project.name}.pdf")
     
     return StreamingResponse(
         buffer,
