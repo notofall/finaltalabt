@@ -291,11 +291,11 @@ const SupervisorDashboard = () => {
   // Add item to list
   const addItem = () => {
     if (!newItemName.trim()) { toast.error("أدخل اسم المادة"); return; }
-    if (!newItemQty || parseInt(newItemQty) <= 0) { toast.error("أدخل الكمية"); return; }
+    if (!newItemQty || parseFloat(newItemQty) <= 0) { toast.error("أدخل الكمية"); return; }
     
     const newItem = { 
       name: newItemName.trim(), 
-      quantity: newItemQty, 
+      quantity: parseFloat(newItemQty), 
       unit: newItemUnit,
       estimated_price: newItemEstPrice ? parseFloat(newItemEstPrice) : (selectedCatalogItem?.price || null),
       catalog_item_id: selectedCatalogItem?.id || null,
@@ -317,11 +317,11 @@ const SupervisorDashboard = () => {
   // Edit item functions
   const addEditItem = () => {
     if (!editNewItemName.trim()) { toast.error("أدخل اسم المادة"); return; }
-    if (!editNewItemQty || parseInt(editNewItemQty) <= 0) { toast.error("أدخل الكمية"); return; }
+    if (!editNewItemQty || parseFloat(editNewItemQty) <= 0) { toast.error("أدخل الكمية"); return; }
     
     setEditItems([...editItems, { 
       name: editNewItemName.trim(), 
-      quantity: editNewItemQty, 
+      quantity: parseFloat(editNewItemQty), 
       unit: editNewItemUnit,
       estimated_price: editNewItemEstPrice ? parseFloat(editNewItemEstPrice) : null
     }]);
