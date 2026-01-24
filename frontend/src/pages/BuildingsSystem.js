@@ -657,7 +657,7 @@ const BuildingsSystem = () => {
       
       toast.success("تم إنشاء النموذج بنجاح");
       setTemplateDialogOpen(false);
-      setNewTemplate({ code: "", name: "", description: "", area: 0, rooms_count: 0, bathrooms_count: 0, count: 0 });
+      setNewTemplate({ code: "", name: "", description: "", area: 0, rooms_count: 0, bathrooms_count: 0, count: 1 });
       fetchProjectDetails(selectedProject.id);
     } catch (error) {
       console.error("Error creating template:", error);
