@@ -2351,14 +2351,14 @@ async def export_project_full(
     current_user = Depends(get_current_user),
     session: AsyncSession = Depends(get_postgres_session)
 ):
-    """تصدير المشروع الكامل إلى Excel - يشمل الأدوار ومواد المساحة"""
+    """تصدير المشروع الكامل إلى Excel - يشمل النماذج ومواد النماذج والأدوار ومواد المساحة"""
     from fastapi.responses import StreamingResponse
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
     from openpyxl.utils import get_column_letter
     from io import BytesIO
     from urllib.parse import quote
-    from database.models import ProjectFloor, ProjectAreaMaterial
+    from database.models import ProjectFloor, ProjectAreaMaterial, UnitTemplate, UnitTemplateMaterial
     
     # Get project
     result = await session.execute(select(Project).where(Project.id == project_id))
@@ -2366,18 +2366,32 @@ async def export_project_full(
     if not project:
         raise HTTPException(status_code=404, detail="المشروع غير موجود")
     
+    # Get templates
+    templates_result = await session.execute(
+        select(UnitTemplate).where(UnitTemplate.project_id == project_id).order_by(UnitTemplate.code)
+    )
+    templates = list(templates_result.scalars().all())
+    
+    # Get template materials for all templates
+    template_materials_dict = {}
+    for template in templates:
+        materials_result = await session.execute(
+            select(UnitTemplateMaterial).where(UnitTemplateMaterial.template_id == template.id)
+        )
+        template_materials_dict[template.id] = list(materials_result.scalars().all())
+    
     # Get floors
     floors_result = await session.execute(
         select(ProjectFloor).where(ProjectFloor.project_id == project_id).order_by(ProjectFloor.floor_number)
     )
-    floors = floors_result.scalars().all()
+    floors = list(floors_result.scalars().all())
     floors_dict = {str(f.id): f for f in floors}
     
     # Get area materials
     materials_result = await session.execute(
         select(ProjectAreaMaterial).where(ProjectAreaMaterial.project_id == project_id)
     )
-    area_materials = materials_result.scalars().all()
+    area_materials = list(materials_result.scalars().all())
     
     # Create workbook
     wb = Workbook()
@@ -2387,6 +2401,7 @@ async def export_project_full(
     title_fill = PatternFill(start_color="1e3a5f", end_color="1e3a5f", fill_type="solid")
     header_font = Font(bold=True, size=11, color="FFFFFF")
     header_fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
+    template_fill = PatternFill(start_color="1565C0", end_color="1565C0", fill_type="solid")
     info_fill = PatternFill(start_color="e8f5e9", end_color="e8f5e9", fill_type="solid")
     border = Border(
         left=Side(style='thin'), right=Side(style='thin'),
@@ -2405,9 +2420,12 @@ async def export_project_full(
     ws_info['A1'].fill = title_fill
     ws_info['A1'].alignment = center_align
     
+    total_template_materials = sum(len(mats) for mats in template_materials_dict.values())
     info_data = [
         ("اسم المشروع:", project.name),
         ("وصف المشروع:", project.description or ""),
+        ("عدد النماذج:", len(templates)),
+        ("عدد مواد النماذج:", total_template_materials),
         ("عدد الأدوار:", len(floors)),
         ("إجمالي المساحة:", f"{sum(f.area for f in floors)} م²"),
         ("عدد مواد المساحة:", len(area_materials)),
@@ -2420,7 +2438,70 @@ async def export_project_full(
     ws_info.column_dimensions['A'].width = 20
     ws_info.column_dimensions['B'].width = 40
     
-    # ==================== Sheet 2: الأدوار ====================
+    # ==================== Sheet 2: النماذج (الوحدات/الشقق) ====================
+    ws_templates = wb.create_sheet("النماذج")
+    ws_templates.sheet_view.rightToLeft = True
+    
+    ws_templates.merge_cells('A1:G1')
+    ws_templates['A1'] = "نماذج الوحدات (الشقق)"
+    ws_templates['A1'].font = title_font
+    ws_templates['A1'].fill = template_fill
+    ws_templates['A1'].alignment = center_align
+    
+    template_headers = ["كود النموذج", "اسم النموذج", "العدد", "المساحة (م²)", "عدد الغرف", "عدد الحمامات", "الوصف"]
+    for col, header in enumerate(template_headers, 1):
+        cell = ws_templates.cell(row=2, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+        cell.alignment = center_align
+    
+    for row_idx, template in enumerate(templates, 3):
+        ws_templates.cell(row=row_idx, column=1, value=template.code).border = border
+        ws_templates.cell(row=row_idx, column=2, value=template.name).border = border
+        ws_templates.cell(row=row_idx, column=3, value=template.count or 1).border = border
+        ws_templates.cell(row=row_idx, column=4, value=template.area or 0).border = border
+        ws_templates.cell(row=row_idx, column=5, value=template.rooms_count or 0).border = border
+        ws_templates.cell(row=row_idx, column=6, value=template.bathrooms_count or 0).border = border
+        ws_templates.cell(row=row_idx, column=7, value=template.description or "").border = border
+    
+    for i, w in enumerate([15, 20, 10, 12, 12, 12, 25], 1):
+        ws_templates.column_dimensions[get_column_letter(i)].width = w
+    
+    # ==================== Sheet 3: مواد النماذج ====================
+    ws_tmpl_materials = wb.create_sheet("مواد النماذج")
+    ws_tmpl_materials.sheet_view.rightToLeft = True
+    
+    ws_tmpl_materials.merge_cells('A1:G1')
+    ws_tmpl_materials['A1'] = "مواد النماذج (المواد لكل نموذج)"
+    ws_tmpl_materials['A1'].font = title_font
+    ws_tmpl_materials['A1'].fill = template_fill
+    ws_tmpl_materials['A1'].alignment = center_align
+    
+    tmpl_mat_headers = ["كود النموذج", "كود الصنف", "اسم المادة", "الوحدة", "الكمية لكل وحدة", "السعر"]
+    for col, header in enumerate(tmpl_mat_headers, 1):
+        cell = ws_tmpl_materials.cell(row=2, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+        cell.alignment = center_align
+    
+    row_idx = 3
+    for template in templates:
+        materials = template_materials_dict.get(template.id, [])
+        for mat in materials:
+            ws_tmpl_materials.cell(row=row_idx, column=1, value=template.code).border = border
+            ws_tmpl_materials.cell(row=row_idx, column=2, value=mat.item_code or "").border = border
+            ws_tmpl_materials.cell(row=row_idx, column=3, value=mat.item_name).border = border
+            ws_tmpl_materials.cell(row=row_idx, column=4, value=mat.unit).border = border
+            ws_tmpl_materials.cell(row=row_idx, column=5, value=mat.quantity_per_unit or 0).border = border
+            ws_tmpl_materials.cell(row=row_idx, column=6, value=mat.unit_price or 0).border = border
+            row_idx += 1
+    
+    for i, w in enumerate([15, 15, 25, 10, 15, 12], 1):
+        ws_tmpl_materials.column_dimensions[get_column_letter(i)].width = w
+    
+    # ==================== Sheet 4: الأدوار ====================
     ws_floors = wb.create_sheet("الأدوار")
     ws_floors.sheet_view.rightToLeft = True
     
@@ -2449,17 +2530,16 @@ async def export_project_full(
     ws_floors.column_dimensions['C'].width = 15
     ws_floors.column_dimensions['D'].width = 22
     
-    # ==================== Sheet 3: مواد المساحة ====================
+    # ==================== Sheet 5: مواد المساحة ====================
     ws_materials = wb.create_sheet("مواد المساحة")
     ws_materials.sheet_view.rightToLeft = True
     
-    ws_materials.merge_cells('A1:L1')
+    ws_materials.merge_cells('A1:M1')
     ws_materials['A1'] = "مواد المساحة"
     ws_materials['A1'].font = title_font
     ws_materials['A1'].fill = title_fill
     ws_materials['A1'].alignment = center_align
     
-    # إضافة كود الصنف كأول عمود (مطلوب للاستيراد)
     mat_headers = [
         "كود الصنف", "اسم المادة", "الوحدة", "طريقة الحساب", "المعامل", "الكمية المباشرة",
         "نطاق الحساب", "الدور", "عرض البلاط (سم)", "طول البلاط (سم)",
@@ -2500,18 +2580,28 @@ async def export_project_full(
     for i, width in enumerate(col_widths, 1):
         ws_materials.column_dimensions[get_column_letter(i)].width = width
     
-    # ==================== Sheet 4: تعليمات الاستيراد ====================
+    # ==================== Sheet 6: تعليمات الاستيراد ====================
     ws_help = wb.create_sheet("تعليمات الاستيراد")
     ws_help.sheet_view.rightToLeft = True
     
     instructions = [
-        ("تعليمات استيراد المشروع:", ""),
+        ("تعليمات استيراد المشروع الكامل:", ""),
         ("", ""),
-        ("⚠️ مهم:", "يجب أن تكون جميع المواد موجودة في الكتالوج. استخدم كود الصنف للربط."),
+        ("⚠️ مهم جداً:", "يجب أن تكون جميع المواد موجودة في كتالوج الأسعار. استخدم كود الصنف للربط."),
+        ("", ""),
+        ("ورقة النماذج:", ""),
+        ("  - كود النموذج:", "كود فريد للنموذج (مثال: UNIT-A)"),
+        ("  - اسم النموذج:", "اسم وصفي (مثال: شقة 3 غرف)"),
+        ("  - العدد:", "عدد الوحدات من هذا النموذج (يجب أن يكون 1 أو أكثر)"),
+        ("", ""),
+        ("ورقة مواد النماذج:", ""),
+        ("  - كود النموذج:", "⚠️ مطلوب - يجب أن يطابق كود في ورقة النماذج"),
+        ("  - كود الصنف:", "⚠️ مطلوب - يجب أن يكون موجوداً في كتالوج الأسعار"),
+        ("  - الكمية لكل وحدة:", "كمية المادة لكل شقة/وحدة"),
         ("", ""),
         ("ورقة الأدوار:", ""),
         ("  - رقم الدور:", "-1=لبشة، 0=أرضي، 1،2،3...=أدوار متكررة، 99=سطح"),
-        ("  - اسم الدور:", "اسم وصفي للدور (مثال: الدور الأرضي، سقف الأول)"),
+        ("  - اسم الدور:", "اسم وصفي للدور"),
         ("  - المساحة:", "مساحة الدور بالمتر المربع"),
         ("  - معامل التسليح:", "كمية الحديد لكل متر مربع (الافتراضي 120 كجم/م²)"),
         ("", ""),
@@ -2519,10 +2609,8 @@ async def export_project_full(
         ("  - كود الصنف:", "⚠️ مطلوب - يجب أن يكون موجوداً في كتالوج الأسعار"),
         ("  - طريقة الحساب:", "'معامل' = الكمية × المساحة، 'مباشر' = كمية ثابتة"),
         ("  - نطاق الحساب:", "'جميع الأدوار' أو 'دور محدد'"),
-        ("  - الدور:", "اسم الدور كما في ورقة الأدوار (إذا كان نطاق الحساب 'دور محدد')"),
-        ("  - عرض/طول البلاط:", "بالسنتيمتر (للبلاط فقط)"),
         ("", ""),
-        ("ملاحظة:", "إذا وجد صنف غير موجود في الكتالوج، سيتم رفض الاستيراد"),
+        ("ملاحظة:", "عند الاستيراد، سيتم تحديث البيانات الموجودة أو إضافة جديدة حسب الكود"),
     ]
     
     for row_idx, (label, value) in enumerate(instructions, 1):
