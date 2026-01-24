@@ -1811,64 +1811,100 @@ async def import_area_materials_excel(
     errors = []
     
     # Detect format from header row
-    header_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True))
-    # Check if column 6 is "الكمية" (quantity) - means we have quantity column
-    has_quantity_column = header_row and len(header_row) > 5 and header_row[5] and "كمية" in str(header_row[5])
+    header_row = list(next(ws.iter_rows(min_row=1, max_row=1, values_only=True)))
+    header_row = [str(h).strip() if h else "" for h in header_row]
     
-    # Skip header row (and note row if exists)
-    for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-        # Skip empty rows or note rows
-        if not row[0] or str(row[0]).startswith('#'):
+    # تحديد نوع التنسيق بناءً على العناوين
+    # التنسيق الجديد الشامل: اسم المادة, الوحدة, طريقة الحساب, المعامل, الكمية المباشرة, نطاق الحساب, الدور, عرض البلاط, طول البلاط, نسبة الهالك, السعر, ملاحظات
+    # التنسيق القديم: اسم المادة, الوحدة, المعامل, الدور, نسبة الهالك, الكمية, السعر, الإجمالي
+    
+    is_new_format = any("طريقة" in h for h in header_row)
+    has_quantity_column = any("كمية" in h and "مباشر" not in h for h in header_row)
+    
+    # Skip header row and title row if exists
+    start_row = 2
+    # Check if row 2 is a title/merged row
+    row2 = list(next(ws.iter_rows(min_row=2, max_row=2, values_only=True)))
+    if row2 and row2[0] and str(row2[0]).startswith("مواد المساحة"):
+        start_row = 3
+    
+    for row_idx, row in enumerate(ws.iter_rows(min_row=start_row, values_only=True), start=start_row):
+        # Skip empty rows or note/comment rows
+        if not row or not row[0] or str(row[0]).strip().startswith('#') or str(row[0]).strip().startswith('مواد'):
             continue
         
         try:
-            item_name = str(row[0]).strip()
-            unit = str(row[1]).strip() if row[1] else "طن"
-            factor = float(row[2]) if row[2] else 0
-            floor_value = row[3] if len(row) > 3 else None
-            waste_percentage = float(row[4]) if len(row) > 4 and row[4] else 0
-            
-            # قراءة الكمية والسعر
-            if has_quantity_column:
-                # تنسيق: اسم المادة, الوحدة, المعامل, الدور, نسبة الهالك, الكمية, السعر, الإجمالي
-                direct_quantity = float(row[5]) if len(row) > 5 and row[5] else 0
-                unit_price = float(row[6]) if len(row) > 6 and row[6] else 0
+            if is_new_format:
+                # التنسيق الجديد الشامل (12 عمود)
+                item_name = str(row[0]).strip() if row[0] else ""
+                unit = str(row[1]).strip() if len(row) > 1 and row[1] else "طن"
+                calc_method_str = str(row[2]).strip() if len(row) > 2 and row[2] else "مباشر"
+                factor = float(row[3]) if len(row) > 3 and row[3] else 0
+                direct_quantity = float(row[4]) if len(row) > 4 and row[4] else 0
+                calc_type_str = str(row[5]).strip() if len(row) > 5 and row[5] else "جميع الأدوار"
+                floor_value = row[6] if len(row) > 6 else None
+                tile_width = float(row[7]) if len(row) > 7 and row[7] else 0
+                tile_height = float(row[8]) if len(row) > 8 and row[8] else 0
+                waste_percentage = float(row[9]) if len(row) > 9 and row[9] else 0
+                unit_price = float(row[10]) if len(row) > 10 and row[10] else 0
+                notes = str(row[11]).strip() if len(row) > 11 and row[11] else None
+                
+                # تحويل طريقة الحساب
+                calculation_method = "factor" if "معامل" in calc_method_str else "direct"
+                # تحويل نطاق الحساب
+                calculation_type = "all_floors" if "جميع" in calc_type_str else "selected_floor"
+                
             else:
-                # تنسيق: اسم المادة, الوحدة, المعامل, الدور, نسبة الهالك, السعر
-                direct_quantity = 0
-                unit_price = float(row[5]) if len(row) > 5 and row[5] else 0
+                # التنسيق القديم (8 أعمدة): اسم المادة, الوحدة, المعامل, الدور, نسبة الهالك, الكمية, السعر, الإجمالي
+                item_name = str(row[0]).strip() if row[0] else ""
+                unit = str(row[1]).strip() if len(row) > 1 and row[1] else "طن"
+                factor = float(row[2]) if len(row) > 2 and row[2] else 0
+                floor_value = row[3] if len(row) > 3 else None
+                waste_percentage = float(row[4]) if len(row) > 4 and row[4] else 0
+                
+                if has_quantity_column:
+                    direct_quantity = float(row[5]) if len(row) > 5 and row[5] else 0
+                    unit_price = float(row[6]) if len(row) > 6 and row[6] else 0
+                else:
+                    direct_quantity = 0
+                    unit_price = float(row[5]) if len(row) > 5 and row[5] else 0
+                
+                tile_width = 0
+                tile_height = 0
+                notes = None
+                
+                # تحديد طريقة الحساب تلقائياً
+                if factor > 0:
+                    calculation_method = "factor"
+                elif direct_quantity > 0:
+                    calculation_method = "direct"
+                else:
+                    calculation_method = "direct"
+                
+                calculation_type = "all_floors"
             
-            # تحديد طريقة الحساب تلقائياً لكل صف:
-            # - إذا المعامل = 0 والكمية > 0 → كمية مباشرة
-            # - إذا المعامل > 0 → بالمعامل
-            # - إذا كلاهما = 0 → كمية مباشرة (افتراضي)
-            if factor > 0:
-                calculation_method = "factor"
-            elif direct_quantity > 0:
-                calculation_method = "direct"
-            else:
-                calculation_method = "direct"  # افتراضي للكمية المباشرة
+            if not item_name:
+                continue
             
-            # Determine floor
-            calculation_type = "all_floors"
+            # تحديد الدور
             selected_floor_id = None
-            
-            if floor_value not in [None, "", " "]:
+            if floor_value not in [None, "", " "] and calculation_type == "selected_floor":
                 floor_str = str(floor_value).strip()
-                # Try by name first
                 if floor_str in floors_by_name:
-                    calculation_type = "selected_floor"
                     selected_floor_id = str(floors_by_name[floor_str].id)
                 else:
-                    # Try by number
                     try:
                         floor_num = int(floor_value)
                         if floor_num in floors_by_number:
-                            calculation_type = "selected_floor"
                             selected_floor_id = str(floors_by_number[floor_num].id)
                     except (ValueError, TypeError):
-                        # Floor name not found, keep as all_floors
                         pass
+            elif floor_value not in [None, "", " "]:
+                # للتنسيق القديم - محاولة تحديد الدور
+                floor_str = str(floor_value).strip()
+                if floor_str in floors_by_name:
+                    calculation_type = "selected_floor"
+                    selected_floor_id = str(floors_by_name[floor_str].id)
             
             material = ProjectAreaMaterial(
                 id=str(uuid4()),
@@ -1882,10 +1918,10 @@ async def import_area_materials_excel(
                 unit_price=unit_price,
                 calculation_type=calculation_type,
                 selected_floor_id=selected_floor_id,
-                tile_width=0,
-                tile_height=0,
+                tile_width=tile_width,
+                tile_height=tile_height,
                 waste_percentage=waste_percentage,
-                notes=None
+                notes=notes
             )
             session.add(material)
             imported_count += 1
