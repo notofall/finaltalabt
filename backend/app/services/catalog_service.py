@@ -199,14 +199,3 @@ class CatalogService(BaseService):
                 result["catalog_item"] = suggestions[0]
         
         return result
-                        "item_code": item.item_code,
-                        "name": item.name,
-                        "alias_name": alias.alias_name,  # الاسم البديل
-                        "unit": item.unit,
-                        "price": item.price,
-                        "category_name": item.category_name,
-                        "type": "alias"
-                    })
-        
-        result["suggestions"] = suggestions
-        return result
