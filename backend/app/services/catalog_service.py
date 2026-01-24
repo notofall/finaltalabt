@@ -139,58 +139,41 @@ class CatalogService(BaseService):
             "suggestions": []
         }
         
+        suggestions = []
+        
         # 1. البحث في الأسماء البديلة أولاً (تطابق تام)
         alias = await self.catalog_repo.find_alias(item_name)
         if alias:
             item = await self.catalog_repo.get_item_by_id(alias.catalog_item_id)
             if item:
-                result["found"] = True
-                result["match_type"] = "alias"
-                result["catalog_item"] = {
+                suggestions.append({
                     "id": str(item.id),
                     "item_code": item.item_code,
                     "name": item.name,
                     "unit": item.unit,
                     "price": item.price,
                     "category_name": item.category_name,
-                    "alias_name": alias.alias_name  # الاسم البديل المُستخدم
-                }
-                return result
+                    "alias_name": alias.alias_name,
+                    "type": "alias_exact"
+                })
         
-        # 2. البحث في الكتالوج بالاسم
-        items = await self.catalog_repo.search_items(item_name, limit=1)
-        if items:
-            item = items[0]
-            result["found"] = True
-            result["match_type"] = "catalog"
-            result["catalog_item"] = {
-                "id": str(item.id),
-                "item_code": item.item_code,
-                "name": item.name,
-                "unit": item.unit,
-                "price": item.price,
-                "category_name": item.category_name
-            }
-            return result
-        
-        # 3. البحث عن اقتراحات (جزئي) - الكتالوج والأسماء البديلة
-        suggestions = []
-        
-        # بحث في الكتالوج
-        catalog_items = await self.catalog_repo.search_items(item_name, limit=5)
+        # 2. بحث في الكتالوج - إرجاع جميع النتائج المتطابقة (حتى 20)
+        catalog_items = await self.catalog_repo.search_items(item_name, limit=20)
         for item in catalog_items:
-            suggestions.append({
-                "id": str(item.id),
-                "item_code": item.item_code,
-                "name": item.name,
-                "unit": item.unit,
-                "price": item.price,
-                "category_name": item.category_name,
-                "type": "catalog"
-            })
+            # تجنب التكرار
+            if not any(s["id"] == str(item.id) for s in suggestions):
+                suggestions.append({
+                    "id": str(item.id),
+                    "item_code": item.item_code,
+                    "name": item.name,
+                    "unit": item.unit,
+                    "price": item.price,
+                    "category_name": item.category_name,
+                    "type": "catalog"
+                })
         
-        # بحث في الأسماء البديلة
-        aliases = await self.catalog_repo.search_aliases(item_name, limit=5)
+        # 3. بحث في الأسماء البديلة (جزئي)
+        aliases = await self.catalog_repo.search_aliases(item_name, limit=20)
         for alias in aliases:
             item = await self.catalog_repo.get_item_by_id(alias.catalog_item_id)
             if item:
@@ -198,6 +181,24 @@ class CatalogService(BaseService):
                 if not any(s["id"] == str(item.id) for s in suggestions):
                     suggestions.append({
                         "id": str(item.id),
+                        "item_code": item.item_code,
+                        "name": item.name,
+                        "unit": item.unit,
+                        "price": item.price,
+                        "category_name": item.category_name,
+                        "alias_name": alias.alias_name,
+                        "type": "alias"
+                    })
+        
+        if suggestions:
+            result["found"] = len(suggestions) > 0
+            result["suggestions"] = suggestions
+            # إذا كان هناك تطابق تام واحد فقط، أرجعه
+            if len(suggestions) == 1:
+                result["match_type"] = suggestions[0].get("type", "catalog")
+                result["catalog_item"] = suggestions[0]
+        
+        return result
                         "item_code": item.item_code,
                         "name": item.name,
                         "alias_name": alias.alias_name,  # الاسم البديل
