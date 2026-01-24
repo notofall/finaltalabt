@@ -2647,10 +2647,10 @@ async def import_project_full(
     current_user = Depends(get_current_user),
     session: AsyncSession = Depends(get_postgres_session)
 ):
-    """استيراد المشروع الكامل من Excel - الأدوار ومواد المساحة (مع التحقق من الكتالوج)"""
+    """استيراد المشروع الكامل من Excel - النماذج ومواد النماذج والأدوار ومواد المساحة"""
     from openpyxl import load_workbook
     from io import BytesIO
-    from database.models import ProjectFloor, ProjectAreaMaterial, PriceCatalog
+    from database.models import ProjectFloor, ProjectAreaMaterial, PriceCatalogItem, UnitTemplate, UnitTemplateMaterial
     
     # Get project
     result = await session.execute(select(Project).where(Project.id == project_id))
@@ -2661,43 +2661,55 @@ async def import_project_full(
     # تحميل الكتالوج للتحقق
     catalog_result = await session.execute(select(PriceCatalogItem))
     catalog_items = catalog_result.scalars().all()
-    catalog_by_code = {item.item_code: item for item in catalog_items}
+    catalog_by_code = {item.item_code: item for item in catalog_items if item.item_code}
     catalog_by_name = {item.name: item for item in catalog_items}
     
     # Read Excel file
     contents = await file.read()
     wb = load_workbook(BytesIO(contents))
     
+    imported_templates = 0
+    imported_template_materials = 0
     imported_floors = 0
     imported_materials = 0
     errors = []
-    missing_items = []  # الأصناف غير الموجودة في الكتالوج
+    missing_items = []
     
-    # ==================== التحقق من مواد المساحة أولاً ====================
+    # ==================== التحقق من الأصناف في الكتالوج أولاً ====================
+    
+    # التحقق من مواد النماذج
+    if "مواد النماذج" in wb.sheetnames:
+        ws_tmpl_mats = wb["مواد النماذج"]
+        for row_idx, row in enumerate(ws_tmpl_mats.iter_rows(min_row=3, values_only=True), start=3):
+            if not row or not row[0]:
+                continue
+            item_code = str(row[1]).strip() if row[1] else ""
+            item_name = str(row[2]).strip() if row[2] else ""
+            
+            if item_code and item_code not in catalog_by_code:
+                if item_name not in catalog_by_name:
+                    missing_items.append({"row": row_idx, "sheet": "مواد النماذج", "code": item_code, "name": item_name})
+            elif not item_code and item_name and item_name not in catalog_by_name:
+                missing_items.append({"row": row_idx, "sheet": "مواد النماذج", "code": "", "name": item_name})
+    
+    # التحقق من مواد المساحة
     if "مواد المساحة" in wb.sheetnames:
         ws_materials = wb["مواد المساحة"]
-        
-        # تحديد نوع التنسيق من العناوين
         header_row = list(next(ws_materials.iter_rows(min_row=2, max_row=2, values_only=True)))
         header_row = [str(h).strip() if h else "" for h in header_row]
         has_item_code = any("كود" in h for h in header_row)
         
-        start_row = 3
-        
-        for row_idx, row in enumerate(ws_materials.iter_rows(min_row=start_row, values_only=True), start=start_row):
+        for row_idx, row in enumerate(ws_materials.iter_rows(min_row=3, values_only=True), start=3):
             if not row or not row[0] or str(row[0]).strip().startswith('#'):
                 continue
             
             if has_item_code:
-                # التنسيق الجديد مع كود الصنف
                 item_code = str(row[0]).strip() if row[0] else ""
                 item_name = str(row[1]).strip() if row[1] else ""
             else:
-                # التنسيق القديم بدون كود الصنف
                 item_code = ""
                 item_name = str(row[0]).strip() if row[0] else ""
             
-            # التحقق من وجود الصنف في الكتالوج
             catalog_item = None
             if item_code and item_code in catalog_by_code:
                 catalog_item = catalog_by_code[item_code]
@@ -2705,15 +2717,11 @@ async def import_project_full(
                 catalog_item = catalog_by_name[item_name]
             
             if not catalog_item:
-                missing_items.append({
-                    "row": row_idx,
-                    "code": item_code,
-                    "name": item_name
-                })
+                missing_items.append({"row": row_idx, "sheet": "مواد المساحة", "code": item_code, "name": item_name})
     
-    # إذا وجدت أصناف غير موجودة في الكتالوج، رفض الاستيراد
+    # رفض الاستيراد إذا وجدت أصناف غير موجودة
     if missing_items:
-        missing_list = [f"صف {m['row']}: {m['code'] or m['name']}" for m in missing_items[:10]]
+        missing_list = [f"{m['sheet']} صف {m['row']}: {m['code'] or m['name']}" for m in missing_items[:10]]
         if len(missing_items) > 10:
             missing_list.append(f"... و {len(missing_items) - 10} أصناف أخرى")
         
@@ -2725,8 +2733,24 @@ async def import_project_full(
             }
         )
     
-    # حذف البيانات الموجودة إذا طُلب ذلك
+    # ==================== حذف البيانات الموجودة إذا طُلب ====================
     if replace_existing:
+        # حذف مواد النماذج أولاً
+        templates_result = await session.execute(
+            select(UnitTemplate).where(UnitTemplate.project_id == project_id)
+        )
+        existing_templates = templates_result.scalars().all()
+        for tmpl in existing_templates:
+            await session.execute(
+                UnitTemplateMaterial.__table__.delete().where(UnitTemplateMaterial.template_id == tmpl.id)
+            )
+        
+        # حذف النماذج
+        await session.execute(
+            UnitTemplate.__table__.delete().where(UnitTemplate.project_id == project_id)
+        )
+        
+        # حذف مواد المساحة والأدوار
         await session.execute(
             ProjectAreaMaterial.__table__.delete().where(ProjectAreaMaterial.project_id == project_id)
         )
@@ -2734,13 +2758,147 @@ async def import_project_full(
             ProjectFloor.__table__.delete().where(ProjectFloor.project_id == project_id)
         )
     
+    # ==================== استيراد النماذج ====================
+    templates_by_code = {}
+    
+    if "النماذج" in wb.sheetnames:
+        ws_templates = wb["النماذج"]
+        
+        for row_idx, row in enumerate(ws_templates.iter_rows(min_row=3, values_only=True), start=3):
+            if not row or not row[0]:
+                continue
+            
+            try:
+                code = str(row[0]).strip()
+                name = str(row[1]).strip() if row[1] else code
+                count = int(row[2]) if row[2] else 1
+                count = max(1, count)  # الحد الأدنى 1
+                area = float(row[3]) if row[3] else 0
+                rooms_count = int(row[4]) if row[4] else 0
+                bathrooms_count = int(row[5]) if row[5] else 0
+                description = str(row[6]).strip() if len(row) > 6 and row[6] else ""
+                
+                # التحقق من وجود النموذج
+                existing_result = await session.execute(
+                    select(UnitTemplate).where(
+                        UnitTemplate.project_id == project_id,
+                        UnitTemplate.code == code
+                    )
+                )
+                existing = existing_result.scalar_one_or_none()
+                
+                if existing:
+                    # تحديث النموذج الموجود
+                    existing.name = name
+                    existing.count = count
+                    existing.area = area
+                    existing.rooms_count = rooms_count
+                    existing.bathrooms_count = bathrooms_count
+                    existing.description = description
+                    templates_by_code[code] = existing
+                else:
+                    # إنشاء نموذج جديد
+                    template = UnitTemplate(
+                        id=str(uuid4()),
+                        project_id=project_id,
+                        code=code,
+                        name=name,
+                        count=count,
+                        area=area,
+                        rooms_count=rooms_count,
+                        bathrooms_count=bathrooms_count,
+                        description=description
+                    )
+                    session.add(template)
+                    templates_by_code[code] = template
+                    imported_templates += 1
+                    
+            except Exception as e:
+                errors.append(f"النماذج - صف {row_idx}: {str(e)}")
+        
+        await session.flush()
+    
+    # ==================== استيراد مواد النماذج ====================
+    if "مواد النماذج" in wb.sheetnames:
+        ws_tmpl_mats = wb["مواد النماذج"]
+        
+        for row_idx, row in enumerate(ws_tmpl_mats.iter_rows(min_row=3, values_only=True), start=3):
+            if not row or not row[0]:
+                continue
+            
+            try:
+                template_code = str(row[0]).strip()
+                item_code = str(row[1]).strip() if row[1] else ""
+                item_name = str(row[2]).strip() if row[2] else ""
+                unit = str(row[3]).strip() if row[3] else "قطعة"
+                quantity_per_unit = float(row[4]) if row[4] else 0
+                unit_price = float(row[5]) if len(row) > 5 and row[5] else 0
+                
+                # البحث عن النموذج
+                template = templates_by_code.get(template_code)
+                if not template:
+                    # البحث في قاعدة البيانات
+                    tmpl_result = await session.execute(
+                        select(UnitTemplate).where(
+                            UnitTemplate.project_id == project_id,
+                            UnitTemplate.code == template_code
+                        )
+                    )
+                    template = tmpl_result.scalar_one_or_none()
+                
+                if not template:
+                    errors.append(f"مواد النماذج - صف {row_idx}: النموذج '{template_code}' غير موجود")
+                    continue
+                
+                # البحث عن الصنف في الكتالوج
+                catalog_item = None
+                if item_code and item_code in catalog_by_code:
+                    catalog_item = catalog_by_code[item_code]
+                elif item_name and item_name in catalog_by_name:
+                    catalog_item = catalog_by_name[item_name]
+                
+                if not catalog_item:
+                    errors.append(f"مواد النماذج - صف {row_idx}: الصنف غير موجود في الكتالوج")
+                    continue
+                
+                # التحقق من وجود المادة في النموذج
+                existing_mat_result = await session.execute(
+                    select(UnitTemplateMaterial).where(
+                        UnitTemplateMaterial.template_id == template.id,
+                        UnitTemplateMaterial.catalog_item_id == catalog_item.id
+                    )
+                )
+                existing_mat = existing_mat_result.scalar_one_or_none()
+                
+                if existing_mat:
+                    # تحديث المادة الموجودة
+                    existing_mat.quantity_per_unit = quantity_per_unit
+                    existing_mat.unit_price = unit_price if unit_price > 0 else (catalog_item.price or 0)
+                else:
+                    # إضافة مادة جديدة
+                    tmpl_material = UnitTemplateMaterial(
+                        id=str(uuid4()),
+                        template_id=template.id,
+                        catalog_item_id=catalog_item.id,
+                        item_code=catalog_item.item_code,
+                        item_name=catalog_item.name,
+                        unit=catalog_item.unit or unit,
+                        quantity_per_unit=quantity_per_unit,
+                        unit_price=unit_price if unit_price > 0 else (catalog_item.price or 0)
+                    )
+                    session.add(tmpl_material)
+                    imported_template_materials += 1
+                    
+            except Exception as e:
+                errors.append(f"مواد النماذج - صف {row_idx}: {str(e)}")
+        
+        await session.flush()
+    
     # ==================== استيراد الأدوار ====================
     if "الأدوار" in wb.sheetnames:
         ws_floors = wb["الأدوار"]
         
-        start_row = 3
-        
-        for row_idx, row in enumerate(ws_floors.iter_rows(min_row=start_row, values_only=True), start=start_row):
+        for row_idx, row in enumerate(ws_floors.iter_rows(min_row=3, values_only=True), start=3):
             if not row or row[0] is None:
                 continue
             
@@ -2750,16 +2908,33 @@ async def import_project_full(
                 area = float(row[2]) if row[2] else 0
                 steel_factor = float(row[3]) if len(row) > 3 and row[3] else 120
                 
-                floor = ProjectFloor(
-                    id=str(uuid4()),
-                    project_id=project_id,
-                    floor_number=floor_number,
-                    floor_name=floor_name,
-                    area=area,
-                    steel_factor=steel_factor
+                # التحقق من وجود الدور
+                existing_floor_result = await session.execute(
+                    select(ProjectFloor).where(
+                        ProjectFloor.project_id == project_id,
+                        ProjectFloor.floor_number == floor_number
+                    )
                 )
-                session.add(floor)
-                imported_floors += 1
+                existing_floor = existing_floor_result.scalar_one_or_none()
+                
+                if existing_floor:
+                    # تحديث الدور الموجود
+                    existing_floor.floor_name = floor_name
+                    existing_floor.area = area
+                    existing_floor.steel_factor = steel_factor
+                else:
+                    # إنشاء دور جديد
+                    floor = ProjectFloor(
+                        id=str(uuid4()),
+                        project_id=project_id,
+                        floor_number=floor_number,
+                        floor_name=floor_name,
+                        area=area,
+                        steel_factor=steel_factor
+                    )
+                    session.add(floor)
+                    imported_floors += 1
+                    
             except Exception as e:
                 errors.append(f"الأدوار - صف {row_idx}: {str(e)}")
     
@@ -2781,15 +2956,12 @@ async def import_project_full(
         header_row = [str(h).strip() if h else "" for h in header_row]
         has_item_code = any("كود" in h for h in header_row)
         
-        start_row = 3
-        
-        for row_idx, row in enumerate(ws_materials.iter_rows(min_row=start_row, values_only=True), start=start_row):
+        for row_idx, row in enumerate(ws_materials.iter_rows(min_row=3, values_only=True), start=3):
             if not row or not row[0] or str(row[0]).strip().startswith('#'):
                 continue
             
             try:
                 if has_item_code:
-                    # التنسيق الجديد (13 عمود مع كود الصنف)
                     item_code = str(row[0]).strip() if row[0] else ""
                     item_name = str(row[1]).strip() if row[1] else ""
                     unit = str(row[2]).strip() if row[2] else "طن"
@@ -2798,6 +2970,87 @@ async def import_project_full(
                     direct_quantity = float(row[5]) if row[5] else 0
                     calc_type_str = str(row[6]).strip() if row[6] else "جميع الأدوار"
                     floor_value = row[7] if len(row) > 7 else None
+                    tile_width = float(row[8]) if len(row) > 8 and row[8] else 0
+                    tile_height = float(row[9]) if len(row) > 9 and row[9] else 0
+                    waste_percentage = float(row[10]) if len(row) > 10 and row[10] else 0
+                    unit_price = float(row[11]) if len(row) > 11 and row[11] else 0
+                    notes = str(row[12]).strip() if len(row) > 12 and row[12] else ""
+                else:
+                    item_code = ""
+                    item_name = str(row[0]).strip() if row[0] else ""
+                    unit = str(row[1]).strip() if row[1] else "طن"
+                    calc_method_str = str(row[2]).strip() if row[2] else "مباشر"
+                    factor = float(row[3]) if row[3] else 0
+                    direct_quantity = float(row[4]) if row[4] else 0
+                    calc_type_str = str(row[5]).strip() if row[5] else "جميع الأدوار"
+                    floor_value = row[6] if len(row) > 6 else None
+                    tile_width = float(row[7]) if len(row) > 7 and row[7] else 0
+                    tile_height = float(row[8]) if len(row) > 8 and row[8] else 0
+                    waste_percentage = float(row[9]) if len(row) > 9 and row[9] else 0
+                    unit_price = float(row[10]) if len(row) > 10 and row[10] else 0
+                    notes = str(row[11]).strip() if len(row) > 11 and row[11] else ""
+                
+                # البحث عن الصنف في الكتالوج
+                catalog_item = None
+                if item_code and item_code in catalog_by_code:
+                    catalog_item = catalog_by_code[item_code]
+                elif item_name and item_name in catalog_by_name:
+                    catalog_item = catalog_by_name[item_name]
+                
+                if not catalog_item:
+                    errors.append(f"مواد المساحة - صف {row_idx}: الصنف '{item_code or item_name}' غير موجود في الكتالوج")
+                    continue
+                
+                calculation_method = "factor" if "معامل" in calc_method_str else "direct"
+                calculation_type = "all_floors" if "جميع" in calc_type_str else "selected_floor"
+                
+                selected_floor_id = None
+                if calculation_type == "selected_floor" and floor_value:
+                    floor_str = str(floor_value).strip()
+                    if floor_str in floors_by_name:
+                        selected_floor_id = floors_by_name[floor_str].id
+                    else:
+                        try:
+                            floor_num = int(floor_str)
+                            if floor_num in floors_by_number:
+                                selected_floor_id = floors_by_number[floor_num].id
+                        except:
+                            pass
+                
+                material = ProjectAreaMaterial(
+                    id=str(uuid4()),
+                    project_id=project_id,
+                    catalog_item_id=catalog_item.id,
+                    item_code=catalog_item.item_code,
+                    item_name=catalog_item.name,
+                    unit=catalog_item.unit or unit,
+                    calculation_method=calculation_method,
+                    factor=factor,
+                    direct_quantity=direct_quantity,
+                    unit_price=unit_price if unit_price > 0 else (catalog_item.price or 0),
+                    calculation_type=calculation_type,
+                    selected_floor_id=selected_floor_id,
+                    tile_width=tile_width,
+                    tile_height=tile_height,
+                    waste_percentage=waste_percentage,
+                    notes=notes
+                )
+                session.add(material)
+                imported_materials += 1
+                
+            except Exception as e:
+                errors.append(f"مواد المساحة - صف {row_idx}: {str(e)}")
+    
+    await session.commit()
+    
+    return {
+        "message": "تم استيراد المشروع بنجاح",
+        "imported_templates": imported_templates,
+        "imported_template_materials": imported_template_materials,
+        "imported_floors": imported_floors,
+        "imported_materials": imported_materials,
+        "errors": errors if errors else None
+    }
                     tile_width = float(row[8]) if len(row) > 8 and row[8] else 0
                     tile_height = float(row[9]) if len(row) > 9 and row[9] else 0
                     waste_percentage = float(row[10]) if len(row) > 10 and row[10] else 0
