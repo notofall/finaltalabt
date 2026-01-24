@@ -1133,15 +1133,19 @@ async def sync_supply_tracking(
         waste_pct = getattr(m, 'waste_percentage', 0) or 0
         quantity = base_quantity * (1 + waste_pct / 100)
         
+        # ✅ حفظ الكمية المستلمة
+        item_code = getattr(m, 'item_code', None)
+        preserved_received = get_preserved_received(m.catalog_item_id, item_code, m.item_name)
+        
         supply_item = SupplyTracking(
             id=str(uuid4()),
             project_id=project_id,
             catalog_item_id=m.catalog_item_id,
-            item_code=getattr(m, 'item_code', None),
+            item_code=item_code,
             item_name=m.item_name,
             unit=m.unit,
             required_quantity=round(quantity, 2),
-            received_quantity=0,
+            received_quantity=preserved_received,  # ✅ حفظ الكمية المستلمة
             unit_price=m.unit_price,
             source="area",
             notes="مواد المساحة"
