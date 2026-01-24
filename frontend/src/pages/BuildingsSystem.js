@@ -1577,10 +1577,16 @@ const BuildingsSystem = () => {
                 <Card className="bg-slate-800/50 border-slate-700">
                   <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
                     <CardTitle className="text-white">مواد المساحة (حديد، بلاط، بلك)</CardTitle>
-                    <Button onClick={() => { setCatalogSelectionTarget("areaMaterial"); setAreaMaterialDialogOpen(true); }} className="bg-emerald-600 hover:bg-emerald-700">
-                      <Plus className="w-4 h-4 ml-2" />
-                      إضافة مادة
-                    </Button>
+                    <div className="flex gap-2 flex-wrap">
+                      <Button onClick={exportMaterialsRequests} variant="outline" className="border-slate-600 text-slate-300">
+                        <Download className="w-4 h-4 ml-2" />
+                        تصدير طلبات المواد
+                      </Button>
+                      <Button onClick={() => { setCatalogSelectionTarget("areaMaterial"); setAreaMaterialDialogOpen(true); }} className="bg-emerald-600 hover:bg-emerald-700">
+                        <Plus className="w-4 h-4 ml-2" />
+                        إضافة مادة
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     {areaMaterials.length === 0 ? (
