@@ -1601,33 +1601,65 @@ const BuildingsSystem = () => {
                               <th className="text-right p-3">المادة</th>
                               <th className="text-right p-3">الوحدة</th>
                               <th className="text-right p-3">المعامل</th>
-                              <th className="text-right p-3">نوع الحساب</th>
-                              <th className="text-right p-3">نسبة الهالك</th>
+                              <th className="text-right p-3">الدور</th>
+                              <th className="text-right p-3">الكمية</th>
                               <th className="text-center p-3">إجراءات</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {areaMaterials.map((mat) => (
-                              <tr key={mat.id} className="border-b border-slate-700/50 text-white">
-                                <td className="p-3">{mat.item_name}</td>
-                                <td className="p-3">{mat.unit}</td>
-                                <td className="p-3">{mat.calculation_method === "direct" ? mat.direct_quantity : mat.factor}</td>
-                                <td className="p-3">
-                                  <Badge variant={mat.calculation_type === "all_floors" ? "default" : "secondary"} className="bg-emerald-600">
-                                    {mat.calculation_type === "all_floors" ? "جميع الأدوار" : "دور محدد"}
-                                  </Badge>
-                                </td>
-                                <td className="p-3">{mat.waste_percentage}%</td>
-                                <td className="p-3 text-center">
-                                  <div className="flex items-center justify-center gap-1">
-                                    <Button size="sm" variant="outline" className="border-blue-500 text-blue-400 hover:bg-blue-500/20" onClick={() => openEditAreaMaterial(mat)}>
-                                      <Edit className="w-4 h-4" />
-                                    </Button>
-                                    <Button size="sm" variant="destructive" onClick={() => deleteAreaMaterial(mat.id)}>
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                </td>
+                            {areaMaterials.map((mat) => {
+                              // حساب الكمية
+                              const totalArea = floors.reduce((sum, f) => sum + (f.area || 0), 0);
+                              let floorArea = totalArea;
+                              let floorName = "جميع الأدوار";
+                              
+                              if (mat.calculation_type === "selected_floor" && mat.selected_floor_id) {
+                                const selectedFloor = floors.find(f => f.id === mat.selected_floor_id);
+                                if (selectedFloor) {
+                                  floorArea = selectedFloor.area || 0;
+                                  floorName = selectedFloor.floor_name;
+                                }
+                              }
+                              
+                              let quantity = 0;
+                              if (mat.calculation_method === "direct") {
+                                quantity = mat.direct_quantity || 0;
+                              } else {
+                                quantity = floorArea * (mat.factor || 0);
+                              }
+                              
+                              // حساب البلاط
+                              if (mat.tile_width > 0 && mat.tile_height > 0 && floorArea > 0) {
+                                const tileAreaM2 = (mat.tile_width / 100) * (mat.tile_height / 100);
+                                if (tileAreaM2 > 0) {
+                                  quantity = floorArea / tileAreaM2;
+                                }
+                              }
+                              
+                              // تطبيق نسبة الهالك
+                              quantity = quantity * (1 + (mat.waste_percentage || 0) / 100);
+                              
+                              return (
+                                <tr key={mat.id} className="border-b border-slate-700/50 text-white">
+                                  <td className="p-3">{mat.item_name}</td>
+                                  <td className="p-3">{mat.unit}</td>
+                                  <td className="p-3">{mat.calculation_method === "direct" ? mat.direct_quantity : mat.factor}</td>
+                                  <td className="p-3">
+                                    <Badge variant={mat.calculation_type === "all_floors" ? "default" : "secondary"} className={mat.calculation_type === "all_floors" ? "bg-emerald-600" : "bg-blue-600"}>
+                                      {floorName}
+                                    </Badge>
+                                  </td>
+                                  <td className="p-3 text-emerald-400 font-semibold">{quantity.toFixed(2)}</td>
+                                  <td className="p-3 text-center">
+                                    <div className="flex items-center justify-center gap-1">
+                                      <Button size="sm" variant="outline" className="border-blue-500 text-blue-400 hover:bg-blue-500/20" onClick={() => openEditAreaMaterial(mat)}>
+                                        <Edit className="w-4 h-4" />
+                                      </Button>
+                                      <Button size="sm" variant="destructive" onClick={() => deleteAreaMaterial(mat.id)}>
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </td>
                               </tr>
                             ))}
                           </tbody>
