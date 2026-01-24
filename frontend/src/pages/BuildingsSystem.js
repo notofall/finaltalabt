@@ -347,8 +347,6 @@ const BuildingsSystem = () => {
   };
 
   // Import Area Materials from Excel
-  const areaMaterialsImportRef = useRef(null);
-  
   const handleImportAreaMaterials = async (event) => {
     const file = event.target.files?.[0];
     if (!file || !selectedProject) return;
