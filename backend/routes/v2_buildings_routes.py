@@ -1338,7 +1338,7 @@ async def export_boq_pdf(
     buildings_service: BuildingsService = Depends(get_buildings_service),
     session: AsyncSession = Depends(get_postgres_session)
 ):
-    """Export BOQ to PDF file"""
+    """Export BOQ to PDF file with Arabic support"""
     from fastapi.responses import StreamingResponse
     from reportlab.lib.pagesizes import A4
     from reportlab.lib import colors
@@ -1346,8 +1346,29 @@ async def export_boq_pdf(
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.lib.enums import TA_RIGHT, TA_CENTER
     from io import BytesIO
     import os
+    import arabic_reshaper
+    from bidi.algorithm import get_display
+    
+    # Helper function for Arabic text
+    def arabic(text):
+        if not text:
+            return ""
+        try:
+            reshaped = arabic_reshaper.reshape(str(text))
+            return get_display(reshaped)
+        except:
+            return str(text)
+    
+    # Register Arabic font
+    font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+    if os.path.exists(font_path):
+        try:
+            pdfmetrics.registerFont(TTFont('Arabic', font_path))
+        except:
+            pass
     
     # Get project
     result = await session.execute(select(Project).where(Project.id == project_id))
@@ -1363,52 +1384,69 @@ async def export_boq_pdf(
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
     
     elements = []
-    styles = getSampleStyleSheet()
+    
+    # Arabic styles
+    title_style = ParagraphStyle('ArabicTitle', fontName='Arabic', fontSize=18, alignment=TA_CENTER, spaceAfter=20)
+    heading_style = ParagraphStyle('ArabicHeading', fontName='Arabic', fontSize=14, alignment=TA_RIGHT, spaceAfter=10, spaceBefore=20)
     
     # Title
-    title_style = ParagraphStyle('Title', fontSize=18, alignment=1, spaceAfter=20)
-    elements.append(Paragraph(f"BOQ - {project.name}", title_style))
+    elements.append(Paragraph(arabic(f"جدول الكميات - {project.name}"), title_style))
     elements.append(Spacer(1, 20))
     
     # Summary table
     summary_data = [
-        ["Project", project.name],
-        ["Owner", project.owner_name or ""],
-        ["Total Area", f"{calc_data['total_area']} m²"],
-        ["Total Units", str(calc_data['total_units'])],
-        ["Total Steel", f"{calc_data['steel_calculation']['total_steel_tons']} ton"],
-        ["Total Cost", f"{calc_data['total_materials_cost']:,.2f} SAR"],
+        [arabic("القيمة"), arabic("البيان")],
+        [project.name, arabic("المشروع")],
+        [project.owner_name or "-", arabic("المالك")],
+        [f"{calc_data['total_area']} م²", arabic("إجمالي المساحة")],
+        [str(calc_data['total_units']), arabic("عدد الوحدات")],
+        [f"{calc_data['steel_calculation']['total_steel_tons']} طن", arabic("إجمالي الحديد")],
+        [f"{calc_data['total_materials_cost']:,.2f} ريال", arabic("إجمالي التكلفة")],
     ]
     
-    summary_table = Table(summary_data, colWidths=[150, 300])
+    summary_table = Table(summary_data, colWidths=[250, 200])
     summary_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, -1), colors.Color(0.18, 0.49, 0.2)),
-        ('TEXTCOLOR', (0, 0), (0, -1), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('FONTNAME', (0, 0), (-1, -1), 'Arabic'),
+        ('BACKGROUND', (1, 0), (1, 0), colors.Color(0.18, 0.49, 0.2)),
+        ('BACKGROUND', (0, 0), (0, 0), colors.Color(0.18, 0.49, 0.2)),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+        ('FONTSIZE', (0, 0), (-1, -1), 11),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
     ]))
     elements.append(summary_table)
     elements.append(Spacer(1, 30))
     
     # Steel table
-    elements.append(Paragraph("Steel by Floor", styles['Heading2']))
-    steel_data = [["Floor", "Area (m²)", "Factor (kg/m²)", "Steel (ton)"]]
+    elements.append(Paragraph(arabic("الحديد حسب الدور"), heading_style))
+    steel_data = [[arabic("الحديد (طن)"), arabic("المعامل (كجم/م²)"), arabic("المساحة (م²)"), arabic("الدور")]]
     for floor in calc_data['steel_calculation']['floors']:
-        steel_data.append([floor['floor_name'], floor['area'], floor['steel_factor'], floor['steel_tons']])
-    steel_data.append(["Total", calc_data['total_area'], "", calc_data['steel_calculation']['total_steel_tons']])
+        steel_data.append([
+            str(floor['steel_tons']),
+            str(floor['steel_factor']),
+            str(floor['area']),
+            arabic(floor['floor_name'])
+        ])
+    steel_data.append([
+        str(calc_data['steel_calculation']['total_steel_tons']),
+        "",
+        str(calc_data['total_area']),
+        arabic("الإجمالي")
+    ])
     
-    steel_table = Table(steel_data, colWidths=[150, 100, 100, 100])
+    steel_table = Table(steel_data, colWidths=[100, 100, 100, 150])
     steel_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Arabic'),
         ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0.18, 0.49, 0.2)),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ('BACKGROUND', (0, -1), (-1, -1), colors.lightgrey),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
     ]))
     elements.append(steel_table)
     elements.append(Spacer(1, 30))
