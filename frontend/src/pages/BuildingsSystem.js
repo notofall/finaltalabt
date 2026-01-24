@@ -1755,6 +1755,10 @@ const BuildingsSystem = () => {
                         <FileDown className="w-4 h-4 ml-2" />
                         تصدير طلبات المواد
                       </Button>
+                      <Button onClick={syncMaterialsWithCatalog} variant="outline" className="border-amber-600 text-amber-400 hover:bg-amber-900/30">
+                        <RefreshCw className="w-4 h-4 ml-2" />
+                        مزامنة مع الكتالوج
+                      </Button>
                       <Button onClick={() => { setCatalogSelectionTarget("areaMaterial"); setAreaMaterialDialogOpen(true); }} className="bg-emerald-600 hover:bg-emerald-700">
                         <Plus className="w-4 h-4 ml-2" />
                         إضافة مادة
