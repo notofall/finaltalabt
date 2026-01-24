@@ -36,7 +36,7 @@ DEFAULT_LIMIT = PaginationConfig.DEFAULT_PAGE_SIZE
 
 class RequestItemResponse(BaseModel):
     name: str
-    quantity: int
+    quantity: float  # Changed to float to support fractional quantities
     unit: str
     estimated_price: Optional[float]
     catalog_item_id: Optional[str] = None
@@ -85,7 +85,7 @@ class RequestsListResponse(BaseModel):
 
 class RequestItemCreate(BaseModel):
     name: str
-    quantity: int
+    quantity: float  # Changed to float to support fractional quantities
     unit: str = "قطعة"
     estimated_price: Optional[float] = None
     catalog_item_id: Optional[str] = None  # Link to catalog item
