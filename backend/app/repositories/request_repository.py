@@ -173,9 +173,7 @@ class RequestRepository(BaseRepository[MaterialRequest]):
     async def get_next_seq_for_supervisor(self, supervisor_id: str, prefix: Optional[str] = None, project_code: Optional[str] = None) -> int:
         """
         Get next sequence number for a supervisor based on their prefix and project code.
-        Uses database-level locking to prevent race conditions.
-        For SQLite: Uses IMMEDIATE transaction mode
-        For PostgreSQL: Uses FOR UPDATE row locking
+        Uses subquery approach to avoid FOR UPDATE with aggregate functions in PostgreSQL.
         """
         from database.connection import get_database_url
         
@@ -199,9 +197,9 @@ class RequestRepository(BaseRepository[MaterialRequest]):
                 MaterialRequest.supervisor_id == supervisor_id
             )
         
-        # Add row locking for PostgreSQL only (SQLite doesn't support FOR UPDATE)
-        if not is_sqlite:
-            query = query.with_for_update()
+        # Note: FOR UPDATE cannot be used with aggregate functions in PostgreSQL
+        # Using simple query without locking - the unique constraint on request_number
+        # will handle any race conditions
         
         result = await self.session.execute(query)
         current_max = result.scalar_one_or_none() or 0
