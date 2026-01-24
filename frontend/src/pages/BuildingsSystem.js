@@ -1879,6 +1879,10 @@ const BuildingsSystem = () => {
                   <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
                     <CardTitle className="text-white">تتبع التوريد</CardTitle>
                     <div className="flex gap-2 flex-wrap">
+                      <Button onClick={resyncDeliveries} variant="outline" className="border-emerald-600 text-emerald-400 hover:bg-emerald-900/30">
+                        <Truck className="w-4 h-4 ml-2" />
+                        مزامنة الاستلام
+                      </Button>
                       <Button onClick={syncSupply} variant="outline" className="border-slate-600 text-slate-300">
                         <RefreshCw className="w-4 h-4 ml-2" />
                         مزامنة مع الكميات
