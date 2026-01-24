@@ -2185,8 +2185,9 @@ const BuildingsSystem = () => {
                 <Label>العدد</Label>
                 <Input
                   type="number"
+                  min="1"
                   value={newTemplate.count}
-                  onChange={(e) => setNewTemplate({ ...newTemplate, count: parseInt(e.target.value) || 0 })}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, count: Math.max(1, parseInt(e.target.value) || 1) })}
                   className="bg-slate-700 border-slate-600"
                 />
               </div>
