@@ -2958,9 +2958,8 @@ async def import_project_full(
     floors_by_number = {f.floor_number: f for f in floors}
     
     # ==================== استيراد مواد المساحة ====================
-    if "مواد المساحة" in wb.sheetnames:
-        ws_materials = wb["مواد المساحة"]
-        
+    ws_materials = find_sheet(wb, ["مواد المساحة"])
+    if ws_materials:
         header_row = list(next(ws_materials.iter_rows(min_row=2, max_row=2, values_only=True)))
         header_row = [str(h).strip() if h else "" for h in header_row]
         has_item_code = any("كود" in h for h in header_row)
