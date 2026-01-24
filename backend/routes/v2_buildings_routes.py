@@ -2015,7 +2015,7 @@ async def import_project_full(
     catalog_result = await session.execute(select(PriceCatalogItem))
     catalog_items = catalog_result.scalars().all()
     catalog_by_code = {item.item_code: item for item in catalog_items}
-    catalog_by_name = {item.item_name: item for item in catalog_items}
+    catalog_by_name = {item.name: item for item in catalog_items}
     
     # Read Excel file
     contents = await file.read()
@@ -2207,7 +2207,7 @@ async def import_project_full(
                     project_id=project_id,
                     catalog_item_id=catalog_item.id,
                     item_code=catalog_item.item_code,
-                    item_name=catalog_item.item_name,
+                    item_name=catalog_item.name,
                     unit=catalog_item.unit or unit,
                     calculation_method=calculation_method,
                     factor=factor,
@@ -2257,7 +2257,7 @@ async def import_area_materials_excel(
     catalog_result = await session.execute(select(PriceCatalogItem))
     catalog_items = catalog_result.scalars().all()
     catalog_by_code = {item.item_code: item for item in catalog_items}
-    catalog_by_name = {item.item_name: item for item in catalog_items}
+    catalog_by_name = {item.name: item for item in catalog_items}
     
     # Get floors for mapping
     floors_result = await session.execute(
@@ -2426,7 +2426,7 @@ async def import_area_materials_excel(
                 project_id=project_id,
                 catalog_item_id=catalog_item.id,
                 item_code=catalog_item.item_code,
-                item_name=catalog_item.item_name,
+                item_name=catalog_item.name,
                 unit=catalog_item.unit or unit,
                 calculation_method=calculation_method,
                 factor=factor,
