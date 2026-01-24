@@ -2773,9 +2773,8 @@ async def import_project_full(
     # ==================== استيراد النماذج ====================
     templates_by_code = {}
     
-    if "النماذج" in wb.sheetnames:
-        ws_templates = wb["النماذج"]
-        
+    ws_templates = find_sheet(wb, ["النماذج", "نماذج الوحدات", "نماذج الوحدات (الشقق)"])
+    if ws_templates:
         for row_idx, row in enumerate(ws_templates.iter_rows(min_row=3, values_only=True), start=3):
             if not row or not row[0]:
                 continue
