@@ -1812,8 +1812,8 @@ async def import_area_materials_excel(
     
     # Detect format from header row
     header_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True))
-    # Check if column 6 is "الكمية" (quantity) - means direct quantity format
-    is_quantity_format = header_row and len(header_row) > 5 and header_row[5] and "كمية" in str(header_row[5])
+    # Check if column 6 is "الكمية" (quantity) - means we have quantity column
+    has_quantity_column = header_row and len(header_row) > 5 and header_row[5] and "كمية" in str(header_row[5])
     
     # Skip header row (and note row if exists)
     for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
@@ -1828,17 +1828,26 @@ async def import_area_materials_excel(
             floor_value = row[3] if len(row) > 3 else None
             waste_percentage = float(row[4]) if len(row) > 4 and row[4] else 0
             
-            # Handle different formats
-            if is_quantity_format:
-                # Format: اسم المادة, الوحدة, المعامل, الدور (اسم), نسبة الهالك, الكمية, السعر, الإجمالي
+            # قراءة الكمية والسعر
+            if has_quantity_column:
+                # تنسيق: اسم المادة, الوحدة, المعامل, الدور, نسبة الهالك, الكمية, السعر, الإجمالي
                 direct_quantity = float(row[5]) if len(row) > 5 and row[5] else 0
                 unit_price = float(row[6]) if len(row) > 6 and row[6] else 0
-                calculation_method = "direct" if direct_quantity > 0 else "factor"
             else:
-                # Format: اسم المادة, الوحدة, المعامل, رقم الدور, نسبة الهالك, السعر
+                # تنسيق: اسم المادة, الوحدة, المعامل, الدور, نسبة الهالك, السعر
                 direct_quantity = 0
                 unit_price = float(row[5]) if len(row) > 5 and row[5] else 0
+            
+            # تحديد طريقة الحساب تلقائياً لكل صف:
+            # - إذا المعامل = 0 والكمية > 0 → كمية مباشرة
+            # - إذا المعامل > 0 → بالمعامل
+            # - إذا كلاهما = 0 → كمية مباشرة (افتراضي)
+            if factor > 0:
                 calculation_method = "factor"
+            elif direct_quantity > 0:
+                calculation_method = "direct"
+            else:
+                calculation_method = "direct"  # افتراضي للكمية المباشرة
             
             # Determine floor
             calculation_type = "all_floors"
