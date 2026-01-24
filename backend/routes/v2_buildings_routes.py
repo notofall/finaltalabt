@@ -2551,22 +2551,23 @@ async def export_area_materials_excel(
         calc_method_ar = "معامل" if mat.calculation_method == "factor" else "مباشر"
         calc_type_ar = "جميع الأدوار" if mat.calculation_type == "all_floors" else "دور محدد"
         
-        ws.cell(row=row, column=1, value=mat.item_name).border = border
-        ws.cell(row=row, column=2, value=mat.unit).border = border
-        ws.cell(row=row, column=3, value=calc_method_ar).border = border
-        ws.cell(row=row, column=4, value=mat.factor or 0).border = border
-        ws.cell(row=row, column=5, value=mat.direct_quantity or 0).border = border
-        ws.cell(row=row, column=6, value=calc_type_ar).border = border
-        ws.cell(row=row, column=7, value=floor_name).border = border
-        ws.cell(row=row, column=8, value=mat.tile_width or 0).border = border
-        ws.cell(row=row, column=9, value=mat.tile_height or 0).border = border
-        ws.cell(row=row, column=10, value=mat.waste_percentage or 0).border = border
-        ws.cell(row=row, column=11, value=mat.unit_price or 0).border = border
-        ws.cell(row=row, column=12, value=mat.notes or "").border = border
+        ws.cell(row=row, column=1, value=mat.item_code or "").border = border
+        ws.cell(row=row, column=2, value=mat.item_name).border = border
+        ws.cell(row=row, column=3, value=mat.unit).border = border
+        ws.cell(row=row, column=4, value=calc_method_ar).border = border
+        ws.cell(row=row, column=5, value=mat.factor or 0).border = border
+        ws.cell(row=row, column=6, value=mat.direct_quantity or 0).border = border
+        ws.cell(row=row, column=7, value=calc_type_ar).border = border
+        ws.cell(row=row, column=8, value=floor_name).border = border
+        ws.cell(row=row, column=9, value=mat.tile_width or 0).border = border
+        ws.cell(row=row, column=10, value=mat.tile_height or 0).border = border
+        ws.cell(row=row, column=11, value=mat.waste_percentage or 0).border = border
+        ws.cell(row=row, column=12, value=mat.unit_price or 0).border = border
+        ws.cell(row=row, column=13, value=mat.notes or "").border = border
         row += 1
     
     # Column widths
-    col_widths = [20, 10, 12, 10, 14, 14, 18, 14, 14, 12, 10, 20]
+    col_widths = [15, 20, 10, 12, 10, 14, 14, 18, 14, 14, 12, 10, 20]
     for i, width in enumerate(col_widths, 1):
         ws.column_dimensions[get_column_letter(i)].width = width
     
@@ -2577,12 +2578,14 @@ async def export_area_materials_excel(
     instructions = [
         ("التعليمات:", ""),
         ("", ""),
+        ("⚠️ مهم:", "كود الصنف مطلوب - يجب أن يكون موجوداً في كتالوج الأسعار"),
+        ("", ""),
         ("طريقة الحساب:", "اكتب 'معامل' أو 'مباشر'"),
         ("نطاق الحساب:", "اكتب 'جميع الأدوار' أو 'دور محدد'"),
         ("الدور:", "اكتب اسم الدور كما هو معرف في المشروع (إذا كان نطاق الحساب 'دور محدد')"),
         ("عرض/طول البلاط:", "بالسنتيمتر (للبلاط فقط، اتركه 0 لباقي المواد)"),
         ("", ""),
-        ("ملاحظة:", "يمكنك تصدير هذا الملف، تعديله، ثم إعادة استيراده"),
+        ("ملاحظة:", "إذا وجد صنف غير موجود في الكتالوج، سيتم رفض الاستيراد"),
     ]
     
     for row_idx, (label, value) in enumerate(instructions, 1):
@@ -2590,7 +2593,7 @@ async def export_area_materials_excel(
         ws_help.cell(row=row_idx, column=2, value=value)
     
     ws_help.column_dimensions['A'].width = 20
-    ws_help.column_dimensions['B'].width = 50
+    ws_help.column_dimensions['B'].width = 60
     
     buffer = BytesIO()
     wb.save(buffer)
