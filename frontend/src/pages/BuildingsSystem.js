@@ -320,6 +320,63 @@ const BuildingsSystem = () => {
     }
   };
 
+  // Export Area Materials to Excel
+  const exportAreaMaterials = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const res = await axios.get(
+        `${BUILDINGS_API}/projects/${selectedProject.id}/export/area-materials`,
+        { ...getAuthHeaders(), responseType: 'blob' }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `مواد_المساحة_${selectedProject.name}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success("تم تصدير مواد المساحة");
+    } catch (error) {
+      console.error("Error exporting area materials:", error);
+      toast.error("فشل في التصدير");
+    }
+  };
+
+  // Import Area Materials from Excel
+  const areaMaterialsImportRef = useRef(null);
+  
+  const handleImportAreaMaterials = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file || !selectedProject) return;
+    
+    setImporting(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const res = await axios.post(
+        `${BUILDINGS_API}/projects/${selectedProject.id}/import/area-materials`,
+        formData,
+        { ...getAuthHeaders(), headers: { ...getAuthHeaders().headers, 'Content-Type': 'multipart/form-data' } }
+      );
+      
+      toast.success(res.data.message || "تم استيراد مواد المساحة بنجاح");
+      if (res.data.errors && res.data.errors.length > 0) {
+        toast.warning(`تحذير: ${res.data.errors.length} أخطاء`);
+      }
+      fetchProjectDetails(selectedProject.id);
+    } catch (error) {
+      console.error("Error importing area materials:", error);
+      toast.error(error.response?.data?.detail || "فشل في الاستيراد");
+    } finally {
+      setImporting(false);
+      if (areaMaterialsImportRef.current) areaMaterialsImportRef.current.value = '';
+    }
+  };
+
   // Import floors from Excel
   const handleImportFloors = async (event) => {
     const file = event.target.files?.[0];
