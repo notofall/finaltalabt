@@ -2812,6 +2812,7 @@ async def import_project_full(
                     template = UnitTemplate(
                         id=str(uuid4()),
                         project_id=project_id,
+                        project_name=project.name,  # إضافة اسم المشروع
                         code=code,
                         name=name,
                         count=count,
