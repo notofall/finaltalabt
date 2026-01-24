@@ -563,8 +563,8 @@ class ProjectAreaMaterial(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid_lib.uuid4()))
     project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
     
-    # ربط بكتالوج الأسعار
-    catalog_item_id: Mapped[str] = mapped_column(String(36), ForeignKey("price_catalog.id"), nullable=False, index=True)
+    # ربط بكتالوج الأسعار (اختياري للاستيراد من Excel)
+    catalog_item_id: Mapped[Optional[str]] = mapped_column(String(36), ForeignKey("price_catalog.id"), nullable=True, index=True)
     item_code: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     item_name: Mapped[str] = mapped_column(String(255), nullable=False)
     unit: Mapped[str] = mapped_column(String(50), default="طن")
