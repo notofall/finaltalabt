@@ -1280,6 +1280,271 @@ async def sync_supply_tracking(
     }
 
 
+@router.get("/projects/{project_id}/supply/export-excel")
+async def export_supply_excel(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """تصدير تتبع التوريد إلى Excel"""
+    from fastapi.responses import StreamingResponse
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+    from openpyxl.utils import get_column_letter
+    from database.models import SupplyTracking
+    import io
+    
+    # Get project
+    result = await session.execute(select(Project).where(Project.id == project_id))
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Get supply items
+    supply_result = await session.execute(
+        select(SupplyTracking).where(SupplyTracking.project_id == project_id)
+    )
+    items = list(supply_result.scalars().all())
+    
+    # Create workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "تتبع التوريد"
+    ws.sheet_view.rightToLeft = True
+    
+    # Styles
+    header_font = Font(bold=True, size=12, color="FFFFFF")
+    header_fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center")
+    cell_alignment = Alignment(horizontal="right", vertical="center")
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Title
+    ws.merge_cells('A1:F1')
+    ws['A1'] = f"تتبع التوريد - {project.name}"
+    ws['A1'].font = Font(bold=True, size=16)
+    ws['A1'].alignment = Alignment(horizontal="center")
+    
+    # Headers (row 3)
+    headers = ["#", "اسم الصنف", "الوحدة", "الكمية المطلوبة", "الكمية المستلمة", "المتبقي"]
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=3, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+    
+    # Data
+    for idx, item in enumerate(items, 1):
+        row = idx + 3
+        required = item.required_quantity or 0
+        received = item.received_quantity or 0
+        remaining = required - received
+        
+        data = [idx, item.item_name, item.unit, required, received, remaining]
+        for col, value in enumerate(data, 1):
+            cell = ws.cell(row=row, column=col, value=value)
+            cell.alignment = cell_alignment
+            cell.border = thin_border
+            
+            # Color remaining based on status
+            if col == 6:  # المتبقي
+                if remaining <= 0:
+                    cell.font = Font(color="2E7D32")  # أخضر
+                elif remaining < required * 0.3:
+                    cell.font = Font(color="F57C00")  # برتقالي
+                else:
+                    cell.font = Font(color="D32F2F")  # أحمر
+    
+    # Totals row
+    total_row = len(items) + 4
+    ws.cell(row=total_row, column=1, value="الإجمالي").font = Font(bold=True)
+    ws.cell(row=total_row, column=4, value=sum(i.required_quantity or 0 for i in items)).font = Font(bold=True)
+    ws.cell(row=total_row, column=5, value=sum(i.received_quantity or 0 for i in items)).font = Font(bold=True)
+    ws.cell(row=total_row, column=6, value=sum((i.required_quantity or 0) - (i.received_quantity or 0) for i in items)).font = Font(bold=True)
+    
+    # Adjust column widths
+    ws.column_dimensions['A'].width = 5
+    ws.column_dimensions['B'].width = 30
+    ws.column_dimensions['C'].width = 10
+    ws.column_dimensions['D'].width = 15
+    ws.column_dimensions['E'].width = 15
+    ws.column_dimensions['F'].width = 12
+    
+    # Save to buffer
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    filename = f"supply_tracking_{project.code or project_id}.xlsx"
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
+    )
+
+
+@router.get("/projects/{project_id}/supply/export-pdf")
+async def export_supply_pdf(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """تصدير تتبع التوريد إلى PDF مع دعم العربية"""
+    from fastapi.responses import StreamingResponse
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    from database.models import SupplyTracking
+    import io
+    import os
+    
+    try:
+        import arabic_reshaper
+        from bidi.algorithm import get_display
+    except ImportError:
+        arabic_reshaper = None
+        get_display = None
+    
+    # Helper function for Arabic text
+    def arabic(text):
+        if not text:
+            return ""
+        if arabic_reshaper and get_display:
+            try:
+                reshaped = arabic_reshaper.reshape(str(text))
+                return get_display(reshaped)
+            except:
+                return str(text)
+        return str(text)
+    
+    # Register Arabic font
+    font_name = 'Arabic'
+    font_paths = ['/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', '/usr/share/fonts/TTF/DejaVuSans.ttf']
+    for font_path in font_paths:
+        if os.path.exists(font_path):
+            try:
+                pdfmetrics.registerFont(TTFont(font_name, font_path))
+                break
+            except:
+                pass
+    else:
+        font_name = 'Helvetica'
+    
+    # Get project
+    result = await session.execute(select(Project).where(Project.id == project_id))
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Get supply items
+    supply_result = await session.execute(
+        select(SupplyTracking).where(SupplyTracking.project_id == project_id)
+    )
+    items = list(supply_result.scalars().all())
+    
+    # Create PDF
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    elements = []
+    
+    # Styles
+    title_style = ParagraphStyle('ArabicTitle', fontName=font_name, fontSize=18, alignment=TA_CENTER, spaceAfter=20)
+    
+    # Title
+    elements.append(Paragraph(arabic(f"تتبع التوريد - {project.name}"), title_style))
+    elements.append(Spacer(1, 20))
+    
+    # Table headers (reversed for RTL)
+    headers = [arabic("المتبقي"), arabic("المستلم"), arabic("المطلوب"), arabic("الوحدة"), arabic("الصنف"), "#"]
+    
+    # Table data
+    table_data = [headers]
+    
+    for idx, item in enumerate(items, 1):
+        required = item.required_quantity or 0
+        received = item.received_quantity or 0
+        remaining = required - received
+        
+        row = [
+            f"{remaining:.2f}",
+            f"{received:.2f}",
+            f"{required:.2f}",
+            arabic(item.unit or ""),
+            arabic(item.item_name or ""),
+            str(idx)
+        ]
+        table_data.append(row)
+    
+    # Totals row
+    total_required = sum(i.required_quantity or 0 for i in items)
+    total_received = sum(i.received_quantity or 0 for i in items)
+    total_remaining = total_required - total_received
+    
+    table_data.append([
+        f"{total_remaining:.2f}",
+        f"{total_received:.2f}",
+        f"{total_required:.2f}",
+        "",
+        arabic("الإجمالي"),
+        ""
+    ])
+    
+    # Create table
+    col_widths = [60, 70, 70, 50, 200, 30]
+    table = Table(table_data, colWidths=col_widths)
+    
+    table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), font_name),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2E7D32')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#E8F5E9')),
+        ('FONTNAME', (0, -1), (-1, -1), font_name),
+        ('FONTSIZE', (0, -1), (-1, -1), 11),
+    ]))
+    
+    # Color remaining column based on status
+    for idx, item in enumerate(items, 1):
+        required = item.required_quantity or 0
+        received = item.received_quantity or 0
+        remaining = required - received
+        
+        if remaining <= 0:
+            table.setStyle(TableStyle([('TEXTCOLOR', (0, idx), (0, idx), colors.HexColor('#2E7D32'))]))
+        elif remaining < required * 0.3:
+            table.setStyle(TableStyle([('TEXTCOLOR', (0, idx), (0, idx), colors.HexColor('#F57C00'))]))
+        else:
+            table.setStyle(TableStyle([('TEXTCOLOR', (0, idx), (0, idx), colors.HexColor('#D32F2F'))]))
+    
+    elements.append(table)
+    
+    # Build PDF
+    doc.build(elements)
+    buffer.seek(0)
+    
+    filename = f"supply_tracking_{project.code or project_id}.pdf"
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
+    )
+
+
 @router.post("/projects/{project_id}/resync-deliveries")
 async def resync_deliveries_to_supply(
     project_id: str,
