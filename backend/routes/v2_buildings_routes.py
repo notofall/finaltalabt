@@ -2812,14 +2812,16 @@ async def import_project_full(
                     template = UnitTemplate(
                         id=str(uuid4()),
                         project_id=project_id,
-                        project_name=project.name,  # إضافة اسم المشروع
+                        project_name=project.name,
                         code=code,
                         name=name,
                         count=count,
                         area=area,
                         rooms_count=rooms_count,
                         bathrooms_count=bathrooms_count,
-                        description=description
+                        description=description,
+                        created_by=current_user.id,
+                        created_by_name=current_user.name
                     )
                     session.add(template)
                     templates_by_code[code] = template
