@@ -2630,7 +2630,8 @@ async def sync_area_materials_with_catalog(
     # تحميل الكتالوج
     catalog_result = await session.execute(select(PriceCatalogItem))
     catalog_items = catalog_result.scalars().all()
-    catalog_by_name = {item.item_name: item for item in catalog_items}
+    catalog_by_name = {item.name: item for item in catalog_items}
+    catalog_by_code = {item.item_code: item for item in catalog_items if item.item_code}
     
     # تحميل مواد المساحة
     materials_result = await session.execute(
@@ -2646,8 +2647,13 @@ async def sync_area_materials_with_catalog(
         if mat.catalog_item_id and mat.item_code:
             continue
         
-        # البحث في الكتالوج بالاسم
-        catalog_item = catalog_by_name.get(mat.item_name)
+        # البحث في الكتالوج بالاسم أو الكود
+        catalog_item = None
+        if mat.item_code and mat.item_code in catalog_by_code:
+            catalog_item = catalog_by_code[mat.item_code]
+        elif mat.item_name and mat.item_name in catalog_by_name:
+            catalog_item = catalog_by_name[mat.item_name]
+        
         if catalog_item:
             mat.catalog_item_id = catalog_item.id
             mat.item_code = catalog_item.item_code
