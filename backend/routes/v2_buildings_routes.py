@@ -1933,3 +1933,327 @@ async def export_supply_report(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
     )
+
+
+@router.get("/projects/{project_id}/export/materials-requests")
+async def export_materials_requests(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    buildings_service: BuildingsService = Depends(get_buildings_service),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """
+    تصدير طلبات المواد - فقط الأصناف التي فيها كميات مع توضيح الدور
+    Export materials requests - only items with quantities, grouped by floor
+    """
+    from fastapi.responses import StreamingResponse
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+    from openpyxl.utils import get_column_letter
+    from io import BytesIO
+    from database.models import ProjectFloor, ProjectAreaMaterial
+    from datetime import datetime
+    
+    # Get project
+    result = await session.execute(select(Project).where(Project.id == project_id))
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Get floors
+    floors_result = await session.execute(
+        select(ProjectFloor).where(ProjectFloor.project_id == project_id).order_by(ProjectFloor.floor_number)
+    )
+    floors = floors_result.scalars().all()
+    floors_dict = {str(f.id): f for f in floors}
+    total_area = sum(f.area for f in floors)
+    
+    # Get area materials
+    materials_result = await session.execute(
+        select(ProjectAreaMaterial).where(ProjectAreaMaterial.project_id == project_id)
+    )
+    area_materials = materials_result.scalars().all()
+    
+    # Create workbook
+    wb = Workbook()
+    
+    # Styles
+    title_font = Font(bold=True, size=16, color="FFFFFF")
+    title_fill = PatternFill(start_color="1e3a5f", end_color="1e3a5f", fill_type="solid")
+    header_font = Font(bold=True, size=11, color="FFFFFF")
+    header_fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
+    subheader_fill = PatternFill(start_color="4CAF50", end_color="4CAF50", fill_type="solid")
+    data_fill = PatternFill(start_color="f8fafc", end_color="f8fafc", fill_type="solid")
+    total_fill = PatternFill(start_color="e2e8f0", end_color="e2e8f0", fill_type="solid")
+    border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin')
+    )
+    center_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    right_align = Alignment(horizontal='right', vertical='center')
+    
+    # ==================== Sheet 1: طلبات المواد حسب الدور ====================
+    ws = wb.active
+    ws.title = "طلبات المواد"
+    ws.sheet_view.rightToLeft = True
+    
+    # Title
+    ws.merge_cells('A1:H1')
+    ws['A1'] = f"طلبات المواد - {project.name}"
+    ws['A1'].font = title_font
+    ws['A1'].fill = title_fill
+    ws['A1'].alignment = center_align
+    
+    # Date
+    ws.merge_cells('A2:H2')
+    ws['A2'] = f"تاريخ التصدير: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    ws['A2'].alignment = center_align
+    
+    # Process materials grouped by floor
+    row = 4
+    
+    # Group materials by calculation_type and floor
+    materials_by_floor = {}  # {floor_id: [materials]}
+    materials_all_floors = []  # Materials for all floors
+    
+    for m in area_materials:
+        calc_type = getattr(m, 'calculation_type', 'all_floors') or 'all_floors'
+        calc_method = getattr(m, 'calculation_method', 'factor') or 'factor'
+        
+        # Calculate quantity
+        if calc_method == 'direct':
+            base_qty = getattr(m, 'direct_quantity', 0) or 0
+            floor_area = 0
+        else:
+            if calc_type == 'selected_floor' and getattr(m, 'selected_floor_id', None):
+                floor_id = m.selected_floor_id
+                floor = floors_dict.get(floor_id)
+                floor_area = floor.area if floor else 0
+            else:
+                floor_area = total_area
+            base_qty = floor_area * (m.factor or 0)
+        
+        # Handle tile calculation
+        tile_width = getattr(m, 'tile_width', 0) or 0
+        tile_height = getattr(m, 'tile_height', 0) or 0
+        if tile_width > 0 and tile_height > 0 and floor_area > 0:
+            tile_area_m2 = (tile_width / 100) * (tile_height / 100)
+            if tile_area_m2 > 0:
+                base_qty = floor_area / tile_area_m2
+        
+        # Apply waste
+        waste_pct = getattr(m, 'waste_percentage', 0) or 0
+        final_qty = base_qty * (1 + waste_pct / 100)
+        
+        # Skip items with zero quantity
+        if final_qty <= 0:
+            continue
+        
+        mat_data = {
+            'item_name': m.item_name,
+            'unit': m.unit,
+            'factor': m.factor or 0,
+            'waste_percentage': waste_pct,
+            'quantity': round(final_qty, 2),
+            'unit_price': m.unit_price or 0,
+            'total_price': round(final_qty * (m.unit_price or 0), 2),
+            'calculation_method': calc_method
+        }
+        
+        if calc_type == 'selected_floor' and getattr(m, 'selected_floor_id', None):
+            floor_id = m.selected_floor_id
+            if floor_id not in materials_by_floor:
+                materials_by_floor[floor_id] = []
+            materials_by_floor[floor_id].append(mat_data)
+        else:
+            materials_all_floors.append(mat_data)
+    
+    # Headers for materials table
+    headers = ["المادة", "الوحدة", "المعامل", "الهالك%", "الكمية", "السعر", "الإجمالي", "ملاحظات"]
+    
+    # === Section: Materials for All Floors ===
+    if materials_all_floors:
+        ws.merge_cells(f'A{row}:H{row}')
+        cell = ws.cell(row=row, column=1, value="▸ مواد جميع الأدوار")
+        cell.font = Font(bold=True, size=12, color="FFFFFF")
+        cell.fill = subheader_fill
+        cell.alignment = center_align
+        row += 1
+        
+        # Write headers
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=row, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.border = border
+            cell.alignment = center_align
+        row += 1
+        
+        # Write data
+        section_total = 0
+        for mat in materials_all_floors:
+            ws.cell(row=row, column=1, value=mat['item_name']).border = border
+            ws.cell(row=row, column=2, value=mat['unit']).border = border
+            ws.cell(row=row, column=3, value=mat['factor']).border = border
+            ws.cell(row=row, column=4, value=mat['waste_percentage']).border = border
+            ws.cell(row=row, column=5, value=mat['quantity']).border = border
+            ws.cell(row=row, column=6, value=mat['unit_price']).border = border
+            ws.cell(row=row, column=7, value=mat['total_price']).border = border
+            ws.cell(row=row, column=8, value="جميع الأدوار").border = border
+            for c in range(1, 9):
+                ws.cell(row=row, column=c).fill = data_fill
+            section_total += mat['total_price']
+            row += 1
+        
+        # Section total
+        ws.cell(row=row, column=6, value="إجمالي القسم:").font = Font(bold=True)
+        ws.cell(row=row, column=7, value=section_total).font = Font(bold=True)
+        ws.cell(row=row, column=7).fill = total_fill
+        row += 2
+    
+    # === Sections: Materials by Floor ===
+    for floor in floors:
+        floor_id = str(floor.id)
+        if floor_id not in materials_by_floor:
+            continue
+        
+        floor_materials = materials_by_floor[floor_id]
+        if not floor_materials:
+            continue
+        
+        ws.merge_cells(f'A{row}:H{row}')
+        cell = ws.cell(row=row, column=1, value=f"▸ {floor.floor_name} (مساحة: {floor.area} م²)")
+        cell.font = Font(bold=True, size=12, color="FFFFFF")
+        cell.fill = subheader_fill
+        cell.alignment = center_align
+        row += 1
+        
+        # Write headers
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=row, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.border = border
+            cell.alignment = center_align
+        row += 1
+        
+        # Write data
+        section_total = 0
+        for mat in floor_materials:
+            ws.cell(row=row, column=1, value=mat['item_name']).border = border
+            ws.cell(row=row, column=2, value=mat['unit']).border = border
+            ws.cell(row=row, column=3, value=mat['factor']).border = border
+            ws.cell(row=row, column=4, value=mat['waste_percentage']).border = border
+            ws.cell(row=row, column=5, value=mat['quantity']).border = border
+            ws.cell(row=row, column=6, value=mat['unit_price']).border = border
+            ws.cell(row=row, column=7, value=mat['total_price']).border = border
+            ws.cell(row=row, column=8, value=floor.floor_name).border = border
+            for c in range(1, 9):
+                ws.cell(row=row, column=c).fill = data_fill
+            section_total += mat['total_price']
+            row += 1
+        
+        # Section total
+        ws.cell(row=row, column=6, value="إجمالي الدور:").font = Font(bold=True)
+        ws.cell(row=row, column=7, value=section_total).font = Font(bold=True)
+        ws.cell(row=row, column=7).fill = total_fill
+        row += 2
+    
+    # Grand Total
+    grand_total = sum(m['total_price'] for m in materials_all_floors) + sum(
+        sum(m['total_price'] for m in mats) for mats in materials_by_floor.values()
+    )
+    ws.merge_cells(f'A{row}:F{row}')
+    ws.cell(row=row, column=1, value="الإجمالي الكلي:").font = Font(bold=True, size=12)
+    ws.cell(row=row, column=1).alignment = right_align
+    ws.cell(row=row, column=7, value=grand_total).font = Font(bold=True, size=12)
+    ws.cell(row=row, column=7).fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
+    ws.cell(row=row, column=7).font = Font(bold=True, size=12, color="FFFFFF")
+    
+    # Adjust column widths
+    ws.column_dimensions['A'].width = 30
+    ws.column_dimensions['B'].width = 12
+    ws.column_dimensions['C'].width = 12
+    ws.column_dimensions['D'].width = 10
+    ws.column_dimensions['E'].width = 15
+    ws.column_dimensions['F'].width = 12
+    ws.column_dimensions['G'].width = 15
+    ws.column_dimensions['H'].width = 18
+    
+    # ==================== Sheet 2: ملخص حسب الدور ====================
+    ws2 = wb.create_sheet("ملخص حسب الدور")
+    ws2.sheet_view.rightToLeft = True
+    
+    # Title
+    ws2.merge_cells('A1:E1')
+    ws2['A1'] = f"ملخص طلبات المواد حسب الدور - {project.name}"
+    ws2['A1'].font = title_font
+    ws2['A1'].fill = title_fill
+    ws2['A1'].alignment = center_align
+    
+    # Headers
+    summary_headers = ["الدور", "المساحة (م²)", "عدد المواد", "إجمالي القيمة", "النسبة %"]
+    for col, header in enumerate(summary_headers, 1):
+        cell = ws2.cell(row=3, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = border
+        cell.alignment = center_align
+    
+    row = 4
+    
+    # All floors summary
+    if materials_all_floors:
+        all_floors_total = sum(m['total_price'] for m in materials_all_floors)
+        ws2.cell(row=row, column=1, value="جميع الأدوار").border = border
+        ws2.cell(row=row, column=2, value=total_area).border = border
+        ws2.cell(row=row, column=3, value=len(materials_all_floors)).border = border
+        ws2.cell(row=row, column=4, value=all_floors_total).border = border
+        ws2.cell(row=row, column=5, value=f"{(all_floors_total/grand_total*100):.1f}%" if grand_total > 0 else "0%").border = border
+        row += 1
+    
+    # Per floor summary
+    for floor in floors:
+        floor_id = str(floor.id)
+        if floor_id in materials_by_floor:
+            floor_materials = materials_by_floor[floor_id]
+            floor_total = sum(m['total_price'] for m in floor_materials)
+            ws2.cell(row=row, column=1, value=floor.floor_name).border = border
+            ws2.cell(row=row, column=2, value=floor.area).border = border
+            ws2.cell(row=row, column=3, value=len(floor_materials)).border = border
+            ws2.cell(row=row, column=4, value=floor_total).border = border
+            ws2.cell(row=row, column=5, value=f"{(floor_total/grand_total*100):.1f}%" if grand_total > 0 else "0%").border = border
+            row += 1
+    
+    # Total row
+    ws2.cell(row=row, column=1, value="الإجمالي").font = Font(bold=True)
+    ws2.cell(row=row, column=2, value=total_area).font = Font(bold=True)
+    total_items_count = len(materials_all_floors) + sum(len(m) for m in materials_by_floor.values())
+    ws2.cell(row=row, column=3, value=total_items_count).font = Font(bold=True)
+    ws2.cell(row=row, column=4, value=grand_total).font = Font(bold=True)
+    ws2.cell(row=row, column=5, value="100%").font = Font(bold=True)
+    for c in range(1, 6):
+        ws2.cell(row=row, column=c).fill = total_fill
+    
+    ws2.column_dimensions['A'].width = 25
+    ws2.column_dimensions['B'].width = 15
+    ws2.column_dimensions['C'].width = 15
+    ws2.column_dimensions['D'].width = 18
+    ws2.column_dimensions['E'].width = 12
+    
+    # Save to buffer
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    from urllib.parse import quote
+    safe_filename = f"Materials_Requests_{project_id[:8]}.xlsx"
+    encoded_filename = quote(f"طلبات_المواد_{project.name}.xlsx")
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f"attachment; filename=\"{safe_filename}\"; filename*=UTF-8''{encoded_filename}"
+        }
+    )
