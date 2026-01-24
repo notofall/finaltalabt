@@ -247,6 +247,52 @@ const BuildingsSystem = () => {
     }
   };
 
+  // Export Supply Excel
+  const exportSupplyExcel = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const res = await axios.get(
+        `${BUILDINGS_API}/projects/${selectedProject.id}/supply/export-excel`,
+        { ...getAuthHeaders(), responseType: 'blob' }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `تتبع_التوريد_${selectedProject.name || selectedProject.code}.xlsx`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      toast.success("تم تصدير تتبع التوريد بنجاح");
+    } catch (error) {
+      console.error("Error exporting supply excel:", error);
+      toast.error("فشل في تصدير تتبع التوريد");
+    }
+  };
+
+  // Export Supply PDF
+  const exportSupplyPDF = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const res = await axios.get(
+        `${BUILDINGS_API}/projects/${selectedProject.id}/supply/export-pdf`,
+        { ...getAuthHeaders(), responseType: 'blob' }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `تتبع_التوريد_${selectedProject.name || selectedProject.code}.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      toast.success("تم تصدير PDF بنجاح");
+    } catch (error) {
+      console.error("Error exporting supply pdf:", error);
+      toast.error("فشل في تصدير PDF");
+    }
+  };
+
   // Export BOQ Excel
   const exportBOQ = async () => {
     if (!selectedProject) return;
