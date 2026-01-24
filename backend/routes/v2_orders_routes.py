@@ -766,10 +766,14 @@ async def mark_order_printed(
     return {"message": "تم تسجيل الطباعة بنجاح"}
 
 
+class SupplierInvoiceUpdate(BaseModel):
+    supplier_invoice_number: str
+
+
 @router.put("/{order_id}/supplier-invoice")
 async def update_supplier_invoice(
     order_id: UUID,
-    supplier_invoice_number: str,
+    data: SupplierInvoiceUpdate,
     session: AsyncSession = Depends(get_postgres_session),
     order_service: OrderService = Depends(get_order_service),
     current_user = Depends(get_current_user)
@@ -784,7 +788,7 @@ async def update_supplier_invoice(
         )
     
     from datetime import datetime, timezone
-    order.supplier_invoice_number = supplier_invoice_number
+    order.supplier_invoice_number = data.supplier_invoice_number
     order.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     await session.commit()
     
