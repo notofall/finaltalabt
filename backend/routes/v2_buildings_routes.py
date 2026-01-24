@@ -1907,10 +1907,11 @@ async def export_area_materials_excel(
     current_user = Depends(get_current_user),
     session: AsyncSession = Depends(get_postgres_session)
 ):
-    """Export area materials to Excel file - تصدير مواد المساحة إلى Excel (متوافق مع الاستيراد)"""
+    """تصدير مواد المساحة إلى Excel - شامل جميع الحقول"""
     from fastapi.responses import StreamingResponse
     from openpyxl import Workbook
-    from openpyxl.styles import Font, PatternFill, Border, Side
+    from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+    from openpyxl.utils import get_column_letter
     from io import BytesIO
     from database.models import ProjectFloor, ProjectAreaMaterial
     
@@ -1941,70 +1942,118 @@ async def export_area_materials_excel(
     ws.sheet_view.rightToLeft = True
     
     # Styles
-    header_font = Font(bold=True, color="FFFFFF")
+    title_font = Font(bold=True, size=14, color="FFFFFF")
+    title_fill = PatternFill(start_color="1e3a5f", end_color="1e3a5f", fill_type="solid")
+    header_font = Font(bold=True, size=11, color="FFFFFF")
     header_fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
     border = Border(
         left=Side(style='thin'), right=Side(style='thin'),
         top=Side(style='thin'), bottom=Side(style='thin')
     )
+    center_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
     
-    # Headers - متطابقة مع تنسيق الاستيراد
-    headers = ["اسم المادة", "الوحدة", "المعامل", "الدور", "نسبة الهالك %", "الكمية", "السعر", "الإجمالي"]
+    # Title row
+    ws.merge_cells('A1:L1')
+    ws['A1'] = f"مواد المساحة - {project.name}"
+    ws['A1'].font = title_font
+    ws['A1'].fill = title_fill
+    ws['A1'].alignment = center_align
+    ws.row_dimensions[1].height = 30
+    
+    # Headers - جميع الحقول
+    headers = [
+        "اسم المادة",      # A - item_name
+        "الوحدة",          # B - unit
+        "طريقة الحساب",    # C - calculation_method (معامل/مباشر)
+        "المعامل",         # D - factor
+        "الكمية المباشرة", # E - direct_quantity
+        "نطاق الحساب",     # F - calculation_type (جميع الأدوار/دور محدد)
+        "الدور",           # G - floor name
+        "عرض البلاط (سم)", # H - tile_width
+        "طول البلاط (سم)", # I - tile_height
+        "نسبة الهالك %",   # J - waste_percentage
+        "السعر",           # K - unit_price
+        "ملاحظات"          # L - notes
+    ]
+    
     for col, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=header)
+        cell = ws.cell(row=2, column=col, value=header)
         cell.font = header_font
         cell.fill = header_fill
         cell.border = border
+        cell.alignment = center_align
+    ws.row_dimensions[2].height = 25
     
     # Data
-    row = 2
-    total_cost = 0
+    row = 3
     for mat in area_materials:
-        calc_type = getattr(mat, 'calculation_type', 'all_floors') or 'all_floors'
-        calc_method = getattr(mat, 'calculation_method', 'factor') or 'factor'
-        
         # اسم الدور
-        floor_name = ""  # فارغ = جميع الأدوار
-        floor_area = total_area
-        
-        if calc_type == 'selected_floor' and getattr(mat, 'selected_floor_id', None):
+        floor_name = ""
+        if mat.calculation_type == 'selected_floor' and mat.selected_floor_id:
             floor = floors_dict.get(mat.selected_floor_id)
             if floor:
                 floor_name = floor.floor_name
-                floor_area = floor.area
         
-        # حساب الكمية
-        if calc_method == 'direct':
-            quantity = getattr(mat, 'direct_quantity', 0) or 0
-            factor_value = 0  # المعامل = 0 للكمية المباشرة
-        else:
-            factor_value = mat.factor or 0
-            quantity = floor_area * factor_value
-        
-        # حساب البلاط
-        tile_width = getattr(mat, 'tile_width', 0) or 0
-        tile_height = getattr(mat, 'tile_height', 0) or 0
-        if tile_width > 0 and tile_height > 0 and floor_area > 0:
-            tile_area_m2 = (tile_width / 100) * (tile_height / 100)
-            if tile_area_m2 > 0:
-                quantity = floor_area / tile_area_m2
-        
-        # تطبيق نسبة الهالك
-        waste_pct = getattr(mat, 'waste_percentage', 0) or 0
-        quantity_with_waste = quantity * (1 + waste_pct / 100)
-        
-        total_price = quantity_with_waste * (mat.unit_price or 0)
-        total_cost += total_price
+        # طريقة الحساب بالعربية
+        calc_method_ar = "معامل" if mat.calculation_method == "factor" else "مباشر"
+        calc_type_ar = "جميع الأدوار" if mat.calculation_type == "all_floors" else "دور محدد"
         
         ws.cell(row=row, column=1, value=mat.item_name).border = border
         ws.cell(row=row, column=2, value=mat.unit).border = border
-        ws.cell(row=row, column=3, value=factor_value).border = border
-        ws.cell(row=row, column=4, value=floor_name).border = border
-        ws.cell(row=row, column=5, value=waste_pct).border = border
-        ws.cell(row=row, column=6, value=round(quantity_with_waste, 2)).border = border
-        ws.cell(row=row, column=7, value=mat.unit_price or 0).border = border
-        ws.cell(row=row, column=8, value=round(total_price, 2)).border = border
+        ws.cell(row=row, column=3, value=calc_method_ar).border = border
+        ws.cell(row=row, column=4, value=mat.factor or 0).border = border
+        ws.cell(row=row, column=5, value=mat.direct_quantity or 0).border = border
+        ws.cell(row=row, column=6, value=calc_type_ar).border = border
+        ws.cell(row=row, column=7, value=floor_name).border = border
+        ws.cell(row=row, column=8, value=mat.tile_width or 0).border = border
+        ws.cell(row=row, column=9, value=mat.tile_height or 0).border = border
+        ws.cell(row=row, column=10, value=mat.waste_percentage or 0).border = border
+        ws.cell(row=row, column=11, value=mat.unit_price or 0).border = border
+        ws.cell(row=row, column=12, value=mat.notes or "").border = border
         row += 1
+    
+    # Column widths
+    col_widths = [20, 10, 12, 10, 14, 14, 18, 14, 14, 12, 10, 20]
+    for i, width in enumerate(col_widths, 1):
+        ws.column_dimensions[get_column_letter(i)].width = width
+    
+    # إضافة ورقة التعليمات
+    ws_help = wb.create_sheet("تعليمات الاستيراد")
+    ws_help.sheet_view.rightToLeft = True
+    
+    instructions = [
+        ("التعليمات:", ""),
+        ("", ""),
+        ("طريقة الحساب:", "اكتب 'معامل' أو 'مباشر'"),
+        ("نطاق الحساب:", "اكتب 'جميع الأدوار' أو 'دور محدد'"),
+        ("الدور:", "اكتب اسم الدور كما هو معرف في المشروع (إذا كان نطاق الحساب 'دور محدد')"),
+        ("عرض/طول البلاط:", "بالسنتيمتر (للبلاط فقط، اتركه 0 لباقي المواد)"),
+        ("", ""),
+        ("ملاحظة:", "يمكنك تصدير هذا الملف، تعديله، ثم إعادة استيراده"),
+    ]
+    
+    for row_idx, (label, value) in enumerate(instructions, 1):
+        ws_help.cell(row=row_idx, column=1, value=label).font = Font(bold=True)
+        ws_help.cell(row=row_idx, column=2, value=value)
+    
+    ws_help.column_dimensions['A'].width = 20
+    ws_help.column_dimensions['B'].width = 50
+    
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    from urllib.parse import quote
+    safe_filename = f"Area_Materials_{project_id[:8]}.xlsx"
+    encoded_filename = quote(f"مواد_المساحة_{project.name}.xlsx")
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f"attachment; filename=\"{safe_filename}\"; filename*=UTF-8''{encoded_filename}"
+        }
+    )
     
     # Total row
     ws.cell(row=row, column=7, value="الإجمالي:").font = Font(bold=True)
