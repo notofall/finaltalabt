@@ -2073,23 +2073,21 @@ const BuildingsSystem = () => {
               />
             </div>
 
-            {/* نطاق الحساب - للمعامل فقط */}
-            {newAreaMaterial.calculation_method === "factor" && (
-              <div>
-                <Label>نطاق الحساب</Label>
-                <select
-                  value={newAreaMaterial.calculation_type}
-                  onChange={(e) => setNewAreaMaterial({ ...newAreaMaterial, calculation_type: e.target.value, selected_floor_id: "" })}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white"
-                >
-                  <option value="all_floors">جميع الأدوار</option>
-                  <option value="selected_floor">دور محدد</option>
-                </select>
-              </div>
-            )}
+            {/* نطاق الحساب - يظهر دائماً */}
+            <div>
+              <Label>نطاق الحساب</Label>
+              <select
+                value={newAreaMaterial.calculation_type}
+                onChange={(e) => setNewAreaMaterial({ ...newAreaMaterial, calculation_type: e.target.value, selected_floor_id: "" })}
+                className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white"
+              >
+                <option value="all_floors">جميع الأدوار</option>
+                <option value="selected_floor">دور محدد</option>
+              </select>
+            </div>
 
             {/* اختيار الدور */}
-            {newAreaMaterial.calculation_method === "factor" && newAreaMaterial.calculation_type === "selected_floor" && (
+            {newAreaMaterial.calculation_type === "selected_floor" && (
               <div>
                 <Label>اختر الدور</Label>
                 <select
