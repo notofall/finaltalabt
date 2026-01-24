@@ -2054,37 +2054,6 @@ async def export_area_materials_excel(
             "Content-Disposition": f"attachment; filename=\"{safe_filename}\"; filename*=UTF-8''{encoded_filename}"
         }
     )
-    
-    # Total row
-    ws.cell(row=row, column=7, value="الإجمالي:").font = Font(bold=True)
-    ws.cell(row=row, column=8, value=round(total_cost, 2)).font = Font(bold=True)
-    
-    # Column widths
-    ws.column_dimensions['A'].width = 20
-    ws.column_dimensions['B'].width = 12
-    ws.column_dimensions['C'].width = 12
-    ws.column_dimensions['D'].width = 18
-    ws.column_dimensions['E'].width = 15
-    ws.column_dimensions['F'].width = 12
-    ws.column_dimensions['G'].width = 12
-    ws.column_dimensions['H'].width = 15
-    
-    buffer = BytesIO()
-    wb.save(buffer)
-    buffer.seek(0)
-    
-    from urllib.parse import quote
-    safe_filename = f"Area_Materials_{project_id[:8]}.xlsx"
-    encoded_filename = quote(f"مواد_المساحة_{project.name}.xlsx")
-    
-    return StreamingResponse(
-        buffer,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={
-            "Content-Disposition": f"attachment; filename=\"{safe_filename}\"; filename*=UTF-8''{encoded_filename}"
-        }
-    )
-
 
 
 @router.post("/supply/sync-from-delivery")
