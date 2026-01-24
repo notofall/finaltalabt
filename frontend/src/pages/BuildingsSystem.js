@@ -1580,17 +1580,22 @@ const BuildingsSystem = () => {
                               <tr key={mat.id} className="border-b border-slate-700/50 text-white">
                                 <td className="p-3">{mat.item_name}</td>
                                 <td className="p-3">{mat.unit}</td>
-                                <td className="p-3">{mat.factor}</td>
+                                <td className="p-3">{mat.calculation_method === "direct" ? mat.direct_quantity : mat.factor}</td>
                                 <td className="p-3">
                                   <Badge variant={mat.calculation_type === "all_floors" ? "default" : "secondary"} className="bg-emerald-600">
-                                    {mat.calculation_type === "all_floors" ? "جميع الأدوار" : "أدوار محددة"}
+                                    {mat.calculation_type === "all_floors" ? "جميع الأدوار" : "دور محدد"}
                                   </Badge>
                                 </td>
                                 <td className="p-3">{mat.waste_percentage}%</td>
                                 <td className="p-3 text-center">
-                                  <Button size="sm" variant="destructive" onClick={() => deleteAreaMaterial(mat.id)}>
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Button size="sm" variant="outline" className="border-blue-500 text-blue-400 hover:bg-blue-500/20" onClick={() => openEditAreaMaterial(mat)}>
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button size="sm" variant="destructive" onClick={() => deleteAreaMaterial(mat.id)}>
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
                                 </td>
                               </tr>
                             ))}
