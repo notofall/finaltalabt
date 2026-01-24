@@ -212,7 +212,7 @@ class MaterialRequestItem(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid_lib.uuid4()))
     request_id: Mapped[str] = mapped_column(String(36), ForeignKey("material_requests.id", ondelete="CASCADE"), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+    quantity: Mapped[float] = mapped_column(Float, nullable=False)  # Changed to Float to support fractional quantities
     unit: Mapped[str] = mapped_column(String(50), default="قطعة")
     estimated_price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     item_index: Mapped[int] = mapped_column(Integer, default=0)  # Order in the request

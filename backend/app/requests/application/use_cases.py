@@ -16,7 +16,7 @@ from app.requests.domain.models import (
 @dataclass(frozen=True)
 class MaterialItemInput:
     name: str
-    quantity: int
+    quantity: float  # Changed to float to support fractional quantities
     unit: str
     estimated_price: Optional[float] = None
 

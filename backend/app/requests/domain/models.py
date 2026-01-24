@@ -20,7 +20,7 @@ class ProjectSummary:
 @dataclass(frozen=True)
 class MaterialRequestItem:
     name: str
-    quantity: int
+    quantity: float  # Changed to float to support fractional quantities
     unit: str
     estimated_price: Optional[float]
     item_index: int
