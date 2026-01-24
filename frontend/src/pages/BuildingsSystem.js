@@ -222,6 +222,31 @@ const BuildingsSystem = () => {
     }
   };
 
+  // Resync deliveries from purchase orders to supply tracking
+  const resyncDeliveries = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const res = await axios.post(
+        `${BUILDINGS_API}/projects/${selectedProject.id}/resync-deliveries`,
+        {},
+        getAuthHeaders()
+      );
+      
+      // Refresh supply data
+      const supplyRes = await axios.get(
+        `${BUILDINGS_API}/projects/${selectedProject.id}/supply`,
+        getAuthHeaders()
+      );
+      setSupplyItems(supplyRes.data || []);
+      
+      toast.success(`تم مزامنة ${res.data.items_synced} صنف من أوامر الشراء المستلمة`);
+    } catch (error) {
+      console.error("Error resyncing deliveries:", error);
+      toast.error(error.response?.data?.detail || "فشل في إعادة مزامنة الاستلام");
+    }
+  };
+
   // Export BOQ Excel
   const exportBOQ = async () => {
     if (!selectedProject) return;
