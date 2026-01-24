@@ -1635,8 +1635,28 @@ const BuildingsSystem = () => {
                   <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
                     <CardTitle className="text-white">مواد المساحة (حديد، بلاط، بلك)</CardTitle>
                     <div className="flex gap-2 flex-wrap">
-                      <Button onClick={exportMaterialsRequests} variant="outline" className="border-slate-600 text-slate-300">
+                      <input
+                        type="file"
+                        ref={areaMaterialsImportRef}
+                        onChange={handleImportAreaMaterials}
+                        accept=".xlsx,.xls"
+                        className="hidden"
+                      />
+                      <Button 
+                        onClick={() => areaMaterialsImportRef.current?.click()} 
+                        variant="outline" 
+                        className="border-slate-600 text-slate-300"
+                        disabled={importing}
+                      >
+                        <Upload className="w-4 h-4 ml-2" />
+                        {importing ? 'جاري الاستيراد...' : 'استيراد Excel'}
+                      </Button>
+                      <Button onClick={exportAreaMaterials} variant="outline" className="border-slate-600 text-slate-300">
                         <Download className="w-4 h-4 ml-2" />
+                        تصدير Excel
+                      </Button>
+                      <Button onClick={exportMaterialsRequests} variant="outline" className="border-emerald-600 text-emerald-400 hover:bg-emerald-900/30">
+                        <FileDown className="w-4 h-4 ml-2" />
                         تصدير طلبات المواد
                       </Button>
                       <Button onClick={() => { setCatalogSelectionTarget("areaMaterial"); setAreaMaterialDialogOpen(true); }} className="bg-emerald-600 hover:bg-emerald-700">
