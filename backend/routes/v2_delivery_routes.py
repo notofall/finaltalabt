@@ -350,13 +350,12 @@ async def confirm_receipt(
                         supply_updated += 1
                         supply_updated_for_item = True
                 
-                # ثانياً: البحث باسم الصنف (بحث جزئي) إذا لم يتم التحديث
-                if not supply_updated_for_item:
-                    # البحث عن أصناف تحتوي على اسم الصنف
+                # ثانياً: البحث بـ item_code إذا لم يتم التحديث
+                if not supply_updated_for_item and item.item_code:
                     supply_result = await session.execute(
                         select(SupplyTracking).where(
                             SupplyTracking.project_id == order.project_id,
-                            SupplyTracking.item_name.contains(item_name)
+                            SupplyTracking.item_code == item.item_code
                         )
                     )
                     supply_items = list(supply_result.scalars().all())
@@ -365,6 +364,28 @@ async def confirm_receipt(
                         supply_item.received_quantity = (supply_item.received_quantity or 0) + quantity_delivered
                         supply_item.updated_at = now
                         supply_updated += 1
+                        supply_updated_for_item = True
+                
+                # ثالثاً: البحث باسم الصنف (تطابق جزئي) إذا لم يتم التحديث
+                if not supply_updated_for_item:
+                    # البحث عن أصناف تحتوي على اسم الصنف أو العكس
+                    supply_result = await session.execute(
+                        select(SupplyTracking).where(
+                            SupplyTracking.project_id == order.project_id
+                        )
+                    )
+                    all_supply_items = list(supply_result.scalars().all())
+                    
+                    # مطابقة بالاسم (جزئي من أي اتجاه)
+                    item_name_lower = item_name.lower().strip()
+                    for supply_item in all_supply_items:
+                        supply_name_lower = (supply_item.item_name or "").lower().strip()
+                        if item_name_lower in supply_name_lower or supply_name_lower in item_name_lower:
+                            supply_item.received_quantity = (supply_item.received_quantity or 0) + quantity_delivered
+                            supply_item.updated_at = now
+                            supply_updated += 1
+                            supply_updated_for_item = True
+                            break  # تحديث أول صنف مطابق فقط
         else:
             all_fully_delivered = False
     
