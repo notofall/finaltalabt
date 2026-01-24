@@ -255,6 +255,7 @@ async def create_request(
         )
     
     # Create request with project code
+    project_code = getattr(project, 'code', None) or project.name[:10]
     request = await request_service.create_request(
         project_id=data.project_id,
         project_name=project.name,
@@ -265,7 +266,7 @@ async def create_request(
         engineer_name=engineer_name,
         expected_delivery_date=data.expected_delivery_date,
         supervisor_prefix=supervisor_prefix,
-        project_code=project.code  # إضافة كود المشروع لرقم الطلب
+        project_code=project_code  # إضافة كود المشروع لرقم الطلب
     )
     
     # Add items
