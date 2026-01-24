@@ -296,6 +296,70 @@ const BuildingsSystem = () => {
     }
   };
 
+  // Export Full Project (floors + area materials)
+  const exportProjectFull = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const res = await axios.get(
+        `${BUILDINGS_API}/projects/${selectedProject.id}/export/full`,
+        { ...getAuthHeaders(), responseType: 'blob' }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `مشروع_${selectedProject.name}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success("تم تصدير المشروع الكامل");
+    } catch (error) {
+      console.error("Error exporting project:", error);
+      toast.error("فشل في التصدير");
+    }
+  };
+
+  // Import Full Project
+  const fullProjectImportRef = useRef(null);
+  
+  const handleImportProjectFull = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file || !selectedProject) return;
+    
+    // تأكيد من المستخدم
+    if (!window.confirm('هل تريد استيراد بيانات المشروع؟ سيتم إضافة البيانات الجديدة للبيانات الموجودة.')) {
+      if (fullProjectImportRef.current) fullProjectImportRef.current.value = '';
+      return;
+    }
+    
+    setImporting(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const res = await axios.post(
+        `${BUILDINGS_API}/projects/${selectedProject.id}/import/full?replace_existing=false`,
+        formData,
+        { ...getAuthHeaders(), headers: { ...getAuthHeaders().headers, 'Content-Type': 'multipart/form-data' } }
+      );
+      
+      toast.success(`تم الاستيراد: ${res.data.imported_floors} دور، ${res.data.imported_materials} مادة`);
+      if (res.data.errors && res.data.errors.length > 0) {
+        toast.warning(`تحذير: ${res.data.errors.length} أخطاء`);
+        console.log("Import errors:", res.data.errors);
+      }
+      fetchProjectDetails(selectedProject.id);
+    } catch (error) {
+      console.error("Error importing project:", error);
+      toast.error(error.response?.data?.detail || "فشل في الاستيراد");
+    } finally {
+      setImporting(false);
+      if (fullProjectImportRef.current) fullProjectImportRef.current.value = '';
+    }
+  };
+
   // Export Materials Requests (filtered - only items with quantities)
   const exportMaterialsRequests = async () => {
     if (!selectedProject) return;
