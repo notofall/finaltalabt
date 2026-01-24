@@ -996,7 +996,8 @@ async def sync_supply_tracking(
 ):
     """
     Sync supply tracking with calculated quantities
-    Creates supply items for all calculated materials
+    Creates/updates supply items for all calculated materials
+    PRESERVES received_quantity from existing items
     """
     from database.models import SupplyTracking, UnitTemplate, UnitTemplateMaterial, ProjectFloor, ProjectAreaMaterial
     
@@ -1008,6 +1009,28 @@ async def sync_supply_tracking(
     
     if not project:
         raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # ⚠️ حفظ الكميات المستلمة الحالية قبل الحذف
+    existing_result = await session.execute(
+        select(SupplyTracking).where(SupplyTracking.project_id == project_id)
+    )
+    existing_items = existing_result.scalars().all()
+    
+    # إنشاء قاموس بالكميات المستلمة (بـ catalog_item_id و item_code و item_name)
+    received_by_catalog_id = {}
+    received_by_item_code = {}
+    received_by_name = {}
+    
+    for item in existing_items:
+        received_qty = item.received_quantity or 0
+        if received_qty > 0:
+            if item.catalog_item_id:
+                received_by_catalog_id[item.catalog_item_id] = received_by_catalog_id.get(item.catalog_item_id, 0) + received_qty
+            if item.item_code:
+                received_by_item_code[item.item_code] = received_by_item_code.get(item.item_code, 0) + received_qty
+            if item.item_name:
+                name_key = item.item_name.lower().strip()
+                received_by_name[name_key] = received_by_name.get(name_key, 0) + received_qty
     
     # Delete existing supply items for this project
     await session.execute(
