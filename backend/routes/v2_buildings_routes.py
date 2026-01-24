@@ -2000,16 +2000,22 @@ async def import_project_full(
     current_user = Depends(get_current_user),
     session: AsyncSession = Depends(get_postgres_session)
 ):
-    """استيراد المشروع الكامل من Excel - الأدوار ومواد المساحة"""
+    """استيراد المشروع الكامل من Excel - الأدوار ومواد المساحة (مع التحقق من الكتالوج)"""
     from openpyxl import load_workbook
     from io import BytesIO
-    from database.models import ProjectFloor, ProjectAreaMaterial
+    from database.models import ProjectFloor, ProjectAreaMaterial, PriceCatalog
     
     # Get project
     result = await session.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
     if not project:
         raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # تحميل الكتالوج للتحقق
+    catalog_result = await session.execute(select(PriceCatalog))
+    catalog_items = catalog_result.scalars().all()
+    catalog_by_code = {item.item_code: item for item in catalog_items}
+    catalog_by_name = {item.item_name: item for item in catalog_items}
     
     # Read Excel file
     contents = await file.read()
@@ -2018,6 +2024,59 @@ async def import_project_full(
     imported_floors = 0
     imported_materials = 0
     errors = []
+    missing_items = []  # الأصناف غير الموجودة في الكتالوج
+    
+    # ==================== التحقق من مواد المساحة أولاً ====================
+    if "مواد المساحة" in wb.sheetnames:
+        ws_materials = wb["مواد المساحة"]
+        
+        # تحديد نوع التنسيق من العناوين
+        header_row = list(next(ws_materials.iter_rows(min_row=2, max_row=2, values_only=True)))
+        header_row = [str(h).strip() if h else "" for h in header_row]
+        has_item_code = any("كود" in h for h in header_row)
+        
+        start_row = 3
+        
+        for row_idx, row in enumerate(ws_materials.iter_rows(min_row=start_row, values_only=True), start=start_row):
+            if not row or not row[0] or str(row[0]).strip().startswith('#'):
+                continue
+            
+            if has_item_code:
+                # التنسيق الجديد مع كود الصنف
+                item_code = str(row[0]).strip() if row[0] else ""
+                item_name = str(row[1]).strip() if row[1] else ""
+            else:
+                # التنسيق القديم بدون كود الصنف
+                item_code = ""
+                item_name = str(row[0]).strip() if row[0] else ""
+            
+            # التحقق من وجود الصنف في الكتالوج
+            catalog_item = None
+            if item_code and item_code in catalog_by_code:
+                catalog_item = catalog_by_code[item_code]
+            elif item_name and item_name in catalog_by_name:
+                catalog_item = catalog_by_name[item_name]
+            
+            if not catalog_item:
+                missing_items.append({
+                    "row": row_idx,
+                    "code": item_code,
+                    "name": item_name
+                })
+    
+    # إذا وجدت أصناف غير موجودة في الكتالوج، رفض الاستيراد
+    if missing_items:
+        missing_list = [f"صف {m['row']}: {m['code'] or m['name']}" for m in missing_items[:10]]
+        if len(missing_items) > 10:
+            missing_list.append(f"... و {len(missing_items) - 10} أصناف أخرى")
+        
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": f"لا يمكن الاستيراد: {len(missing_items)} صنف غير موجود في الكتالوج",
+                "missing_items": missing_list
+            }
+        )
     
     # حذف البيانات الموجودة إذا طُلب ذلك
     if replace_existing:
@@ -2032,7 +2091,6 @@ async def import_project_full(
     if "الأدوار" in wb.sheetnames:
         ws_floors = wb["الأدوار"]
         
-        # تحديد صف البداية (تخطي العنوان والـ header)
         start_row = 3
         
         for row_idx, row in enumerate(ws_floors.iter_rows(min_row=start_row, values_only=True), start=start_row):
@@ -2058,7 +2116,7 @@ async def import_project_full(
             except Exception as e:
                 errors.append(f"الأدوار - صف {row_idx}: {str(e)}")
     
-    await session.flush()  # للحصول على IDs الأدوار
+    await session.flush()
     
     # إعادة تحميل الأدوار للربط
     floors_result = await session.execute(
@@ -2072,10 +2130,9 @@ async def import_project_full(
     if "مواد المساحة" in wb.sheetnames:
         ws_materials = wb["مواد المساحة"]
         
-        # تحديد نوع التنسيق
         header_row = list(next(ws_materials.iter_rows(min_row=2, max_row=2, values_only=True)))
         header_row = [str(h).strip() if h else "" for h in header_row]
-        is_new_format = any("طريقة" in h for h in header_row)
+        has_item_code = any("كود" in h for h in header_row)
         
         start_row = 3
         
@@ -2084,25 +2141,24 @@ async def import_project_full(
                 continue
             
             try:
-                if is_new_format:
-                    # التنسيق الجديد (12 عمود)
-                    item_name = str(row[0]).strip()
-                    unit = str(row[1]).strip() if row[1] else "طن"
-                    calc_method_str = str(row[2]).strip() if row[2] else "مباشر"
-                    factor = float(row[3]) if row[3] else 0
-                    direct_quantity = float(row[4]) if row[4] else 0
-                    calc_type_str = str(row[5]).strip() if row[5] else "جميع الأدوار"
-                    floor_value = row[6] if len(row) > 6 else None
-                    tile_width = float(row[7]) if len(row) > 7 and row[7] else 0
-                    tile_height = float(row[8]) if len(row) > 8 and row[8] else 0
-                    waste_percentage = float(row[9]) if len(row) > 9 and row[9] else 0
-                    unit_price = float(row[10]) if len(row) > 10 and row[10] else 0
-                    notes = str(row[11]).strip() if len(row) > 11 and row[11] else None
-                    
-                    calculation_method = "factor" if "معامل" in calc_method_str else "direct"
-                    calculation_type = "all_floors" if "جميع" in calc_type_str else "selected_floor"
+                if has_item_code:
+                    # التنسيق الجديد (13 عمود مع كود الصنف)
+                    item_code = str(row[0]).strip() if row[0] else ""
+                    item_name = str(row[1]).strip() if row[1] else ""
+                    unit = str(row[2]).strip() if row[2] else "طن"
+                    calc_method_str = str(row[3]).strip() if row[3] else "مباشر"
+                    factor = float(row[4]) if row[4] else 0
+                    direct_quantity = float(row[5]) if row[5] else 0
+                    calc_type_str = str(row[6]).strip() if row[6] else "جميع الأدوار"
+                    floor_value = row[7] if len(row) > 7 else None
+                    tile_width = float(row[8]) if len(row) > 8 and row[8] else 0
+                    tile_height = float(row[9]) if len(row) > 9 and row[9] else 0
+                    waste_percentage = float(row[10]) if len(row) > 10 and row[10] else 0
+                    unit_price = float(row[11]) if len(row) > 11 and row[11] else 0
+                    notes = str(row[12]).strip() if len(row) > 12 and row[12] else None
                 else:
-                    # التنسيق القديم
+                    # التنسيق القديم بدون كود
+                    item_code = ""
                     item_name = str(row[0]).strip()
                     unit = str(row[1]).strip() if row[1] else "طن"
                     factor = float(row[2]) if row[2] else 0
@@ -2113,9 +2169,22 @@ async def import_project_full(
                     tile_width = 0
                     tile_height = 0
                     notes = None
-                    
-                    calculation_method = "factor" if factor > 0 else "direct"
-                    calculation_type = "all_floors"
+                    calc_method_str = "معامل" if factor > 0 else "مباشر"
+                    calc_type_str = "جميع الأدوار"
+                
+                # البحث عن الصنف في الكتالوج
+                catalog_item = None
+                if item_code and item_code in catalog_by_code:
+                    catalog_item = catalog_by_code[item_code]
+                elif item_name and item_name in catalog_by_name:
+                    catalog_item = catalog_by_name[item_name]
+                
+                if not catalog_item:
+                    errors.append(f"صف {row_idx}: الصنف '{item_code or item_name}' غير موجود في الكتالوج")
+                    continue
+                
+                calculation_method = "factor" if "معامل" in calc_method_str else "direct"
+                calculation_type = "all_floors" if "جميع" in calc_type_str else "selected_floor"
                 
                 # تحديد الدور
                 selected_floor_id = None
@@ -2136,13 +2205,14 @@ async def import_project_full(
                 material = ProjectAreaMaterial(
                     id=str(uuid4()),
                     project_id=project_id,
-                    catalog_item_id=None,
-                    item_name=item_name,
-                    unit=unit,
+                    catalog_item_id=catalog_item.id,
+                    item_code=catalog_item.item_code,
+                    item_name=catalog_item.item_name,
+                    unit=catalog_item.unit or unit,
                     calculation_method=calculation_method,
                     factor=factor,
                     direct_quantity=direct_quantity,
-                    unit_price=unit_price,
+                    unit_price=unit_price if unit_price > 0 else (catalog_item.unit_price or 0),
                     calculation_type=calculation_type,
                     selected_floor_id=selected_floor_id,
                     tile_width=tile_width,
