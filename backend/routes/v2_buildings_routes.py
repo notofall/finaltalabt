@@ -2612,6 +2612,58 @@ async def export_area_materials_excel(
     )
 
 
+@router.post("/projects/{project_id}/area-materials/sync-catalog")
+async def sync_area_materials_with_catalog(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """مزامنة مواد المساحة مع الكتالوج - ربط المواد بالكتالوج عن طريق الاسم"""
+    from database.models import ProjectAreaMaterial, PriceCatalog
+    
+    # Get project
+    result = await session.execute(select(Project).where(Project.id == project_id))
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # تحميل الكتالوج
+    catalog_result = await session.execute(select(PriceCatalog))
+    catalog_items = catalog_result.scalars().all()
+    catalog_by_name = {item.item_name: item for item in catalog_items}
+    
+    # تحميل مواد المساحة
+    materials_result = await session.execute(
+        select(ProjectAreaMaterial).where(ProjectAreaMaterial.project_id == project_id)
+    )
+    materials = materials_result.scalars().all()
+    
+    synced_count = 0
+    not_found = []
+    
+    for mat in materials:
+        # إذا كان لديها catalog_item_id بالفعل، تخطي
+        if mat.catalog_item_id and mat.item_code:
+            continue
+        
+        # البحث في الكتالوج بالاسم
+        catalog_item = catalog_by_name.get(mat.item_name)
+        if catalog_item:
+            mat.catalog_item_id = catalog_item.id
+            mat.item_code = catalog_item.item_code
+            synced_count += 1
+        else:
+            not_found.append(mat.item_name)
+    
+    await session.commit()
+    
+    return {
+        "message": f"تم مزامنة {synced_count} مادة مع الكتالوج",
+        "synced_count": synced_count,
+        "not_found": list(set(not_found)) if not_found else None
+    }
+
+
 @router.post("/supply/sync-from-delivery")
 async def sync_supply_from_deliveries(
     project_id: str,
