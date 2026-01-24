@@ -2242,10 +2242,10 @@ async def import_area_materials_excel(
     current_user = Depends(get_current_user),
     session: AsyncSession = Depends(get_postgres_session)
 ):
-    """Import area materials from Excel file - استيراد مواد المساحة من Excel"""
+    """استيراد مواد المساحة من Excel - مع التحقق من الكتالوج"""
     from openpyxl import load_workbook
     from io import BytesIO
-    from database.models import ProjectFloor, ProjectAreaMaterial
+    from database.models import ProjectFloor, ProjectAreaMaterial, PriceCatalog
     
     # Get project
     result = await session.execute(select(Project).where(Project.id == project_id))
@@ -2253,7 +2253,13 @@ async def import_area_materials_excel(
     if not project:
         raise HTTPException(status_code=404, detail="المشروع غير موجود")
     
-    # Get floors for mapping (by number and by name)
+    # تحميل الكتالوج للتحقق
+    catalog_result = await session.execute(select(PriceCatalog))
+    catalog_items = catalog_result.scalars().all()
+    catalog_by_code = {item.item_code: item for item in catalog_items}
+    catalog_by_name = {item.item_name: item for item in catalog_items}
+    
+    # Get floors for mapping
     floors_result = await session.execute(
         select(ProjectFloor).where(ProjectFloor.project_id == project_id)
     )
@@ -2268,39 +2274,95 @@ async def import_area_materials_excel(
     
     imported_count = 0
     errors = []
+    missing_items = []
     
     # Detect format from header row
     header_row = list(next(ws.iter_rows(min_row=1, max_row=1, values_only=True)))
     header_row = [str(h).strip() if h else "" for h in header_row]
     
-    # تحديد نوع التنسيق بناءً على العناوين
-    # التنسيق الجديد الشامل: اسم المادة, الوحدة, طريقة الحساب, المعامل, الكمية المباشرة, نطاق الحساب, الدور, عرض البلاط, طول البلاط, نسبة الهالك, السعر, ملاحظات
-    # التنسيق القديم: اسم المادة, الوحدة, المعامل, الدور, نسبة الهالك, الكمية, السعر, الإجمالي
-    
+    has_item_code = any("كود" in h for h in header_row)
     is_new_format = any("طريقة" in h for h in header_row)
     has_quantity_column = any("كمية" in h and "مباشر" not in h for h in header_row)
     
-    # Skip header row and title row if exists
+    # تحديد صف البداية
     start_row = 2
-    # Check if row 2 is a title/merged row
     row2 = list(next(ws.iter_rows(min_row=2, max_row=2, values_only=True)))
     if row2 and row2[0] and str(row2[0]).startswith("مواد المساحة"):
         start_row = 3
     
+    # ==================== مرحلة التحقق ====================
     for row_idx, row in enumerate(ws.iter_rows(min_row=start_row, values_only=True), start=start_row):
-        # Skip empty rows or note/comment rows
-        if not row or not row[0] or str(row[0]).strip().startswith('#') or str(row[0]).strip().startswith('مواد'):
+        if not row or not row[0] or str(row[0]).strip().startswith('#'):
+            continue
+        
+        if has_item_code:
+            item_code = str(row[0]).strip() if row[0] else ""
+            item_name = str(row[1]).strip() if row[1] else ""
+        else:
+            item_code = ""
+            item_name = str(row[0]).strip() if row[0] else ""
+        
+        # التحقق من وجود الصنف في الكتالوج
+        catalog_item = None
+        if item_code and item_code in catalog_by_code:
+            catalog_item = catalog_by_code[item_code]
+        elif item_name and item_name in catalog_by_name:
+            catalog_item = catalog_by_name[item_name]
+        
+        if not catalog_item:
+            missing_items.append({
+                "row": row_idx,
+                "code": item_code,
+                "name": item_name
+            })
+    
+    # رفض الاستيراد إذا وجدت أصناف غير موجودة
+    if missing_items:
+        missing_list = [f"صف {m['row']}: {m['code'] or m['name']}" for m in missing_items[:10]]
+        if len(missing_items) > 10:
+            missing_list.append(f"... و {len(missing_items) - 10} أصناف أخرى")
+        
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": f"لا يمكن الاستيراد: {len(missing_items)} صنف غير موجود في الكتالوج",
+                "missing_items": missing_list
+            }
+        )
+    
+    # ==================== مرحلة الاستيراد ====================
+    for row_idx, row in enumerate(ws.iter_rows(min_row=start_row, values_only=True), start=start_row):
+        if not row or not row[0] or str(row[0]).strip().startswith('#'):
             continue
         
         try:
-            if is_new_format:
-                # التنسيق الجديد الشامل (12 عمود)
+            if has_item_code:
+                # التنسيق الجديد مع كود الصنف (13 عمود)
+                item_code = str(row[0]).strip() if row[0] else ""
+                item_name = str(row[1]).strip() if row[1] else ""
+                unit = str(row[2]).strip() if row[2] else "طن"
+                calc_method_str = str(row[3]).strip() if row[3] else "مباشر"
+                factor = float(row[4]) if row[4] else 0
+                direct_quantity = float(row[5]) if row[5] else 0
+                calc_type_str = str(row[6]).strip() if row[6] else "جميع الأدوار"
+                floor_value = row[7] if len(row) > 7 else None
+                tile_width = float(row[8]) if len(row) > 8 and row[8] else 0
+                tile_height = float(row[9]) if len(row) > 9 and row[9] else 0
+                waste_percentage = float(row[10]) if len(row) > 10 and row[10] else 0
+                unit_price = float(row[11]) if len(row) > 11 and row[11] else 0
+                notes = str(row[12]).strip() if len(row) > 12 and row[12] else None
+                
+                calculation_method = "factor" if "معامل" in calc_method_str else "direct"
+                calculation_type = "all_floors" if "جميع" in calc_type_str else "selected_floor"
+            elif is_new_format:
+                # التنسيق الجديد بدون كود (12 عمود)
+                item_code = ""
                 item_name = str(row[0]).strip() if row[0] else ""
-                unit = str(row[1]).strip() if len(row) > 1 and row[1] else "طن"
-                calc_method_str = str(row[2]).strip() if len(row) > 2 and row[2] else "مباشر"
-                factor = float(row[3]) if len(row) > 3 and row[3] else 0
-                direct_quantity = float(row[4]) if len(row) > 4 and row[4] else 0
-                calc_type_str = str(row[5]).strip() if len(row) > 5 and row[5] else "جميع الأدوار"
+                unit = str(row[1]).strip() if row[1] else "طن"
+                calc_method_str = str(row[2]).strip() if row[2] else "مباشر"
+                factor = float(row[3]) if row[3] else 0
+                direct_quantity = float(row[4]) if row[4] else 0
+                calc_type_str = str(row[5]).strip() if row[5] else "جميع الأدوار"
                 floor_value = row[6] if len(row) > 6 else None
                 tile_width = float(row[7]) if len(row) > 7 and row[7] else 0
                 tile_height = float(row[8]) if len(row) > 8 and row[8] else 0
@@ -2308,16 +2370,14 @@ async def import_area_materials_excel(
                 unit_price = float(row[10]) if len(row) > 10 and row[10] else 0
                 notes = str(row[11]).strip() if len(row) > 11 and row[11] else None
                 
-                # تحويل طريقة الحساب
                 calculation_method = "factor" if "معامل" in calc_method_str else "direct"
-                # تحويل نطاق الحساب
                 calculation_type = "all_floors" if "جميع" in calc_type_str else "selected_floor"
-                
             else:
-                # التنسيق القديم (8 أعمدة): اسم المادة, الوحدة, المعامل, الدور, نسبة الهالك, الكمية, السعر, الإجمالي
+                # التنسيق القديم (8 أعمدة)
+                item_code = ""
                 item_name = str(row[0]).strip() if row[0] else ""
-                unit = str(row[1]).strip() if len(row) > 1 and row[1] else "طن"
-                factor = float(row[2]) if len(row) > 2 and row[2] else 0
+                unit = str(row[1]).strip() if row[1] else "طن"
+                factor = float(row[2]) if row[2] else 0
                 floor_value = row[3] if len(row) > 3 else None
                 waste_percentage = float(row[4]) if len(row) > 4 and row[4] else 0
                 
@@ -2331,50 +2391,47 @@ async def import_area_materials_excel(
                 tile_width = 0
                 tile_height = 0
                 notes = None
-                
-                # تحديد طريقة الحساب تلقائياً
-                if factor > 0:
-                    calculation_method = "factor"
-                elif direct_quantity > 0:
-                    calculation_method = "direct"
-                else:
-                    calculation_method = "direct"
-                
+                calculation_method = "factor" if factor > 0 else "direct"
                 calculation_type = "all_floors"
             
-            if not item_name:
+            # البحث عن الصنف في الكتالوج
+            catalog_item = None
+            if item_code and item_code in catalog_by_code:
+                catalog_item = catalog_by_code[item_code]
+            elif item_name and item_name in catalog_by_name:
+                catalog_item = catalog_by_name[item_name]
+            
+            if not catalog_item:
+                errors.append(f"صف {row_idx}: الصنف '{item_code or item_name}' غير موجود في الكتالوج")
                 continue
             
             # تحديد الدور
             selected_floor_id = None
-            if floor_value not in [None, "", " "] and calculation_type == "selected_floor":
+            if floor_value and str(floor_value).strip():
                 floor_str = str(floor_value).strip()
                 if floor_str in floors_by_name:
+                    calculation_type = "selected_floor"
                     selected_floor_id = str(floors_by_name[floor_str].id)
                 else:
                     try:
                         floor_num = int(floor_value)
                         if floor_num in floors_by_number:
+                            calculation_type = "selected_floor"
                             selected_floor_id = str(floors_by_number[floor_num].id)
-                    except (ValueError, TypeError):
+                    except:
                         pass
-            elif floor_value not in [None, "", " "]:
-                # للتنسيق القديم - محاولة تحديد الدور
-                floor_str = str(floor_value).strip()
-                if floor_str in floors_by_name:
-                    calculation_type = "selected_floor"
-                    selected_floor_id = str(floors_by_name[floor_str].id)
             
             material = ProjectAreaMaterial(
                 id=str(uuid4()),
                 project_id=project_id,
-                catalog_item_id=None,
-                item_name=item_name,
-                unit=unit,
+                catalog_item_id=catalog_item.id,
+                item_code=catalog_item.item_code,
+                item_name=catalog_item.item_name,
+                unit=catalog_item.unit or unit,
                 calculation_method=calculation_method,
                 factor=factor,
                 direct_quantity=direct_quantity,
-                unit_price=unit_price,
+                unit_price=unit_price if unit_price > 0 else (catalog_item.unit_price or 0),
                 calculation_type=calculation_type,
                 selected_floor_id=selected_floor_id,
                 tile_width=tile_width,
