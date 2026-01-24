@@ -323,8 +323,6 @@ const BuildingsSystem = () => {
   };
 
   // Import Full Project
-  const fullProjectImportRef = useRef(null);
-  
   const handleImportProjectFull = async (event) => {
     const file = event.target.files?.[0];
     if (!file || !selectedProject) return;
