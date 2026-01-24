@@ -1135,22 +1135,57 @@ async def sync_supply_tracking(
         waste_pct = getattr(m, 'waste_percentage', 0) or 0
         quantity = base_quantity * (1 + waste_pct / 100)
         
-        # ✅ حفظ الكمية المستلمة
         item_code = getattr(m, 'item_code', None)
-        preserved_received = get_preserved_received(m.catalog_item_id, item_code, m.item_name)
+        
+        # تحديد المصدر (الدور إن وجد)
+        source_note = "مواد المساحة"
+        if getattr(m, 'calculation_type', 'all_floors') == 'selected_floor' and getattr(m, 'selected_floor_id', None):
+            floor_name = next((f.floor_name or f"دور {f.floor_number}" for f in floors if str(f.id) == m.selected_floor_id), "")
+            source_note = f"دور: {floor_name}"
+        
+        add_to_aggregated(
+            m.catalog_item_id,
+            item_code,
+            m.item_name,
+            m.unit,
+            round(quantity, 2),
+            m.unit_price,
+            source_note
+        )
+    
+    # ✅ إنشاء عناصر supply_tracking من الأصناف المجمّعة
+    created_items = []
+    
+    for key, data in aggregated_items.items():
+        # البحث عن الكمية المستلمة المحفوظة
+        preserved_received = 0
+        if data["catalog_item_id"] and data["catalog_item_id"] in received_by_catalog_id:
+            preserved_received = received_by_catalog_id[data["catalog_item_id"]]
+        elif data["item_code"] and data["item_code"] in received_by_item_code:
+            preserved_received = received_by_item_code[data["item_code"]]
+        elif data["item_name"]:
+            name_key = data["item_name"].lower().strip()
+            if name_key in received_by_name:
+                preserved_received = received_by_name[name_key]
+            else:
+                # بحث جزئي
+                for k, qty in received_by_name.items():
+                    if name_key in k or k in name_key:
+                        preserved_received = qty
+                        break
         
         supply_item = SupplyTracking(
             id=str(uuid4()),
             project_id=project_id,
-            catalog_item_id=m.catalog_item_id,
-            item_code=item_code,
-            item_name=m.item_name,
-            unit=m.unit,
-            required_quantity=round(quantity, 2),
-            received_quantity=preserved_received,  # ✅ حفظ الكمية المستلمة
-            unit_price=m.unit_price,
-            source="area",
-            notes="مواد المساحة"
+            catalog_item_id=data["catalog_item_id"],
+            item_code=data["item_code"],
+            item_name=data["item_name"],
+            unit=data["unit"],
+            required_quantity=round(data["required_quantity"], 2),
+            received_quantity=preserved_received,
+            unit_price=data["unit_price"],
+            source="aggregated",
+            notes=", ".join(data["sources"][:3])  # أول 3 مصادر فقط
         )
         session.add(supply_item)
         created_items.append(supply_item)
