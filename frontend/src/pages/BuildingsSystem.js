@@ -1421,18 +1421,29 @@ const BuildingsSystem = () => {
                       accept=".xlsx,.xls"
                       className="hidden"
                     />
+                    <input
+                      type="file"
+                      ref={fullProjectImportRef}
+                      onChange={handleImportProjectFull}
+                      accept=".xlsx,.xls"
+                      className="hidden"
+                    />
                     <Button onClick={downloadProjectTemplate} variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700">
                       <FileDown className="w-4 h-4 ml-2" />
                       نموذج الاستيراد
                     </Button>
+                    <Button onClick={exportProjectFull} variant="outline" className="border-emerald-600 text-emerald-400 hover:bg-emerald-900/30">
+                      <Download className="w-4 h-4 ml-2" />
+                      تصدير المشروع
+                    </Button>
                     <Button 
-                      onClick={() => projectImportRef.current?.click()} 
+                      onClick={() => fullProjectImportRef.current?.click()} 
                       variant="outline" 
-                      className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                      className="border-blue-600 text-blue-400 hover:bg-blue-900/30"
                       disabled={importing}
                     >
                       <Upload className="w-4 h-4 ml-2" />
-                      {importing ? 'جاري الاستيراد...' : 'استيراد مشروع'}
+                      {importing ? 'جاري الاستيراد...' : 'استيراد المشروع'}
                     </Button>
                     <Button onClick={calculateQuantities} className="bg-emerald-600 hover:bg-emerald-700">
                       <Calculator className="w-4 h-4 ml-2" />
