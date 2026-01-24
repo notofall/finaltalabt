@@ -324,7 +324,7 @@ async def confirm_receipt(
         if item_name and item_name in order_items:
             item = order_items[item_name]
             new_delivered = (item.delivered_quantity or 0) + quantity_delivered
-            item.delivered_quantity = min(int(new_delivered), item.quantity)  # Cap at max quantity
+            item.delivered_quantity = min(new_delivered, item.quantity)  # Cap at max quantity - support float
             items_updated += 1
             
             if item.delivered_quantity < item.quantity:
