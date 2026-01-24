@@ -56,6 +56,8 @@ const BuildingsSystem = () => {
   // Area Materials
   const [areaMaterials, setAreaMaterials] = useState([]);
   const [areaMaterialDialogOpen, setAreaMaterialDialogOpen] = useState(false);
+  const [editAreaMaterialDialogOpen, setEditAreaMaterialDialogOpen] = useState(false);
+  const [editingAreaMaterial, setEditingAreaMaterial] = useState(null);
   const [newAreaMaterial, setNewAreaMaterial] = useState({
     catalog_item_id: "", 
     item_code: "",
