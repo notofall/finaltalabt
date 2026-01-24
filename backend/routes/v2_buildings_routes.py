@@ -1733,25 +1733,24 @@ async def download_project_template(current_user = Depends(get_current_user)):
     ws3 = wb.create_sheet("مواد المساحة")
     ws3.sheet_view.rightToLeft = True
     
-    headers = ["اسم المادة", "الوحدة", "المعامل", "رقم الدور (اختياري)", "نسبة الهالك %", "السعر"]
+    # نفس الأعمدة المستخدمة في التصدير
+    headers = ["اسم المادة", "الوحدة", "المعامل", "الدور", "نسبة الهالك %", "الكمية", "السعر", "الإجمالي"]
     for col, header in enumerate(headers, 1):
         cell = ws3.cell(row=1, column=col, value=header)
         cell.font = header_font
         cell.fill = header_fill
     
     # ملاحظات
-    ws3.cell(row=2, column=1, value="# ملاحظة: إذا تركت رقم الدور فارغاً، سيتم تطبيق المادة على جميع الأدوار")
+    ws3.cell(row=2, column=1, value="# ملاحظة: اترك الدور فارغاً لتطبيق المادة على جميع الأدوار. الكمية المدخلة هي الكمية المباشرة.")
     ws3.cell(row=2, column=1).font = note_font
-    ws3.merge_cells('A2:F2')
+    ws3.merge_cells('A2:H2')
     
     sample_materials = [
-        ["حديد 8 ملم", "طن", 0.0, "", 0, 0],
-        ["حديد 10 ملم", "طن", 0.0, "", 0, 0],
-        ["حديد 12 ملم", "طن", 0.0, "", 0, 0],
-        ["حديد 14 ملم", "طن", 0.0, "", 0, 0],
-        ["حديد 16 ملم", "طن", 0.0, "", 0, 0],
-        ["خرسانة c30", "م³", 40.0, 1, 0, 0],
-        ["خرسانة c35", "م³", 40.0, 2, 0, 0],
+        ["حديد 8 ملم", "طن", 0, "صبة الارضيه", 0, 2, 0, 0],
+        ["حديد 10 ملم", "طن", 0, "اعمدة الارضي", 0, 2.7, 0, 0],
+        ["خرسانه c15", "م³", 0, "صبة الارضيه", 0, 49, 0, 0],
+        ["خرسانه c35", "م³", 0, "اعمدة الارضي", 0, 33, 0, 0],
+        ["حديد 12 ملم", "طن", 0, "سقف الارضي", 0, 15.9, 0, 0],
     ]
     for row, data in enumerate(sample_materials, 3):
         for col, value in enumerate(data, 1):
@@ -1760,9 +1759,11 @@ async def download_project_template(current_user = Depends(get_current_user)):
     ws3.column_dimensions['A'].width = 20
     ws3.column_dimensions['B'].width = 12
     ws3.column_dimensions['C'].width = 12
-    ws3.column_dimensions['D'].width = 20
+    ws3.column_dimensions['D'].width = 18
     ws3.column_dimensions['E'].width = 15
     ws3.column_dimensions['F'].width = 12
+    ws3.column_dimensions['G'].width = 12
+    ws3.column_dimensions['H'].width = 12
     
     buffer = BytesIO()
     wb.save(buffer)
