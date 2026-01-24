@@ -44,7 +44,7 @@ const BuildingsSystem = () => {
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [newTemplate, setNewTemplate] = useState({
-    code: "", name: "", description: "", area: 0, rooms_count: 0, bathrooms_count: 0, count: 0
+    code: "", name: "", description: "", area: 0, rooms_count: 0, bathrooms_count: 0, count: 1
   });
   
   // Floors
