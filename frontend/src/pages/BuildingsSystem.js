@@ -295,6 +295,31 @@ const BuildingsSystem = () => {
     }
   };
 
+  // Export Materials Requests (filtered - only items with quantities)
+  const exportMaterialsRequests = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const res = await axios.get(
+        `${BUILDINGS_API}/projects/${selectedProject.id}/export/materials-requests`,
+        { ...getAuthHeaders(), responseType: 'blob' }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `طلبات_المواد_${selectedProject.name}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success("تم تصدير طلبات المواد");
+    } catch (error) {
+      console.error("Error exporting materials requests:", error);
+      toast.error("فشل في التصدير");
+    }
+  };
+
   // Import floors from Excel
   const handleImportFloors = async (event) => {
     const file = event.target.files?.[0];
