@@ -98,6 +98,7 @@ const BuildingsSystem = () => {
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef(null);
   const projectImportRef = useRef(null);
+  const areaMaterialsImportRef = useRef(null);
   
   // Password dialog
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
