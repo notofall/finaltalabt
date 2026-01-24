@@ -1058,6 +1058,26 @@ async def sync_supply_tracking(
     
     created_items = []
     
+    # Helper function to find preserved received quantity
+    def get_preserved_received(catalog_item_id, item_code, item_name):
+        """البحث عن الكمية المستلمة المحفوظة"""
+        # أولاً: بـ catalog_item_id
+        if catalog_item_id and catalog_item_id in received_by_catalog_id:
+            return received_by_catalog_id[catalog_item_id]
+        # ثانياً: بـ item_code
+        if item_code and item_code in received_by_item_code:
+            return received_by_item_code[item_code]
+        # ثالثاً: بالاسم
+        if item_name:
+            name_key = item_name.lower().strip()
+            if name_key in received_by_name:
+                return received_by_name[name_key]
+            # بحث جزئي
+            for key, qty in received_by_name.items():
+                if name_key in key or key in name_key:
+                    return qty
+        return 0
+    
     # Create supply items from template materials
     for template in templates:
         materials_result = await session.execute(
@@ -1067,15 +1087,18 @@ async def sync_supply_tracking(
         
         for m in materials:
             quantity = m.quantity_per_unit * template.count
+            item_name = f"{m.item_name} ({template.name})"
+            preserved_received = get_preserved_received(m.catalog_item_id, m.item_code, m.item_name)
+            
             supply_item = SupplyTracking(
                 id=str(uuid4()),
                 project_id=project_id,
                 catalog_item_id=m.catalog_item_id,
                 item_code=m.item_code,
-                item_name=f"{m.item_name} ({template.name})",
+                item_name=item_name,
                 unit=m.unit,
                 required_quantity=quantity,
-                received_quantity=0,
+                received_quantity=preserved_received,  # ✅ حفظ الكمية المستلمة
                 unit_price=m.unit_price,
                 source="quantity",
                 notes=f"من نموذج: {template.name}"
