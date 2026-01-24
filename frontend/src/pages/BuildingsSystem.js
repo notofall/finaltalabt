@@ -670,7 +670,7 @@ const BuildingsSystem = () => {
     
     try {
       await axios.put(
-        `${BUILDINGS_API}/projects/${selectedProject.id}/templates/${editingTemplate.id}`,
+        `${BUILDINGS_API}/templates/${editingTemplate.id}`,
         newTemplate,
         getAuthHeaders()
       );
@@ -681,7 +681,7 @@ const BuildingsSystem = () => {
       fetchProjectDetails(selectedProject.id);
     } catch (error) {
       console.error("Error updating template:", error);
-      toast.error("فشل في التحديث");
+      toast.error(error.response?.data?.detail || "فشل في التحديث");
     }
   };
 
@@ -698,7 +698,7 @@ const BuildingsSystem = () => {
     
     try {
       await axios.delete(
-        `${BUILDINGS_API}/projects/${selectedProject.id}/templates/${templateId}`,
+        `${BUILDINGS_API}/templates/${templateId}`,
         getAuthHeaders()
       );
       
@@ -706,7 +706,7 @@ const BuildingsSystem = () => {
       fetchProjectDetails(selectedProject.id);
     } catch (error) {
       console.error("Error deleting template:", error);
-      toast.error("فشل في الحذف");
+      toast.error(error.response?.data?.detail || "فشل في الحذف");
     }
   };
 
