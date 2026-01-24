@@ -149,19 +149,19 @@ const SupervisorDashboard = () => {
         getAuthHeaders()
       );
       
-      if (suggestRes.data.found && suggestRes.data.catalog_item) {
-        // Found exact match
+      // عرض جميع الاقتراحات دائماً
+      if (suggestRes.data.suggestions?.length > 0) {
+        setCatalogSuggestions(suggestRes.data.suggestions);
+      } else if (suggestRes.data.found && suggestRes.data.catalog_item) {
+        // Found single exact match
         setCatalogSuggestions([{
           ...suggestRes.data.catalog_item,
           match_type: suggestRes.data.match_type
         }]);
-      } else if (suggestRes.data.suggestions?.length > 0) {
-        // Found partial matches
-        setCatalogSuggestions(suggestRes.data.suggestions);
       } else {
-        // Search catalog directly
+        // Search catalog directly as fallback
         const catalogRes = await axios.get(
-          `${API_V2_URL}/catalog/search?q=${encodeURIComponent(searchTerm)}`,
+          `${API_V2_URL}/catalog/search?q=${encodeURIComponent(searchTerm)}&limit=20`,
           getAuthHeaders()
         );
         setCatalogSuggestions(catalogRes.data || []);
