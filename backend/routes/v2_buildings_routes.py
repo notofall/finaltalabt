@@ -1793,12 +1793,13 @@ async def import_area_materials_excel(
     if not project:
         raise HTTPException(status_code=404, detail="المشروع غير موجود")
     
-    # Get floors for mapping
+    # Get floors for mapping (by number and by name)
     floors_result = await session.execute(
         select(ProjectFloor).where(ProjectFloor.project_id == project_id)
     )
     floors = floors_result.scalars().all()
     floors_by_number = {f.floor_number: f for f in floors}
+    floors_by_name = {f.floor_name.strip(): f for f in floors}
     
     # Read Excel file
     contents = await file.read()
@@ -1807,6 +1808,11 @@ async def import_area_materials_excel(
     
     imported_count = 0
     errors = []
+    
+    # Detect format from header row
+    header_row = next(ws.iter_rows(min_row=1, max_row=1, values_only=True))
+    # Check if column 6 is "الكمية" (quantity) - means direct quantity format
+    is_quantity_format = header_row and len(header_row) > 5 and header_row[5] and "كمية" in str(header_row[5])
     
     # Skip header row (and note row if exists)
     for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
@@ -1818,17 +1824,41 @@ async def import_area_materials_excel(
             item_name = str(row[0]).strip()
             unit = str(row[1]).strip() if row[1] else "طن"
             factor = float(row[2]) if row[2] else 0
-            floor_number = int(row[3]) if row[3] not in [None, "", " "] else None
-            waste_percentage = float(row[4]) if row[4] else 0
-            unit_price = float(row[5]) if row[5] else 0
+            floor_value = row[3] if len(row) > 3 else None
+            waste_percentage = float(row[4]) if len(row) > 4 and row[4] else 0
             
-            # Determine calculation type and floor
+            # Handle different formats
+            if is_quantity_format:
+                # Format: اسم المادة, الوحدة, المعامل, الدور (اسم), نسبة الهالك, الكمية, السعر, الإجمالي
+                direct_quantity = float(row[5]) if len(row) > 5 and row[5] else 0
+                unit_price = float(row[6]) if len(row) > 6 and row[6] else 0
+                calculation_method = "direct" if direct_quantity > 0 else "factor"
+            else:
+                # Format: اسم المادة, الوحدة, المعامل, رقم الدور, نسبة الهالك, السعر
+                direct_quantity = 0
+                unit_price = float(row[5]) if len(row) > 5 and row[5] else 0
+                calculation_method = "factor"
+            
+            # Determine floor
             calculation_type = "all_floors"
             selected_floor_id = None
             
-            if floor_number is not None and floor_number in floors_by_number:
-                calculation_type = "selected_floor"
-                selected_floor_id = str(floors_by_number[floor_number].id)
+            if floor_value not in [None, "", " "]:
+                floor_str = str(floor_value).strip()
+                # Try by name first
+                if floor_str in floors_by_name:
+                    calculation_type = "selected_floor"
+                    selected_floor_id = str(floors_by_name[floor_str].id)
+                else:
+                    # Try by number
+                    try:
+                        floor_num = int(floor_value)
+                        if floor_num in floors_by_number:
+                            calculation_type = "selected_floor"
+                            selected_floor_id = str(floors_by_number[floor_num].id)
+                    except (ValueError, TypeError):
+                        # Floor name not found, keep as all_floors
+                        pass
             
             material = ProjectAreaMaterial(
                 id=str(uuid4()),
@@ -1836,9 +1866,9 @@ async def import_area_materials_excel(
                 catalog_item_id=None,
                 item_name=item_name,
                 unit=unit,
-                calculation_method="factor",
+                calculation_method=calculation_method,
                 factor=factor,
-                direct_quantity=0,
+                direct_quantity=direct_quantity,
                 unit_price=unit_price,
                 calculation_type=calculation_type,
                 selected_floor_id=selected_floor_id,
