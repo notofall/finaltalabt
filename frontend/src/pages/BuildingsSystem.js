@@ -359,6 +359,29 @@ const BuildingsSystem = () => {
     }
   };
 
+  // Sync area materials with catalog
+  const syncMaterialsWithCatalog = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const res = await axios.post(
+        `${BUILDINGS_API}/projects/${selectedProject.id}/area-materials/sync-catalog`,
+        {},
+        getAuthHeaders()
+      );
+      
+      toast.success(res.data.message);
+      if (res.data.not_found && res.data.not_found.length > 0) {
+        toast.warning(`${res.data.not_found.length} مادة غير موجودة في الكتالوج`);
+        console.log("Materials not found in catalog:", res.data.not_found);
+      }
+      fetchProjectDetails(selectedProject.id);
+    } catch (error) {
+      console.error("Error syncing materials:", error);
+      toast.error("فشل في المزامنة");
+    }
+  };
+
   // Export Materials Requests (filtered - only items with quantities)
   const exportMaterialsRequests = async () => {
     if (!selectedProject) return;
