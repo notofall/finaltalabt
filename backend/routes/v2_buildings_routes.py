@@ -2505,27 +2505,28 @@ async def export_area_materials_excel(
     center_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
     
     # Title row
-    ws.merge_cells('A1:L1')
+    ws.merge_cells('A1:M1')
     ws['A1'] = f"مواد المساحة - {project.name}"
     ws['A1'].font = title_font
     ws['A1'].fill = title_fill
     ws['A1'].alignment = center_align
     ws.row_dimensions[1].height = 30
     
-    # Headers - جميع الحقول
+    # Headers - جميع الحقول مع كود الصنف
     headers = [
-        "اسم المادة",      # A - item_name
-        "الوحدة",          # B - unit
-        "طريقة الحساب",    # C - calculation_method (معامل/مباشر)
-        "المعامل",         # D - factor
-        "الكمية المباشرة", # E - direct_quantity
-        "نطاق الحساب",     # F - calculation_type (جميع الأدوار/دور محدد)
-        "الدور",           # G - floor name
-        "عرض البلاط (سم)", # H - tile_width
-        "طول البلاط (سم)", # I - tile_height
-        "نسبة الهالك %",   # J - waste_percentage
-        "السعر",           # K - unit_price
-        "ملاحظات"          # L - notes
+        "كود الصنف",       # A - item_code (مطلوب للاستيراد)
+        "اسم المادة",      # B - item_name
+        "الوحدة",          # C - unit
+        "طريقة الحساب",    # D - calculation_method (معامل/مباشر)
+        "المعامل",         # E - factor
+        "الكمية المباشرة", # F - direct_quantity
+        "نطاق الحساب",     # G - calculation_type (جميع الأدوار/دور محدد)
+        "الدور",           # H - floor name
+        "عرض البلاط (سم)", # I - tile_width
+        "طول البلاط (سم)", # J - tile_height
+        "نسبة الهالك %",   # K - waste_percentage
+        "السعر",           # L - unit_price
+        "ملاحظات"          # M - notes
     ]
     
     for col, header in enumerate(headers, 1):
