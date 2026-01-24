@@ -599,6 +599,48 @@ const BuildingsSystem = () => {
     }
   };
 
+  // Edit Area Material - تعديل مادة مساحة
+  const openEditAreaMaterial = (material) => {
+    setEditingAreaMaterial({
+      id: material.id,
+      catalog_item_id: material.catalog_item_id || "",
+      item_code: material.item_code || "",
+      item_name: material.item_name || "",
+      unit: material.unit || "طن",
+      calculation_method: material.calculation_method || "factor",
+      factor: material.factor || 0,
+      direct_quantity: material.direct_quantity || 0,
+      unit_price: material.unit_price || 0,
+      calculation_type: material.calculation_type || "all_floors",
+      selected_floor_id: material.selected_floor_id || "",
+      tile_width: material.tile_width || 0,
+      tile_height: material.tile_height || 0,
+      waste_percentage: material.waste_percentage || 0,
+      notes: material.notes || ""
+    });
+    setEditAreaMaterialDialogOpen(true);
+  };
+
+  const updateAreaMaterial = async () => {
+    if (!selectedProject || !editingAreaMaterial) return;
+    
+    try {
+      await axios.put(
+        `${BUILDINGS_API}/projects/${selectedProject.id}/area-materials/${editingAreaMaterial.id}`,
+        editingAreaMaterial,
+        getAuthHeaders()
+      );
+      
+      toast.success("تم تحديث المادة بنجاح");
+      setEditAreaMaterialDialogOpen(false);
+      setEditingAreaMaterial(null);
+      fetchProjectDetails(selectedProject.id);
+    } catch (error) {
+      console.error("Error updating area material:", error);
+      toast.error("فشل في تحديث المادة");
+    }
+  };
+
   // Template materials
   const addTemplateMaterial = async () => {
     if (!selectedTemplateForMaterial) return;
