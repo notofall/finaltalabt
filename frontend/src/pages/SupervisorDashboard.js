@@ -358,7 +358,7 @@ const SupervisorDashboard = () => {
       await axios.post(`${API_V2_URL}/requests/`, {
         items: items.map(item => ({ 
           name: item.name, 
-          quantity: parseInt(item.quantity), 
+          quantity: parseFloat(item.quantity), 
           unit: item.unit,
           estimated_price: item.estimated_price
         })),
@@ -386,7 +386,7 @@ const SupervisorDashboard = () => {
     setSubmitting(true);
     try {
       await axios.put(`${API_V2_URL}/requests/${selectedRequest.id}/edit`, {
-        items: editItems.map(item => ({ name: item.name, quantity: parseInt(item.quantity), unit: item.unit || "قطعة" })),
+        items: editItems.map(item => ({ name: item.name, quantity: parseFloat(item.quantity), unit: item.unit || "قطعة" })),
         project_id: editProjectId, reason: editReason, engineer_id: editEngineerId,
       }, getAuthHeaders());
       toast.success("تم تعديل الطلب بنجاح");
