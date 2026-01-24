@@ -1900,8 +1900,9 @@ async def export_project_full(
     ws_materials['A1'].fill = title_fill
     ws_materials['A1'].alignment = center_align
     
+    # إضافة كود الصنف كأول عمود (مطلوب للاستيراد)
     mat_headers = [
-        "اسم المادة", "الوحدة", "طريقة الحساب", "المعامل", "الكمية المباشرة",
+        "كود الصنف", "اسم المادة", "الوحدة", "طريقة الحساب", "المعامل", "الكمية المباشرة",
         "نطاق الحساب", "الدور", "عرض البلاط (سم)", "طول البلاط (سم)",
         "نسبة الهالك %", "السعر", "ملاحظات"
     ]
@@ -1922,20 +1923,21 @@ async def export_project_full(
         calc_method_ar = "معامل" if mat.calculation_method == "factor" else "مباشر"
         calc_type_ar = "جميع الأدوار" if mat.calculation_type == "all_floors" else "دور محدد"
         
-        ws_materials.cell(row=row_idx, column=1, value=mat.item_name).border = border
-        ws_materials.cell(row=row_idx, column=2, value=mat.unit).border = border
-        ws_materials.cell(row=row_idx, column=3, value=calc_method_ar).border = border
-        ws_materials.cell(row=row_idx, column=4, value=mat.factor or 0).border = border
-        ws_materials.cell(row=row_idx, column=5, value=mat.direct_quantity or 0).border = border
-        ws_materials.cell(row=row_idx, column=6, value=calc_type_ar).border = border
-        ws_materials.cell(row=row_idx, column=7, value=floor_name).border = border
-        ws_materials.cell(row=row_idx, column=8, value=mat.tile_width or 0).border = border
-        ws_materials.cell(row=row_idx, column=9, value=mat.tile_height or 0).border = border
-        ws_materials.cell(row=row_idx, column=10, value=mat.waste_percentage or 0).border = border
-        ws_materials.cell(row=row_idx, column=11, value=mat.unit_price or 0).border = border
-        ws_materials.cell(row=row_idx, column=12, value=mat.notes or "").border = border
+        ws_materials.cell(row=row_idx, column=1, value=mat.item_code or "").border = border
+        ws_materials.cell(row=row_idx, column=2, value=mat.item_name).border = border
+        ws_materials.cell(row=row_idx, column=3, value=mat.unit).border = border
+        ws_materials.cell(row=row_idx, column=4, value=calc_method_ar).border = border
+        ws_materials.cell(row=row_idx, column=5, value=mat.factor or 0).border = border
+        ws_materials.cell(row=row_idx, column=6, value=mat.direct_quantity or 0).border = border
+        ws_materials.cell(row=row_idx, column=7, value=calc_type_ar).border = border
+        ws_materials.cell(row=row_idx, column=8, value=floor_name).border = border
+        ws_materials.cell(row=row_idx, column=9, value=mat.tile_width or 0).border = border
+        ws_materials.cell(row=row_idx, column=10, value=mat.tile_height or 0).border = border
+        ws_materials.cell(row=row_idx, column=11, value=mat.waste_percentage or 0).border = border
+        ws_materials.cell(row=row_idx, column=12, value=mat.unit_price or 0).border = border
+        ws_materials.cell(row=row_idx, column=13, value=mat.notes or "").border = border
     
-    col_widths = [18, 10, 12, 10, 14, 14, 16, 14, 14, 12, 10, 18]
+    col_widths = [15, 18, 10, 12, 10, 14, 14, 16, 14, 14, 12, 10, 18]
     for i, width in enumerate(col_widths, 1):
         ws_materials.column_dimensions[get_column_letter(i)].width = width
     
