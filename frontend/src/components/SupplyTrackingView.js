@@ -58,6 +58,33 @@ const SupplyTrackingView = () => {
     toast.success("تم تحديث البيانات");
   };
 
+  // Sync supply with quantities - مزامنة التوريد مع الكميات
+  const handleSyncSupply = async () => {
+    if (!selectedProjectId) {
+      toast.error("الرجاء اختيار مشروع أولاً");
+      return;
+    }
+    
+    setRefreshing(true);
+    try {
+      // Call sync API
+      await axios.post(
+        `${API_V2_URL}/buildings/projects/${selectedProjectId}/sync-supply`,
+        {},
+        getAuthHeaders()
+      );
+      
+      // Refresh data after sync
+      await fetchSupplyTracking();
+      toast.success("تمت مزامنة التوريد مع الكميات بنجاح");
+    } catch (error) {
+      console.error("Error syncing supply:", error);
+      toast.error("فشل في مزامنة التوريد");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   // Get selected project data
   const selectedProject = projects.find(p => p.project_id === selectedProjectId);
   
