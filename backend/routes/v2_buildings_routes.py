@@ -1111,6 +1111,131 @@ async def sync_supply_tracking(
     }
 
 
+@router.post("/projects/{project_id}/resync-deliveries")
+async def resync_deliveries_to_supply(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """
+    إعادة مزامنة الكميات المستلمة من أوامر الشراء إلى تتبع التوريد
+    يقوم بحساب إجمالي الكميات المستلمة من جميع أوامر الشراء وتحديث supply_tracking
+    """
+    from database.models import PurchaseOrder, PurchaseOrderItem, SupplyTracking
+    
+    # التحقق من وجود المشروع
+    project_result = await session.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = project_result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # جلب جميع أوامر الشراء المستلمة للمشروع
+    orders_result = await session.execute(
+        select(PurchaseOrder).where(
+            PurchaseOrder.project_id == project_id,
+            PurchaseOrder.status.in_(["delivered", "partially_delivered"])
+        )
+    )
+    orders = list(orders_result.scalars().all())
+    
+    if not orders:
+        return {
+            "message": "لا توجد أوامر شراء مستلمة لهذا المشروع",
+            "items_synced": 0
+        }
+    
+    # جمع الكميات المستلمة لكل صنف
+    delivered_totals = {}  # {item_key: {"name": ..., "quantity": ..., "catalog_id": ..., "item_code": ...}}
+    
+    for order in orders:
+        items_result = await session.execute(
+            select(PurchaseOrderItem).where(PurchaseOrderItem.order_id == order.id)
+        )
+        items = list(items_result.scalars().all())
+        
+        for item in items:
+            delivered_qty = item.delivered_quantity or 0
+            if delivered_qty > 0:
+                # استخدام catalog_item_id أو item_code أو الاسم كمفتاح
+                key = item.catalog_item_id or item.item_code or item.name
+                
+                if key not in delivered_totals:
+                    delivered_totals[key] = {
+                        "name": item.name,
+                        "quantity": 0,
+                        "catalog_item_id": item.catalog_item_id,
+                        "item_code": item.item_code
+                    }
+                delivered_totals[key]["quantity"] += delivered_qty
+    
+    # تحديث supply_tracking
+    items_synced = 0
+    sync_details = []
+    
+    for key, data in delivered_totals.items():
+        # البحث في supply_tracking بثلاث طرق
+        supply_item = None
+        
+        # 1. بـ catalog_item_id
+        if data["catalog_item_id"]:
+            result = await session.execute(
+                select(SupplyTracking).where(
+                    SupplyTracking.project_id == project_id,
+                    SupplyTracking.catalog_item_id == data["catalog_item_id"]
+                )
+            )
+            supply_item = result.scalar_one_or_none()
+        
+        # 2. بـ item_code
+        if not supply_item and data["item_code"]:
+            result = await session.execute(
+                select(SupplyTracking).where(
+                    SupplyTracking.project_id == project_id,
+                    SupplyTracking.item_code == data["item_code"]
+                )
+            )
+            supply_item = result.scalar_one_or_none()
+        
+        # 3. بالاسم (مطابقة جزئية)
+        if not supply_item:
+            result = await session.execute(
+                select(SupplyTracking).where(
+                    SupplyTracking.project_id == project_id
+                )
+            )
+            all_supplies = list(result.scalars().all())
+            
+            item_name_lower = data["name"].lower().strip()
+            for s in all_supplies:
+                supply_name_lower = (s.item_name or "").lower().strip()
+                if item_name_lower in supply_name_lower or supply_name_lower in item_name_lower:
+                    supply_item = s
+                    break
+        
+        # تحديث الكمية المستلمة
+        if supply_item:
+            old_qty = supply_item.received_quantity or 0
+            supply_item.received_quantity = data["quantity"]
+            items_synced += 1
+            sync_details.append({
+                "item_name": data["name"],
+                "old_received": old_qty,
+                "new_received": data["quantity"],
+                "matched_with": supply_item.item_name
+            })
+    
+    await session.commit()
+    
+    return {
+        "message": f"تم إعادة مزامنة {items_synced} صنف بنجاح",
+        "items_synced": items_synced,
+        "total_delivered_items": len(delivered_totals),
+        "details": sync_details
+    }
+
+
 @router.put("/projects/{project_id}/supply/{item_id}")
 async def update_supply_item(
     project_id: str,
