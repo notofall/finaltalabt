@@ -279,11 +279,11 @@ class PurchaseOrderItem(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid_lib.uuid4()))
     order_id: Mapped[str] = mapped_column(String(36), ForeignKey("purchase_orders.id", ondelete="CASCADE"), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+    quantity: Mapped[float] = mapped_column(Float, nullable=False)  # Changed to Float for fractional quantities
     unit: Mapped[str] = mapped_column(String(50), default="قطعة")
     unit_price: Mapped[float] = mapped_column(Float, default=0)
     total_price: Mapped[float] = mapped_column(Float, default=0)
-    delivered_quantity: Mapped[int] = mapped_column(Integer, default=0)
+    delivered_quantity: Mapped[float] = mapped_column(Float, default=0)  # Changed to Float for fractional quantities
     item_index: Mapped[int] = mapped_column(Integer, default=0)
     # ربط بكتالوج الأسعار
     catalog_item_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True, index=True)
