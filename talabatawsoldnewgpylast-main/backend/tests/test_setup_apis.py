@@ -8,7 +8,7 @@ import os
 
 from tests.test_config import get_db_config
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://buildtrack-120.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://buildmatflex.preview.emergentagent.com').rstrip('/')
 
 VALID_DB_CONFIG = get_db_config()
 
