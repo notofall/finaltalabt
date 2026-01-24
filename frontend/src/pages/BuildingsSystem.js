@@ -1925,9 +1925,17 @@ const BuildingsSystem = () => {
                   <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
                     <CardTitle className="text-white">تتبع التوريد</CardTitle>
                     <div className="flex gap-2 flex-wrap">
+                      <Button onClick={exportSupplyExcel} variant="outline" className="border-blue-600 text-blue-400 hover:bg-blue-900/30">
+                        <FileSpreadsheet className="w-4 h-4 ml-2" />
+                        Excel
+                      </Button>
+                      <Button onClick={exportSupplyPDF} variant="outline" className="border-red-600 text-red-400 hover:bg-red-900/30">
+                        <FileDown className="w-4 h-4 ml-2" />
+                        PDF
+                      </Button>
                       <Button onClick={syncSupply} variant="outline" className="border-emerald-600 text-emerald-400 hover:bg-emerald-900/30">
                         <RefreshCw className="w-4 h-4 ml-2" />
-                        مزامنة الكميات والاستلام
+                        مزامنة
                       </Button>
                     </div>
                   </CardHeader>
