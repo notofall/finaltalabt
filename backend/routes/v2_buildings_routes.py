@@ -1733,37 +1733,47 @@ async def download_project_template(current_user = Depends(get_current_user)):
     ws3 = wb.create_sheet("مواد المساحة")
     ws3.sheet_view.rightToLeft = True
     
-    # نفس الأعمدة المستخدمة في التصدير
-    headers = ["اسم المادة", "الوحدة", "المعامل", "الدور", "نسبة الهالك %", "الكمية", "السعر", "الإجمالي"]
+    # التنسيق الجديد الشامل - جميع الحقول
+    headers = [
+        "اسم المادة",      # A
+        "الوحدة",          # B
+        "طريقة الحساب",    # C - معامل/مباشر
+        "المعامل",         # D
+        "الكمية المباشرة", # E
+        "نطاق الحساب",     # F - جميع الأدوار/دور محدد
+        "الدور",           # G
+        "عرض البلاط (سم)", # H
+        "طول البلاط (سم)", # I
+        "نسبة الهالك %",   # J
+        "السعر",           # K
+        "ملاحظات"          # L
+    ]
     for col, header in enumerate(headers, 1):
         cell = ws3.cell(row=1, column=col, value=header)
         cell.font = header_font
         cell.fill = header_fill
     
-    # ملاحظات
-    ws3.cell(row=2, column=1, value="# ملاحظة: اترك الدور فارغاً لتطبيق المادة على جميع الأدوار. الكمية المدخلة هي الكمية المباشرة.")
+    # ملاحظات / تعليمات
+    ws3.cell(row=2, column=1, value="# طريقة الحساب: 'معامل' أو 'مباشر' | نطاق الحساب: 'جميع الأدوار' أو 'دور محدد'")
     ws3.cell(row=2, column=1).font = note_font
-    ws3.merge_cells('A2:H2')
+    ws3.merge_cells('A2:L2')
     
+    # أمثلة بكلا الطريقتين
     sample_materials = [
-        ["حديد 8 ملم", "طن", 0, "صبة الارضيه", 0, 2, 0, 0],
-        ["حديد 10 ملم", "طن", 0, "اعمدة الارضي", 0, 2.7, 0, 0],
-        ["خرسانه c15", "م³", 0, "صبة الارضيه", 0, 49, 0, 0],
-        ["خرسانه c35", "م³", 0, "اعمدة الارضي", 0, 33, 0, 0],
-        ["حديد 12 ملم", "طن", 0, "سقف الارضي", 0, 15.9, 0, 0],
+        # اسم المادة, الوحدة, طريقة, المعامل, الكمية المباشرة, نطاق, الدور, عرض بلاط, طول بلاط, هالك%, السعر, ملاحظات
+        ["حديد 8 ملم", "طن", "مباشر", 0, 2, "دور محدد", "صبة الارضيه", 0, 0, 0, 0, ""],
+        ["حديد 10 ملم", "طن", "مباشر", 0, 2.7, "دور محدد", "اعمدة الارضي", 0, 0, 0, 0, ""],
+        ["خرسانه c35", "م³", "معامل", 0.15, 0, "جميع الأدوار", "", 0, 0, 5, 250, ""],
+        ["بلاط سيراميك", "قطعة", "معامل", 0, 0, "جميع الأدوار", "", 60, 60, 10, 15, "بلاط أرضي"],
     ]
     for row, data in enumerate(sample_materials, 3):
         for col, value in enumerate(data, 1):
             ws3.cell(row=row, column=col, value=value)
     
-    ws3.column_dimensions['A'].width = 20
-    ws3.column_dimensions['B'].width = 12
-    ws3.column_dimensions['C'].width = 12
-    ws3.column_dimensions['D'].width = 18
-    ws3.column_dimensions['E'].width = 15
-    ws3.column_dimensions['F'].width = 12
-    ws3.column_dimensions['G'].width = 12
-    ws3.column_dimensions['H'].width = 12
+    # عرض الأعمدة
+    col_widths = {'A': 18, 'B': 10, 'C': 12, 'D': 10, 'E': 14, 'F': 14, 'G': 16, 'H': 14, 'I': 14, 'J': 12, 'K': 10, 'L': 18}
+    for col, width in col_widths.items():
+        ws3.column_dimensions[col].width = width
     
     buffer = BytesIO()
     wb.save(buffer)
