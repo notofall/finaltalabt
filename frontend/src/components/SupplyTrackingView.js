@@ -160,12 +160,13 @@ const SupplyTrackingView = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={handleRefresh}
-          disabled={refreshing}
+          onClick={handleSyncSupply}
+          disabled={refreshing || !selectedProjectId}
           className="h-9 gap-1"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline">تحديث</span>
+          <span className="hidden sm:inline">مزامنة مع الكميات</span>
+          <span className="sm:hidden">مزامنة</span>
         </Button>
       </div>
 
