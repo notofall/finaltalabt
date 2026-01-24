@@ -2012,7 +2012,7 @@ async def import_project_full(
         raise HTTPException(status_code=404, detail="المشروع غير موجود")
     
     # تحميل الكتالوج للتحقق
-    catalog_result = await session.execute(select(PriceCatalog))
+    catalog_result = await session.execute(select(PriceCatalogItem))
     catalog_items = catalog_result.scalars().all()
     catalog_by_code = {item.item_code: item for item in catalog_items}
     catalog_by_name = {item.item_name: item for item in catalog_items}
@@ -2254,7 +2254,7 @@ async def import_area_materials_excel(
         raise HTTPException(status_code=404, detail="المشروع غير موجود")
     
     # تحميل الكتالوج للتحقق
-    catalog_result = await session.execute(select(PriceCatalog))
+    catalog_result = await session.execute(select(PriceCatalogItem))
     catalog_items = catalog_result.scalars().all()
     catalog_by_code = {item.item_code: item for item in catalog_items}
     catalog_by_name = {item.item_name: item for item in catalog_items}
@@ -2619,7 +2619,7 @@ async def sync_area_materials_with_catalog(
     session: AsyncSession = Depends(get_postgres_session)
 ):
     """مزامنة مواد المساحة مع الكتالوج - ربط المواد بالكتالوج عن طريق الاسم"""
-    from database.models import ProjectAreaMaterial, PriceCatalog
+    from database.models import ProjectAreaMaterial, PriceCatalogItem
     
     # Get project
     result = await session.execute(select(Project).where(Project.id == project_id))
@@ -2628,7 +2628,7 @@ async def sync_area_materials_with_catalog(
         raise HTTPException(status_code=404, detail="المشروع غير موجود")
     
     # تحميل الكتالوج
-    catalog_result = await session.execute(select(PriceCatalog))
+    catalog_result = await session.execute(select(PriceCatalogItem))
     catalog_items = catalog_result.scalars().all()
     catalog_by_name = {item.item_name: item for item in catalog_items}
     
