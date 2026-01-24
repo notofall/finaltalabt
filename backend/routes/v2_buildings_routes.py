@@ -1801,3 +1801,135 @@ async def sync_supply_from_deliveries(
         "items_synced": updated_count,
         "delivered_orders_count": len(delivered_items)
     }
+
+
+
+@router.get("/reports/supply-export/{project_id}")
+async def export_supply_report(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """تصدير تقرير التوريد إلى Excel"""
+    from fastapi.responses import StreamingResponse
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment
+    import io
+    
+    # Import models
+    from database.pg_models import SupplyTracking
+    
+    # جلب المشروع
+    project_result = await session.execute(
+        select(Project).where(Project.id == project_id)
+    )
+    project = project_result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # جلب بيانات التوريد
+    supply_result = await session.execute(
+        select(SupplyTracking).where(SupplyTracking.project_id == project_id)
+    )
+    supply_items = supply_result.scalars().all()
+    
+    # إنشاء Excel
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "تقرير التوريد"
+    ws.sheet_view.rightToLeft = True
+    
+    # التنسيقات
+    title_fill = PatternFill(start_color="1e3a5f", end_color="1e3a5f", fill_type="solid")
+    title_font = Font(bold=True, color="FFFFFF", size=14)
+    header_fill = PatternFill(start_color="059669", end_color="059669", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    completed_fill = PatternFill(start_color="d1fae5", end_color="d1fae5", fill_type="solid")
+    progress_fill = PatternFill(start_color="fef3c7", end_color="fef3c7", fill_type="solid")
+    not_started_fill = PatternFill(start_color="fee2e2", end_color="fee2e2", fill_type="solid")
+    
+    # العنوان
+    ws.merge_cells('A1:I1')
+    ws['A1'] = f'تقرير التوريد - {project.name}'
+    ws['A1'].fill = title_fill
+    ws['A1'].font = title_font
+    ws['A1'].alignment = Alignment(horizontal="center")
+    
+    # رؤوس الأعمدة
+    headers = ['الكود', 'المادة', 'الوحدة', 'المطلوب', 'المستلم', 'المتبقي', 'الإنجاز %', 'السعر', 'القيمة المتبقية']
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=3, column=col, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center")
+    
+    # البيانات
+    row = 4
+    for item in supply_items:
+        required = item.required_quantity or 0
+        received = item.received_quantity or 0
+        remaining = required - received
+        completion = (received / required * 100) if required > 0 else 0
+        remaining_value = remaining * (item.unit_price or 0)
+        
+        # تحديد لون الصف
+        if completion >= 100:
+            row_fill = completed_fill
+        elif completion > 0:
+            row_fill = progress_fill
+        else:
+            row_fill = not_started_fill
+        
+        data = [
+            item.item_code or "",
+            item.item_name,
+            item.unit,
+            required,
+            received,
+            remaining,
+            f"{completion:.1f}%",
+            item.unit_price or 0,
+            remaining_value
+        ]
+        
+        for col, val in enumerate(data, 1):
+            cell = ws.cell(row=row, column=col, value=val)
+            cell.fill = row_fill
+        
+        row += 1
+    
+    # الإجماليات
+    total_row = row
+    ws.cell(row=total_row, column=2, value="الإجمالي").font = Font(bold=True)
+    ws.cell(row=total_row, column=4, value=sum(s.required_quantity or 0 for s in supply_items)).font = Font(bold=True)
+    ws.cell(row=total_row, column=5, value=sum(s.received_quantity or 0 for s in supply_items)).font = Font(bold=True)
+    ws.cell(row=total_row, column=6, value=sum((s.required_quantity or 0) - (s.received_quantity or 0) for s in supply_items)).font = Font(bold=True)
+    
+    total_required = sum(s.required_quantity or 0 for s in supply_items)
+    total_received = sum(s.received_quantity or 0 for s in supply_items)
+    overall_completion = (total_received / total_required * 100) if total_required > 0 else 0
+    ws.cell(row=total_row, column=7, value=f"{overall_completion:.1f}%").font = Font(bold=True)
+    
+    # ضبط عرض الأعمدة
+    ws.column_dimensions['A'].width = 15
+    ws.column_dimensions['B'].width = 30
+    ws.column_dimensions['C'].width = 12
+    ws.column_dimensions['D'].width = 15
+    ws.column_dimensions['E'].width = 15
+    ws.column_dimensions['F'].width = 15
+    ws.column_dimensions['G'].width = 12
+    ws.column_dimensions['H'].width = 15
+    ws.column_dimensions['I'].width = 18
+    
+    # حفظ
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    from urllib.parse import quote
+    filename = quote(f"Supply_Report_{project.name}.xlsx")
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{filename}"}
+    )
