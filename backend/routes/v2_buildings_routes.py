@@ -1056,29 +1056,40 @@ async def sync_supply_tracking(
     )
     area_materials = area_materials_result.scalars().all()
     
-    created_items = []
+    # ✅ تجميع الأصناف المتشابهة بدلاً من التكرار
+    # المفتاح: catalog_item_id أو item_code أو item_name
+    aggregated_items = {}  # {key: {"catalog_item_id", "item_code", "item_name", "unit", "required_quantity", "unit_price", "sources"}}
     
-    # Helper function to find preserved received quantity
-    def get_preserved_received(catalog_item_id, item_code, item_name):
-        """البحث عن الكمية المستلمة المحفوظة"""
-        # أولاً: بـ catalog_item_id
-        if catalog_item_id and catalog_item_id in received_by_catalog_id:
-            return received_by_catalog_id[catalog_item_id]
-        # ثانياً: بـ item_code
-        if item_code and item_code in received_by_item_code:
-            return received_by_item_code[item_code]
-        # ثالثاً: بالاسم
-        if item_name:
-            name_key = item_name.lower().strip()
-            if name_key in received_by_name:
-                return received_by_name[name_key]
-            # بحث جزئي
-            for key, qty in received_by_name.items():
-                if name_key in key or key in name_key:
-                    return qty
-        return 0
+    def get_item_key(catalog_item_id, item_code, item_name):
+        """إنشاء مفتاح فريد للصنف"""
+        if catalog_item_id:
+            return f"catalog_{catalog_item_id}"
+        if item_code:
+            return f"code_{item_code}"
+        return f"name_{item_name.lower().strip()}"
     
-    # Create supply items from template materials
+    def add_to_aggregated(catalog_item_id, item_code, item_name, unit, quantity, unit_price, source):
+        """إضافة أو تجميع صنف"""
+        key = get_item_key(catalog_item_id, item_code, item_name)
+        
+        if key not in aggregated_items:
+            aggregated_items[key] = {
+                "catalog_item_id": catalog_item_id,
+                "item_code": item_code,
+                "item_name": item_name,
+                "unit": unit,
+                "required_quantity": 0,
+                "unit_price": unit_price or 0,
+                "sources": []
+            }
+        
+        aggregated_items[key]["required_quantity"] += quantity
+        aggregated_items[key]["sources"].append(source)
+        # تحديث السعر إذا كان أعلى
+        if unit_price and unit_price > aggregated_items[key]["unit_price"]:
+            aggregated_items[key]["unit_price"] = unit_price
+    
+    # تجميع من مواد النماذج
     for template in templates:
         materials_result = await session.execute(
             select(UnitTemplateMaterial).where(UnitTemplateMaterial.template_id == template.id)
@@ -1087,26 +1098,17 @@ async def sync_supply_tracking(
         
         for m in materials:
             quantity = m.quantity_per_unit * template.count
-            item_name = f"{m.item_name} ({template.name})"
-            preserved_received = get_preserved_received(m.catalog_item_id, m.item_code, m.item_name)
-            
-            supply_item = SupplyTracking(
-                id=str(uuid4()),
-                project_id=project_id,
-                catalog_item_id=m.catalog_item_id,
-                item_code=m.item_code,
-                item_name=item_name,
-                unit=m.unit,
-                required_quantity=quantity,
-                received_quantity=preserved_received,  # ✅ حفظ الكمية المستلمة
-                unit_price=m.unit_price,
-                source="quantity",
-                notes=f"من نموذج: {template.name}"
+            add_to_aggregated(
+                m.catalog_item_id,
+                m.item_code,
+                m.item_name,  # استخدام الاسم الأصلي بدون اسم النموذج
+                m.unit,
+                quantity,
+                m.unit_price,
+                f"نموذج: {template.name}"
             )
-            session.add(supply_item)
-            created_items.append(supply_item)
     
-    # Create supply items from area materials
+    # تجميع من مواد المساحة
     for m in area_materials:
         calc_method = getattr(m, 'calculation_method', 'factor') or 'factor'
         
