@@ -1673,13 +1673,14 @@ async def download_project_template(current_user = Depends(get_current_user)):
     
     wb = Workbook()
     
-    # Floors sheet
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
+    note_font = Font(italic=True, color="666666")
+    
+    # ==================== Sheet 1: الأدوار ====================
     ws1 = wb.active
     ws1.title = "الأدوار"
     ws1.sheet_view.rightToLeft = True
-    
-    header_font = Font(bold=True, color="FFFFFF")
-    header_fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
     
     headers = ["رقم الدور", "اسم الدور", "المساحة (م²)", "معامل التسليح (كجم/م²)"]
     for col, header in enumerate(headers, 1):
@@ -1692,6 +1693,7 @@ async def download_project_template(current_user = Depends(get_current_user)):
         [0, "اللبشة", 430, 120],
         [1, "دور المواقف", 800, 120],
         [2, "الدور الأول", 300, 120],
+        [3, "الدور الثاني", 300, 120],
     ]
     for row, data in enumerate(sample_floors, 2):
         for col, value in enumerate(data, 1):
@@ -1702,7 +1704,7 @@ async def download_project_template(current_user = Depends(get_current_user)):
     ws1.column_dimensions['C'].width = 15
     ws1.column_dimensions['D'].width = 25
     
-    # Templates sheet
+    # ==================== Sheet 2: النماذج ====================
     ws2 = wb.create_sheet("النماذج")
     ws2.sheet_view.rightToLeft = True
     
@@ -1720,6 +1722,48 @@ async def download_project_template(current_user = Depends(get_current_user)):
         for col, value in enumerate(data, 1):
             ws2.cell(row=row, column=col, value=value)
     
+    ws2.column_dimensions['A'].width = 12
+    ws2.column_dimensions['B'].width = 20
+    ws2.column_dimensions['C'].width = 15
+    ws2.column_dimensions['D'].width = 15
+    ws2.column_dimensions['E'].width = 12
+    ws2.column_dimensions['F'].width = 12
+    
+    # ==================== Sheet 3: مواد المساحة ====================
+    ws3 = wb.create_sheet("مواد المساحة")
+    ws3.sheet_view.rightToLeft = True
+    
+    headers = ["اسم المادة", "الوحدة", "المعامل", "رقم الدور (اختياري)", "نسبة الهالك %", "السعر"]
+    for col, header in enumerate(headers, 1):
+        cell = ws3.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+    
+    # ملاحظات
+    ws3.cell(row=2, column=1, value="# ملاحظة: إذا تركت رقم الدور فارغاً، سيتم تطبيق المادة على جميع الأدوار")
+    ws3.cell(row=2, column=1).font = note_font
+    ws3.merge_cells('A2:F2')
+    
+    sample_materials = [
+        ["حديد 8 ملم", "طن", 0.0, "", 0, 0],
+        ["حديد 10 ملم", "طن", 0.0, "", 0, 0],
+        ["حديد 12 ملم", "طن", 0.0, "", 0, 0],
+        ["حديد 14 ملم", "طن", 0.0, "", 0, 0],
+        ["حديد 16 ملم", "طن", 0.0, "", 0, 0],
+        ["خرسانة c30", "م³", 40.0, 1, 0, 0],
+        ["خرسانة c35", "م³", 40.0, 2, 0, 0],
+    ]
+    for row, data in enumerate(sample_materials, 3):
+        for col, value in enumerate(data, 1):
+            ws3.cell(row=row, column=col, value=value)
+    
+    ws3.column_dimensions['A'].width = 20
+    ws3.column_dimensions['B'].width = 12
+    ws3.column_dimensions['C'].width = 12
+    ws3.column_dimensions['D'].width = 20
+    ws3.column_dimensions['E'].width = 15
+    ws3.column_dimensions['F'].width = 12
+    
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)
@@ -1728,6 +1772,220 @@ async def download_project_template(current_user = Depends(get_current_user)):
         buffer,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": "attachment; filename=project_template.xlsx"}
+    )
+
+
+@router.post("/projects/{project_id}/import/area-materials")
+async def import_area_materials_excel(
+    project_id: str,
+    file: UploadFile = File(...),
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """Import area materials from Excel file - استيراد مواد المساحة من Excel"""
+    from openpyxl import load_workbook
+    from io import BytesIO
+    from database.models import ProjectFloor, ProjectAreaMaterial
+    
+    # Get project
+    result = await session.execute(select(Project).where(Project.id == project_id))
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Get floors for mapping
+    floors_result = await session.execute(
+        select(ProjectFloor).where(ProjectFloor.project_id == project_id)
+    )
+    floors = floors_result.scalars().all()
+    floors_by_number = {f.floor_number: f for f in floors}
+    
+    # Read Excel file
+    contents = await file.read()
+    wb = load_workbook(BytesIO(contents))
+    ws = wb.active
+    
+    imported_count = 0
+    errors = []
+    
+    # Skip header row (and note row if exists)
+    for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+        # Skip empty rows or note rows
+        if not row[0] or str(row[0]).startswith('#'):
+            continue
+        
+        try:
+            item_name = str(row[0]).strip()
+            unit = str(row[1]).strip() if row[1] else "طن"
+            factor = float(row[2]) if row[2] else 0
+            floor_number = int(row[3]) if row[3] not in [None, "", " "] else None
+            waste_percentage = float(row[4]) if row[4] else 0
+            unit_price = float(row[5]) if row[5] else 0
+            
+            # Determine calculation type and floor
+            calculation_type = "all_floors"
+            selected_floor_id = None
+            
+            if floor_number is not None and floor_number in floors_by_number:
+                calculation_type = "selected_floor"
+                selected_floor_id = str(floors_by_number[floor_number].id)
+            
+            material = ProjectAreaMaterial(
+                id=str(uuid4()),
+                project_id=project_id,
+                catalog_item_id=None,
+                item_name=item_name,
+                unit=unit,
+                calculation_method="factor",
+                factor=factor,
+                direct_quantity=0,
+                unit_price=unit_price,
+                calculation_type=calculation_type,
+                selected_floor_id=selected_floor_id,
+                tile_width=0,
+                tile_height=0,
+                waste_percentage=waste_percentage,
+                notes=None
+            )
+            session.add(material)
+            imported_count += 1
+        except Exception as e:
+            errors.append(f"صف {row_idx}: {str(e)}")
+    
+    await session.commit()
+    
+    return {
+        "message": f"تم استيراد {imported_count} مادة بنجاح",
+        "imported_count": imported_count,
+        "errors": errors if errors else None
+    }
+
+
+@router.get("/projects/{project_id}/export/area-materials")
+async def export_area_materials_excel(
+    project_id: str,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """Export area materials to Excel file - تصدير مواد المساحة إلى Excel"""
+    from fastapi.responses import StreamingResponse
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    from io import BytesIO
+    from database.models import ProjectFloor, ProjectAreaMaterial
+    
+    # Get project
+    result = await session.execute(select(Project).where(Project.id == project_id))
+    project = result.scalar_one_or_none()
+    if not project:
+        raise HTTPException(status_code=404, detail="المشروع غير موجود")
+    
+    # Get floors
+    floors_result = await session.execute(
+        select(ProjectFloor).where(ProjectFloor.project_id == project_id).order_by(ProjectFloor.floor_number)
+    )
+    floors = floors_result.scalars().all()
+    floors_dict = {str(f.id): f for f in floors}
+    total_area = sum(f.area for f in floors)
+    
+    # Get area materials
+    materials_result = await session.execute(
+        select(ProjectAreaMaterial).where(ProjectAreaMaterial.project_id == project_id)
+    )
+    area_materials = materials_result.scalars().all()
+    
+    # Create workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "مواد المساحة"
+    ws.sheet_view.rightToLeft = True
+    
+    # Styles
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
+    
+    # Headers
+    headers = ["اسم المادة", "الوحدة", "المعامل", "الدور", "نسبة الهالك %", "الكمية", "السعر", "الإجمالي"]
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+    
+    # Data
+    row = 2
+    total_cost = 0
+    for mat in area_materials:
+        # Calculate quantity
+        calc_type = getattr(mat, 'calculation_type', 'all_floors') or 'all_floors'
+        calc_method = getattr(mat, 'calculation_method', 'factor') or 'factor'
+        
+        floor_name = "جميع الأدوار"
+        floor_area = total_area
+        
+        if calc_type == 'selected_floor' and getattr(mat, 'selected_floor_id', None):
+            floor = floors_dict.get(mat.selected_floor_id)
+            if floor:
+                floor_name = floor.floor_name
+                floor_area = floor.area
+        
+        if calc_method == 'direct':
+            quantity = getattr(mat, 'direct_quantity', 0) or 0
+        else:
+            quantity = floor_area * (mat.factor or 0)
+        
+        # Handle tile calculation
+        tile_width = getattr(mat, 'tile_width', 0) or 0
+        tile_height = getattr(mat, 'tile_height', 0) or 0
+        if tile_width > 0 and tile_height > 0 and floor_area > 0:
+            tile_area_m2 = (tile_width / 100) * (tile_height / 100)
+            if tile_area_m2 > 0:
+                quantity = floor_area / tile_area_m2
+        
+        # Apply waste
+        waste_pct = getattr(mat, 'waste_percentage', 0) or 0
+        quantity = quantity * (1 + waste_pct / 100)
+        
+        total_price = quantity * (mat.unit_price or 0)
+        total_cost += total_price
+        
+        ws.cell(row=row, column=1, value=mat.item_name)
+        ws.cell(row=row, column=2, value=mat.unit)
+        ws.cell(row=row, column=3, value=mat.factor or 0)
+        ws.cell(row=row, column=4, value=floor_name)
+        ws.cell(row=row, column=5, value=waste_pct)
+        ws.cell(row=row, column=6, value=round(quantity, 2))
+        ws.cell(row=row, column=7, value=mat.unit_price or 0)
+        ws.cell(row=row, column=8, value=round(total_price, 2))
+        row += 1
+    
+    # Total row
+    ws.cell(row=row, column=7, value="الإجمالي:").font = Font(bold=True)
+    ws.cell(row=row, column=8, value=round(total_cost, 2)).font = Font(bold=True)
+    
+    # Column widths
+    ws.column_dimensions['A'].width = 20
+    ws.column_dimensions['B'].width = 12
+    ws.column_dimensions['C'].width = 12
+    ws.column_dimensions['D'].width = 18
+    ws.column_dimensions['E'].width = 15
+    ws.column_dimensions['F'].width = 12
+    ws.column_dimensions['G'].width = 12
+    ws.column_dimensions['H'].width = 15
+    
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    from urllib.parse import quote
+    safe_filename = f"Area_Materials_{project_id[:8]}.xlsx"
+    encoded_filename = quote(f"مواد_المساحة_{project.name}.xlsx")
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f"attachment; filename=\"{safe_filename}\"; filename*=UTF-8''{encoded_filename}"
+        }
     )
 
 
