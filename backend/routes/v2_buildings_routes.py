@@ -2830,9 +2830,8 @@ async def import_project_full(
         await session.flush()
     
     # ==================== استيراد مواد النماذج ====================
-    if "مواد النماذج" in wb.sheetnames:
-        ws_tmpl_mats = wb["مواد النماذج"]
-        
+    ws_tmpl_mats = find_sheet(wb, ["مواد النماذج", "مواد النماذج (المواد لكل نموذج)"])
+    if ws_tmpl_mats:
         for row_idx, row in enumerate(ws_tmpl_mats.iter_rows(min_row=3, values_only=True), start=3):
             if not row or not row[0]:
                 continue
