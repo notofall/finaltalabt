@@ -2219,6 +2219,155 @@ const BuildingsSystem = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Area Material Dialog - نافذة تعديل مادة مساحة */}
+      <Dialog open={editAreaMaterialDialogOpen} onOpenChange={setEditAreaMaterialDialogOpen}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-emerald-400">تعديل مادة مساحة</DialogTitle>
+          </DialogHeader>
+          {editingAreaMaterial && (
+            <div className="space-y-4">
+              {/* اسم المادة */}
+              <div>
+                <Label>اسم المادة</Label>
+                <Input
+                  value={editingAreaMaterial.item_name}
+                  onChange={(e) => setEditingAreaMaterial({ ...editingAreaMaterial, item_name: e.target.value })}
+                  className="bg-slate-700 border-slate-600"
+                />
+              </div>
+
+              {/* الوحدة */}
+              <div>
+                <Label>الوحدة</Label>
+                <select
+                  value={editingAreaMaterial.unit}
+                  onChange={(e) => setEditingAreaMaterial({ ...editingAreaMaterial, unit: e.target.value })}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white"
+                >
+                  <option value="طن">طن</option>
+                  <option value="متر مربع">متر مربع</option>
+                  <option value="متر طولي">متر طولي</option>
+                  <option value="قطعة">قطعة</option>
+                  <option value="كيس">كيس</option>
+                  <option value="لوح">لوح</option>
+                </select>
+              </div>
+
+              {/* طريقة الحساب */}
+              <div>
+                <Label>طريقة الحساب</Label>
+                <select
+                  value={editingAreaMaterial.calculation_method}
+                  onChange={(e) => setEditingAreaMaterial({ ...editingAreaMaterial, calculation_method: e.target.value })}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white"
+                >
+                  <option value="factor">معامل (ضرب في المساحة)</option>
+                  <option value="direct">كمية مباشرة</option>
+                </select>
+              </div>
+
+              {/* المعامل أو الكمية */}
+              {editingAreaMaterial.calculation_method === "factor" ? (
+                <div>
+                  <Label>المعامل</Label>
+                  <Input
+                    type="number"
+                    step="0.001"
+                    value={editingAreaMaterial.factor}
+                    onChange={(e) => setEditingAreaMaterial({ ...editingAreaMaterial, factor: parseFloat(e.target.value) || 0 })}
+                    className="bg-slate-700 border-slate-600"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <Label>الكمية المباشرة</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={editingAreaMaterial.direct_quantity}
+                    onChange={(e) => setEditingAreaMaterial({ ...editingAreaMaterial, direct_quantity: parseFloat(e.target.value) || 0 })}
+                    className="bg-slate-700 border-slate-600"
+                  />
+                </div>
+              )}
+
+              {/* نطاق الحساب */}
+              <div>
+                <Label>نطاق الحساب</Label>
+                <select
+                  value={editingAreaMaterial.calculation_type}
+                  onChange={(e) => setEditingAreaMaterial({ ...editingAreaMaterial, calculation_type: e.target.value, selected_floor_id: "" })}
+                  className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white"
+                >
+                  <option value="all_floors">جميع الأدوار</option>
+                  <option value="selected_floor">دور محدد</option>
+                </select>
+              </div>
+
+              {/* اختيار الدور */}
+              {editingAreaMaterial.calculation_type === "selected_floor" && (
+                <div>
+                  <Label>اختر الدور</Label>
+                  <select
+                    value={editingAreaMaterial.selected_floor_id}
+                    onChange={(e) => setEditingAreaMaterial({ ...editingAreaMaterial, selected_floor_id: e.target.value })}
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white"
+                  >
+                    <option value="">-- اختر الدور --</option>
+                    {selectedProject?.floors?.map((floor) => (
+                      <option key={floor.id} value={floor.id}>{floor.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* نسبة الهالك */}
+              <div>
+                <Label>نسبة الهالك (%)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={editingAreaMaterial.waste_percentage}
+                  onChange={(e) => setEditingAreaMaterial({ ...editingAreaMaterial, waste_percentage: parseFloat(e.target.value) || 0 })}
+                  className="bg-slate-700 border-slate-600"
+                />
+              </div>
+
+              {/* سعر الوحدة */}
+              <div>
+                <Label>سعر الوحدة</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={editingAreaMaterial.unit_price}
+                  onChange={(e) => setEditingAreaMaterial({ ...editingAreaMaterial, unit_price: parseFloat(e.target.value) || 0 })}
+                  className="bg-slate-700 border-slate-600"
+                />
+              </div>
+
+              {/* ملاحظات */}
+              <div>
+                <Label>ملاحظات</Label>
+                <Input
+                  value={editingAreaMaterial.notes || ""}
+                  onChange={(e) => setEditingAreaMaterial({ ...editingAreaMaterial, notes: e.target.value })}
+                  className="bg-slate-700 border-slate-600"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setEditAreaMaterialDialogOpen(false)} className="border-slate-600">
+              إلغاء
+            </Button>
+            <Button onClick={updateAreaMaterial} className="bg-blue-600 hover:bg-blue-700">
+              حفظ التعديلات
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Template Material Dialog */}
       <Dialog open={templateMaterialDialogOpen} onOpenChange={setTemplateMaterialDialogOpen}>
         <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-md" dir="rtl">
