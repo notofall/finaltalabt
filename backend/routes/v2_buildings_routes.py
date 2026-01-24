@@ -1897,10 +1897,10 @@ async def export_area_materials_excel(
     current_user = Depends(get_current_user),
     session: AsyncSession = Depends(get_postgres_session)
 ):
-    """Export area materials to Excel file - تصدير مواد المساحة إلى Excel"""
+    """Export area materials to Excel file - تصدير مواد المساحة إلى Excel (متوافق مع الاستيراد)"""
     from fastapi.responses import StreamingResponse
     from openpyxl import Workbook
-    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.styles import Font, PatternFill, Border, Side
     from io import BytesIO
     from database.models import ProjectFloor, ProjectAreaMaterial
     
@@ -1933,23 +1933,28 @@ async def export_area_materials_excel(
     # Styles
     header_font = Font(bold=True, color="FFFFFF")
     header_fill = PatternFill(start_color="2E7D32", end_color="2E7D32", fill_type="solid")
+    border = Border(
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin')
+    )
     
-    # Headers
+    # Headers - متطابقة مع تنسيق الاستيراد
     headers = ["اسم المادة", "الوحدة", "المعامل", "الدور", "نسبة الهالك %", "الكمية", "السعر", "الإجمالي"]
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col, value=header)
         cell.font = header_font
         cell.fill = header_fill
+        cell.border = border
     
     # Data
     row = 2
     total_cost = 0
     for mat in area_materials:
-        # Calculate quantity
         calc_type = getattr(mat, 'calculation_type', 'all_floors') or 'all_floors'
         calc_method = getattr(mat, 'calculation_method', 'factor') or 'factor'
         
-        floor_name = "جميع الأدوار"
+        # اسم الدور
+        floor_name = ""  # فارغ = جميع الأدوار
         floor_area = total_area
         
         if calc_type == 'selected_floor' and getattr(mat, 'selected_floor_id', None):
@@ -1958,12 +1963,15 @@ async def export_area_materials_excel(
                 floor_name = floor.floor_name
                 floor_area = floor.area
         
+        # حساب الكمية
         if calc_method == 'direct':
             quantity = getattr(mat, 'direct_quantity', 0) or 0
+            factor_value = 0  # المعامل = 0 للكمية المباشرة
         else:
-            quantity = floor_area * (mat.factor or 0)
+            factor_value = mat.factor or 0
+            quantity = floor_area * factor_value
         
-        # Handle tile calculation
+        # حساب البلاط
         tile_width = getattr(mat, 'tile_width', 0) or 0
         tile_height = getattr(mat, 'tile_height', 0) or 0
         if tile_width > 0 and tile_height > 0 and floor_area > 0:
@@ -1971,21 +1979,21 @@ async def export_area_materials_excel(
             if tile_area_m2 > 0:
                 quantity = floor_area / tile_area_m2
         
-        # Apply waste
+        # تطبيق نسبة الهالك
         waste_pct = getattr(mat, 'waste_percentage', 0) or 0
-        quantity = quantity * (1 + waste_pct / 100)
+        quantity_with_waste = quantity * (1 + waste_pct / 100)
         
-        total_price = quantity * (mat.unit_price or 0)
+        total_price = quantity_with_waste * (mat.unit_price or 0)
         total_cost += total_price
         
-        ws.cell(row=row, column=1, value=mat.item_name)
-        ws.cell(row=row, column=2, value=mat.unit)
-        ws.cell(row=row, column=3, value=mat.factor or 0)
-        ws.cell(row=row, column=4, value=floor_name)
-        ws.cell(row=row, column=5, value=waste_pct)
-        ws.cell(row=row, column=6, value=round(quantity, 2))
-        ws.cell(row=row, column=7, value=mat.unit_price or 0)
-        ws.cell(row=row, column=8, value=round(total_price, 2))
+        ws.cell(row=row, column=1, value=mat.item_name).border = border
+        ws.cell(row=row, column=2, value=mat.unit).border = border
+        ws.cell(row=row, column=3, value=factor_value).border = border
+        ws.cell(row=row, column=4, value=floor_name).border = border
+        ws.cell(row=row, column=5, value=waste_pct).border = border
+        ws.cell(row=row, column=6, value=round(quantity_with_waste, 2)).border = border
+        ws.cell(row=row, column=7, value=mat.unit_price or 0).border = border
+        ws.cell(row=row, column=8, value=round(total_price, 2)).border = border
         row += 1
     
     # Total row
