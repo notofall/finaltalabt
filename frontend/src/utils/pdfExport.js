@@ -787,6 +787,146 @@ export const exportPurchaseOrdersTableToPDF = (orders, exportedBy = null, dateRa
   printHTML(html, 'قائمة أوامر الشراء');
 };
 
+// تصدير عرض سعر واحد (RFQ)
+export const exportRFQToPDF = (rfq, companySettings = null) => {
+  const settings = companySettings || getCompanySettings();
+  const companyHeader = generateCompanyHeader(settings);
+  const companyFooter = generateCompanyFooter(settings);
+  
+  const items = Array.isArray(rfq.items) ? rfq.items : [];
+  const suppliers = Array.isArray(rfq.suppliers) ? rfq.suppliers : [];
+  
+  const itemRows = items.map((item, idx) => `
+    <tr style="background: ${idx % 2 === 0 ? '#f8fafc' : '#fff'};">
+      <td style="text-align: center; font-weight: 600;">${idx + 1}</td>
+      <td>${item.item_code || '-'}</td>
+      <td style="font-weight: 600;">${item.name || item.item_name}</td>
+      <td style="text-align: center;">${item.quantity}</td>
+      <td style="text-align: center;">${item.unit}</td>
+      <td>${item.notes || '-'}</td>
+    </tr>
+  `).join('');
+  
+  const supplierRows = suppliers.map((s, idx) => `
+    <tr style="background: ${idx % 2 === 0 ? '#f8fafc' : '#fff'};">
+      <td style="text-align: center;">${idx + 1}</td>
+      <td style="font-weight: 600;">${s.supplier_name}</td>
+      <td>${s.contact_person || '-'}</td>
+      <td>${s.phone || '-'}</td>
+      <td>${s.email || '-'}</td>
+      <td><span class="badge badge-${s.status === 'quoted' ? 'green' : s.status === 'pending' ? 'yellow' : 'gray'}">${getRFQSupplierStatus(s.status)}</span></td>
+    </tr>
+  `).join('');
+
+  const html = `
+    ${companyHeader}
+    <div class="header" style="border-bottom: 3px solid #2563eb; padding-bottom: 15px;">
+      <div class="title" style="color: #2563eb;">طلب عرض سعر</div>
+      <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+        <div>
+          <span style="font-size: 12px; color: #6b7280;">رقم الطلب:</span>
+          <span style="font-size: 14px; font-weight: 700; color: #ea580c; margin-right: 5px;">${rfq.rfq_number || '-'}</span>
+        </div>
+        <div>
+          <span style="font-size: 12px; color: #6b7280;">التاريخ:</span>
+          <span style="font-size: 13px; font-weight: 600; margin-right: 5px;">${formatDate(rfq.created_at)}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; background: #f8fafc; padding: 12px; border-radius: 8px;">
+      <div>
+        <p style="font-size: 11px; color: #6b7280; margin: 0;">المشروع</p>
+        <p style="font-size: 13px; font-weight: 600; margin: 3px 0 0 0;">${rfq.project_name || '-'}</p>
+      </div>
+      <div>
+        <p style="font-size: 11px; color: #6b7280; margin: 0;">طلب المشرف</p>
+        <p style="font-size: 13px; font-weight: 600; margin: 3px 0 0 0;">${rfq.request_number || '-'}</p>
+      </div>
+      <div>
+        <p style="font-size: 11px; color: #6b7280; margin: 0;">صلاحية العرض (أيام)</p>
+        <p style="font-size: 13px; font-weight: 600; margin: 3px 0 0 0;">${rfq.validity_days || 7}</p>
+      </div>
+      <div>
+        <p style="font-size: 11px; color: #6b7280; margin: 0;">الحالة</p>
+        <p style="font-size: 13px; font-weight: 600; margin: 3px 0 0 0;"><span class="badge badge-${rfq.status === 'completed' ? 'green' : rfq.status === 'in_progress' ? 'yellow' : 'blue'}">${getRFQStatus(rfq.status)}</span></p>
+      </div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+      <h3 style="font-size: 14px; color: #1e3a5f; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px;">الأصناف المطلوبة (${items.length})</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40px;">#</th>
+            <th>الكود</th>
+            <th>الصنف</th>
+            <th style="text-align: center;">الكمية</th>
+            <th style="text-align: center;">الوحدة</th>
+            <th>ملاحظات</th>
+          </tr>
+        </thead>
+        <tbody>${itemRows}</tbody>
+      </table>
+    </div>
+    
+    ${suppliers.length > 0 ? `
+    <div style="margin-top: 25px;">
+      <h3 style="font-size: 14px; color: #1e3a5f; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px;">الموردين المدعوين (${suppliers.length})</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40px;">#</th>
+            <th>المورد</th>
+            <th>جهة الاتصال</th>
+            <th>الهاتف</th>
+            <th>البريد</th>
+            <th>الحالة</th>
+          </tr>
+        </thead>
+        <tbody>${supplierRows}</tbody>
+      </table>
+    </div>
+    ` : ''}
+    
+    ${rfq.notes ? `
+    <div style="margin-top: 20px; background: #fef3c7; padding: 12px; border-radius: 8px;">
+      <p style="font-size: 12px; font-weight: 600; color: #92400e; margin: 0 0 5px 0;">ملاحظات:</p>
+      <p style="font-size: 12px; color: #78350f; margin: 0;">${rfq.notes}</p>
+    </div>
+    ` : ''}
+    
+    <div class="footer">
+      <p>نظام إدارة طلبات المواد - تاريخ التصدير: ${formatDateShort(new Date().toISOString())}</p>
+    </div>
+    ${companyFooter}
+  `;
+
+  printHTML(html, `عرض_سعر_${rfq.rfq_number || rfq.id?.slice(0, 8)}`);
+};
+
+// دوال مساعدة لحالات RFQ
+const getRFQStatus = (status) => {
+  const map = {
+    'draft': 'مسودة',
+    'sent': 'مرسل',
+    'in_progress': 'جاري',
+    'completed': 'مكتمل',
+    'cancelled': 'ملغي'
+  };
+  return map[status] || status;
+};
+
+const getRFQSupplierStatus = (status) => {
+  const map = {
+    'pending': 'بانتظار الرد',
+    'quoted': 'تم التسعير',
+    'declined': 'رفض',
+    'winner': 'فائز'
+  };
+  return map[status] || status;
+};
+
 // تصدير تقرير الميزانية
 export const exportBudgetReportToPDF = (report, projectName = null) => {
   const categoriesRows = report.categories?.map((cat, idx) => `
