@@ -541,6 +541,17 @@ async def create_order(
     # Calculate total
     total_amount = sum(item.quantity * item.unit_price for item in data.items)
     
+    # التحقق من حد الموافقة للمدير العام
+    from database.models import SystemSetting
+    approval_limit_result = await session.execute(
+        select(SystemSetting).where(SystemSetting.key == "approval_limit")
+    )
+    approval_setting = approval_limit_result.scalar_one_or_none()
+    approval_limit = float(approval_setting.value) if approval_setting and approval_setting.value else 20000
+    
+    needs_gm = total_amount > approval_limit
+    order_status = "pending_gm_approval" if needs_gm else "pending_approval"
+    
     # Parse delivery date
     delivery_date = None
     if data.expected_delivery_date:
@@ -560,7 +571,8 @@ async def create_order(
         supplier_name=supplier.name,
         category_id=data.category_id,
         total_amount=total_amount,
-        status="pending_approval",
+        status=order_status,
+        needs_gm_approval=needs_gm,
         notes=data.notes,
         terms_conditions=data.terms_conditions,
         expected_delivery_date=delivery_date,
@@ -589,9 +601,10 @@ async def create_order(
     await session.commit()
     
     return {
-        "message": "تم إنشاء أمر الشراء بنجاح",
+        "message": "تم إنشاء أمر الشراء بنجاح" + (" - بانتظار موافقة المدير العام" if needs_gm else ""),
         "order_id": order.id,
-        "order_number": order_number
+        "order_number": order_number,
+        "needs_gm_approval": needs_gm
     }
 
 
