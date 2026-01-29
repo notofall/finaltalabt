@@ -967,20 +967,61 @@ const RFQManagement = () => {
               <h4 className="font-semibold mb-3 flex items-center gap-2">
                 <Package className="w-4 h-4" />
                 الأصناف المطلوبة *
+                <span className="text-xs text-slate-500 font-normal">(ابحث في الكتالوج أو أدخل يدوياً)</span>
               </h4>
               
+              {/* Catalog Search */}
+              <div className="relative mb-3">
+                <Input
+                  placeholder="🔍 ابحث في الكتالوج (بالاسم أو الكود)..."
+                  value={catalogSearch}
+                  onChange={(e) => setCatalogSearch(e.target.value)}
+                  className="bg-white border-emerald-300 focus:border-emerald-500"
+                />
+                {showCatalogDropdown && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                    {filteredCatalog.map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => selectCatalogItem(item)}
+                        className="p-3 hover:bg-emerald-50 cursor-pointer border-b last:border-b-0 flex justify-between items-center"
+                      >
+                        <div>
+                          <span className="font-semibold text-slate-800">{item.name}</span>
+                          {item.item_code && (
+                            <span className="text-xs text-slate-500 mr-2">({item.item_code})</span>
+                          )}
+                        </div>
+                        <div className="text-left">
+                          <span className="text-sm text-slate-600">{item.unit}</span>
+                          {item.price > 0 && (
+                            <span className="text-sm text-emerald-600 mr-2">{item.price} ر.س</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
               <div className="grid grid-cols-12 gap-2 mb-3">
-                <div className="col-span-5">
+                <div className="col-span-4">
                   <Input
                     placeholder="اسم الصنف"
                     value={newItem.item_name}
-                    onChange={(e) => setNewItem({ ...newItem, item_name: e.target.value })}
+                    onChange={(e) => setNewItem({ ...newItem, item_name: e.target.value, catalog_item_id: "" })}
+                    className={newItem.catalog_item_id ? "border-emerald-400 bg-emerald-50" : ""}
                   />
+                  {newItem.item_code && (
+                    <span className="text-xs text-emerald-600">✓ {newItem.item_code}</span>
+                  )}
                 </div>
                 <div className="col-span-2">
                   <Input
                     type="number"
                     placeholder="الكمية"
+                    min="0.01"
+                    step="0.01"
                     value={newItem.quantity}
                     onChange={(e) => setNewItem({ ...newItem, quantity: parseFloat(e.target.value) || 0 })}
                   />
@@ -992,7 +1033,7 @@ const RFQManagement = () => {
                     onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
                   />
                 </div>
-                <div className="col-span-2">
+                <div className="col-span-3">
                   <Input
                     type="number"
                     placeholder="السعر التقديري"
@@ -1001,7 +1042,7 @@ const RFQManagement = () => {
                   />
                 </div>
                 <div className="col-span-1">
-                  <Button onClick={addItemToForm} size="sm" className="w-full h-full">
+                  <Button onClick={addItemToForm} size="sm" className="w-full h-full bg-emerald-600 hover:bg-emerald-700">
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
