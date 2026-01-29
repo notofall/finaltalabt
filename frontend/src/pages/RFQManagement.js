@@ -229,7 +229,14 @@ const RFQManagement = () => {
         delivery_location: formData.delivery_location || null,
         delivery_terms: formData.delivery_terms || null,
         notes: formData.notes || null,
-        description: formData.description || null
+        description: formData.description || null,
+        // Clean items - convert empty strings to null for optional fields
+        items: formData.items.map(item => ({
+          ...item,
+          item_code: item.item_code || null,
+          catalog_item_id: item.catalog_item_id || null,
+          estimated_price: item.estimated_price ? parseFloat(item.estimated_price) : null
+        }))
       };
       
       const response = await axios.post(`${API_V2_URL}/rfq/`, cleanedFormData, config);
