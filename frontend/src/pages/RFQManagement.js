@@ -1053,6 +1053,7 @@ const RFQManagement = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-right">الصنف</TableHead>
+                      <TableHead className="text-center">الكود</TableHead>
                       <TableHead className="text-center">الكمية</TableHead>
                       <TableHead className="text-center">الوحدة</TableHead>
                       <TableHead className="text-center">السعر التقديري</TableHead>
@@ -1061,8 +1062,12 @@ const RFQManagement = () => {
                   </TableHeader>
                   <TableBody>
                     {formData.items.map((item, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell>{item.item_name}</TableCell>
+                      <TableRow key={idx} className={item.catalog_item_id ? "bg-emerald-50/50" : ""}>
+                        <TableCell>
+                          {item.item_name}
+                          {item.catalog_item_id && <span className="text-xs text-emerald-600 mr-1">✓</span>}
+                        </TableCell>
+                        <TableCell className="text-center text-slate-500 text-sm">{item.item_code || "-"}</TableCell>
                         <TableCell className="text-center">{item.quantity}</TableCell>
                         <TableCell className="text-center">{item.unit}</TableCell>
                         <TableCell className="text-center">
