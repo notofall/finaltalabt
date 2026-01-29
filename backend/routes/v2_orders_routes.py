@@ -474,6 +474,21 @@ async def create_order_from_request(
     # Update order total
     order.total_amount = total_amount
     
+    # التحقق من حد الموافقة للمدير العام
+    from database.models import SystemSetting
+    approval_limit_result = await session.execute(
+        select(SystemSetting).where(SystemSetting.key == "approval_limit")
+    )
+    approval_setting = approval_limit_result.scalar_one_or_none()
+    approval_limit = float(approval_setting.value) if approval_setting and approval_setting.value else 20000
+    
+    if total_amount > approval_limit:
+        order.needs_gm_approval = True
+        order.status = "pending_gm_approval"
+    else:
+        order.needs_gm_approval = False
+        order.status = "pending"
+    
     # Update request status
     request.status = "po_issued"
     request.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -481,10 +496,11 @@ async def create_order_from_request(
     await session.commit()
     
     return {
-        "message": "تم إنشاء أمر الشراء بنجاح",
+        "message": "تم إنشاء أمر الشراء بنجاح" + (" - بانتظار موافقة المدير العام" if order.needs_gm_approval else ""),
         "order_id": order.id,
         "order_number": order_number,
-        "total_amount": total_amount
+        "total_amount": total_amount,
+        "needs_gm_approval": order.needs_gm_approval
     }
 
 
