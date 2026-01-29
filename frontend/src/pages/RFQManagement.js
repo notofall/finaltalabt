@@ -76,6 +76,8 @@ const RFQManagement = () => {
   // New item state
   const [newItem, setNewItem] = useState({
     item_name: "",
+    item_code: "",
+    catalog_item_id: "",
     quantity: 1,
     unit: "قطعة",
     estimated_price: ""
