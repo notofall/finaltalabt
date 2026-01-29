@@ -287,7 +287,8 @@ const RFQManagement = () => {
       items: [...prev.items, { ...newItem }]
     }));
     
-    setNewItem({ item_name: "", quantity: 1, unit: "قطعة", estimated_price: "" });
+    setNewItem({ item_name: "", item_code: "", catalog_item_id: "", quantity: 1, unit: "قطعة", estimated_price: "" });
+    setCatalogSearch("");
   };
   
   // Remove item from form
