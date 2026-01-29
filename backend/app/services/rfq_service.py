@@ -779,7 +779,7 @@ class RFQService(BaseService):
             supplier_name=quotation.supplier_name,
             manager_id=created_by,
             manager_name=created_by_name,
-            status="pending",
+            status=order_status,
             needs_gm_approval=needs_gm_approval,
             total_amount=total_amount,
             notes=notes or quotation.notes,
