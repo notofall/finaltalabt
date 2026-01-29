@@ -753,8 +753,17 @@ class RFQService(BaseService):
         # Calculate order total
         total_amount = quotation.final_amount
         
-        # Determine if GM approval is needed (e.g., orders > 50000)
-        needs_gm_approval = total_amount > 50000
+        # الحصول على حد الموافقة من الإعدادات
+        from database.models import SystemSetting
+        approval_limit_result = await self.session.execute(
+            select(SystemSetting).where(SystemSetting.key == "approval_limit")
+        )
+        approval_setting = approval_limit_result.scalar_one_or_none()
+        approval_limit = float(approval_setting.value) if approval_setting and approval_setting.value else 20000
+        
+        # Determine if GM approval is needed
+        needs_gm_approval = total_amount > approval_limit
+        order_status = "pending_gm_approval" if needs_gm_approval else "pending_approval"
         
         # Create purchase order
         order_id = str(uuid.uuid4())
