@@ -33,6 +33,10 @@ export const fetchAndCacheCompanySettings = async (token) => {
     });
     if (res.data) {
       console.log('Company settings fetched:', res.data);
+      // تحويل الشعار لـ URL كامل إذا كان نسبي
+      if (res.data.company_logo && res.data.company_logo.startsWith('/')) {
+        res.data.company_logo = `${API_URL}${res.data.company_logo}`;
+      }
       companySettingsCache = res.data;
       return res.data;
     }
