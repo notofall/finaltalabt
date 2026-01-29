@@ -487,7 +487,7 @@ async def create_order_from_request(
         order.status = "pending_gm_approval"
     else:
         order.needs_gm_approval = False
-        order.status = "pending"
+        order.status = "pending_approval"
     
     # Update request status
     request.status = "po_issued"
