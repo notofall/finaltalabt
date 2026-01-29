@@ -114,7 +114,7 @@ const RFQManagement = () => {
         axios.get(`${API_V2_URL}/rfq/stats`, config),
         axios.get(`${API_V2_URL}/suppliers/`, config),
         axios.get(`${API_V2_URL}/projects/`, config),
-        axios.get(`${API_V2_URL}/catalog/items?limit=500`, config)
+        axios.get(`${API_V2_URL}/catalog/items?limit=100`, config)
       ]);
       
       setRfqs(rfqsRes.data.items || []);
