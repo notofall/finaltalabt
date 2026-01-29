@@ -95,23 +95,31 @@ const RFQManagement = () => {
   const [submitting, setSubmitting] = useState(false);
   const [filterStatus, setFilterStatus] = useState("");
   
+  // Catalog state for item selection
+  const [catalogItems, setCatalogItems] = useState([]);
+  const [catalogSearch, setCatalogSearch] = useState("");
+  const [filteredCatalog, setFilteredCatalog] = useState([]);
+  const [showCatalogDropdown, setShowCatalogDropdown] = useState(false);
+  
   // Fetch data
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const config = getAuthHeaders();
       
-      const [rfqsRes, statsRes, suppliersRes, projectsRes] = await Promise.all([
+      const [rfqsRes, statsRes, suppliersRes, projectsRes, catalogRes] = await Promise.all([
         axios.get(`${API_V2_URL}/rfq/`, config),
         axios.get(`${API_V2_URL}/rfq/stats`, config),
         axios.get(`${API_V2_URL}/suppliers/`, config),
-        axios.get(`${API_V2_URL}/projects/`, config)
+        axios.get(`${API_V2_URL}/projects/`, config),
+        axios.get(`${API_V2_URL}/catalog/items?limit=500`, config)
       ]);
       
       setRfqs(rfqsRes.data.items || []);
       setStats(statsRes.data || {});
       setSuppliers(suppliersRes.data.items || []);
       setProjects(projectsRes.data.items || []);
+      setCatalogItems(catalogRes.data.items || catalogRes.data || []);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("فشل في تحميل البيانات");
@@ -119,6 +127,35 @@ const RFQManagement = () => {
       setLoading(false);
     }
   }, [API_V2_URL, getAuthHeaders]);
+  
+  // Filter catalog items based on search
+  useEffect(() => {
+    if (catalogSearch.trim()) {
+      const filtered = catalogItems.filter(item => 
+        item.name?.toLowerCase().includes(catalogSearch.toLowerCase()) ||
+        item.item_code?.toLowerCase().includes(catalogSearch.toLowerCase())
+      ).slice(0, 10);
+      setFilteredCatalog(filtered);
+      setShowCatalogDropdown(filtered.length > 0);
+    } else {
+      setFilteredCatalog([]);
+      setShowCatalogDropdown(false);
+    }
+  }, [catalogSearch, catalogItems]);
+  
+  // Select item from catalog
+  const selectCatalogItem = (item) => {
+    setNewItem({
+      item_name: item.name,
+      item_code: item.item_code,
+      catalog_item_id: item.id,
+      quantity: 1,
+      unit: item.unit || "قطعة",
+      estimated_price: item.price || ""
+    });
+    setCatalogSearch("");
+    setShowCatalogDropdown(false);
+  };
   
   // Fetch request details when coming from order dialog
   const fetchRequestDetails = useCallback(async (requestId) => {
