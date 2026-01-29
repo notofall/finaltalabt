@@ -219,7 +219,20 @@ const RFQManagement = () => {
       setSubmitting(true);
       const config = getAuthHeaders();
       
-      const response = await axios.post(`${API_V2_URL}/rfq/`, formData, config);
+      // Convert empty strings to null for optional fields
+      const cleanedFormData = {
+        ...formData,
+        submission_deadline: formData.submission_deadline || null,
+        project_id: formData.project_id || null,
+        project_name: formData.project_name || null,
+        payment_terms: formData.payment_terms || null,
+        delivery_location: formData.delivery_location || null,
+        delivery_terms: formData.delivery_terms || null,
+        notes: formData.notes || null,
+        description: formData.description || null
+      };
+      
+      const response = await axios.post(`${API_V2_URL}/rfq/`, cleanedFormData, config);
       
       toast.success(`تم إنشاء طلب عرض السعر ${response.data.rfq_number}`);
       setCreateDialogOpen(false);
