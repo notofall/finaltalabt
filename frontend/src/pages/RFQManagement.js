@@ -228,7 +228,12 @@ const RFQManagement = () => {
       fetchData();
     } catch (error) {
       console.error("Error creating RFQ:", error);
-      toast.error(error.response?.data?.detail || "فشل في إنشاء طلب عرض السعر");
+      const errorDetail = error.response?.data?.detail;
+      // Handle Pydantic validation errors (array of objects) vs string errors
+      const errorMessage = Array.isArray(errorDetail) 
+        ? errorDetail[0]?.msg || "فشل في إنشاء طلب عرض السعر"
+        : (typeof errorDetail === 'string' ? errorDetail : "فشل في إنشاء طلب عرض السعر");
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
