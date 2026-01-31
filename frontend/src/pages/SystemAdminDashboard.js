@@ -488,7 +488,7 @@ export default function SystemAdminDashboard() {
     fetchSchemaInfo();
     fetchDeletePermission();
     fetchDeletedOrders();
-  }, [fetchData]);
+  }, [fetchData, fetchSchemaInfo, fetchDeletePermission, fetchDeletedOrders]);
 
   // User Management
   const handleCreateUser = async () => {
