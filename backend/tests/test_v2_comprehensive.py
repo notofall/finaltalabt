@@ -17,7 +17,7 @@ import uuid
 from datetime import datetime, timedelta
 
 # Base URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://material-maestro.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://talafix.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 TEST_ACCOUNTS = {

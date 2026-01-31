@@ -346,7 +346,7 @@ datetime.now(timezone.utc)
 ### URLs
 ```
 Production: http://13.235.247.19
-Preview: https://material-maestro.preview.emergentagent.com
+Preview: https://talafix.preview.emergentagent.com
 API Base: /api/v2/
 ```
 
