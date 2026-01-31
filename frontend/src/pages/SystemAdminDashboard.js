@@ -478,6 +478,7 @@ export default function SystemAdminDashboard() {
 
   useEffect(() => {
     fetchData();
+    fetchSchemaInfo();
   }, [fetchData]);
 
   // User Management
