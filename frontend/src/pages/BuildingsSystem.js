@@ -148,7 +148,7 @@ const BuildingsSystem = () => {
     } finally {
       setLoading(false);
     }
-  }, [API_URL, API_V2_URL, getAuthHeaders]);
+  }, [API_V2_URL, BUILDINGS_API, getAuthHeaders]);
 
   // Fetch project details
   const fetchProjectDetails = useCallback(async (projectId) => {
