@@ -7,20 +7,19 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional, Any, Dict
 from enum import Enum
-from sqlalchemy import Column, String, Text, DateTime, Integer
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.connection import Base
+from database.models import AuditLog
 
 # Configure audit logger
 audit_logger = logging.getLogger("audit")
 audit_logger.setLevel(logging.INFO)
 
-# File handler for audit logs
-file_handler = logging.FileHandler("/var/log/talabat_audit.log")
-file_handler.setFormatter(logging.Formatter(
-    '%(asctime)s | %(levelname)s | %(message)s'
+# Console handler for audit logs (file handler can be added in production)
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter(
+    '%(asctime)s | AUDIT | %(message)s'
 ))
-audit_logger.addHandler(file_handler)
+audit_logger.addHandler(console_handler)
 
 
 class AuditAction(str, Enum):
@@ -70,26 +69,10 @@ class AuditAction(str, Enum):
     PERMISSION_REVOKE = "permission_revoke"
 
 
-class AuditLog(Base):
-    """Audit log database model"""
-    __tablename__ = "audit_logs"
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
-    action = Column(String(50), nullable=False, index=True)
-    user_id = Column(String(36), nullable=True, index=True)
-    user_name = Column(String(100), nullable=True)
-    user_role = Column(String(50), nullable=True)
-    ip_address = Column(String(45), nullable=True)
-    resource_type = Column(String(50), nullable=True)  # e.g., "order", "user", "project"
-    resource_id = Column(String(36), nullable=True)
-    details = Column(Text, nullable=True)  # JSON string for additional details
-    status = Column(String(20), default="success")  # success, failed, error
-
-
 class AuditLogger:
     """
     Audit logger for recording sensitive operations.
+    Uses existing AuditLog model from database.models
     
     Usage:
         from app.audit_logger import audit_log
@@ -100,10 +83,10 @@ class AuditLogger:
             user_id=current_user.id,
             user_name=current_user.name,
             user_role=current_user.role,
-            ip_address=request.client.host,
-            resource_type="order",
-            resource_id=order_id,
-            details={"amount": 50000}
+            entity_type="order",
+            entity_id=order_id,
+            description="اعتماد أمر شراء",
+            changes={"status": "approved", "amount": 50000}
         )
     """
     
@@ -111,45 +94,40 @@ class AuditLogger:
         self,
         session: AsyncSession,
         action: AuditAction,
-        user_id: Optional[str] = None,
-        user_name: Optional[str] = None,
-        user_role: Optional[str] = None,
-        ip_address: Optional[str] = None,
-        resource_type: Optional[str] = None,
-        resource_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
-        status: str = "success"
+        user_id: str,
+        user_name: str,
+        user_role: str,
+        entity_type: str,
+        entity_id: str,
+        description: str,
+        changes: Optional[Dict[str, Any]] = None
     ) -> None:
-        """Log an audit event to database and file"""
+        """Log an audit event to database"""
         
-        # Create log message
+        action_value = action.value if isinstance(action, AuditAction) else action
+        
+        # Create log message for console
         log_message = {
-            "action": action.value if isinstance(action, AuditAction) else action,
+            "action": action_value,
             "user_id": user_id,
             "user_name": user_name,
-            "user_role": user_role,
-            "ip_address": ip_address,
-            "resource_type": resource_type,
-            "resource_id": resource_id,
-            "details": details,
-            "status": status
+            "entity_type": entity_type,
+            "entity_id": entity_id,
+            "description": description
         }
-        
-        # Log to file
         audit_logger.info(json.dumps(log_message, ensure_ascii=False, default=str))
         
         # Log to database
         try:
             audit_entry = AuditLog(
-                action=action.value if isinstance(action, AuditAction) else action,
+                action=action_value,
                 user_id=user_id,
                 user_name=user_name,
                 user_role=user_role,
-                ip_address=ip_address,
-                resource_type=resource_type,
-                resource_id=resource_id,
-                details=json.dumps(details, ensure_ascii=False, default=str) if details else None,
-                status=status
+                entity_type=entity_type,
+                entity_id=entity_id,
+                description=description,
+                changes=json.dumps(changes, ensure_ascii=False, default=str) if changes else None
             )
             session.add(audit_entry)
             await session.commit()
@@ -160,27 +138,25 @@ class AuditLogger:
     def log_sync(
         self,
         action: AuditAction,
-        user_id: Optional[str] = None,
-        user_name: Optional[str] = None,
-        user_role: Optional[str] = None,
-        ip_address: Optional[str] = None,
-        resource_type: Optional[str] = None,
-        resource_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
-        status: str = "success"
+        user_id: str,
+        user_name: str,
+        entity_type: str,
+        entity_id: str,
+        description: str,
+        changes: Optional[Dict[str, Any]] = None
     ) -> None:
-        """Synchronous log to file only (for use outside async context)"""
+        """Synchronous log to console only (for use outside async context)"""
+        
+        action_value = action.value if isinstance(action, AuditAction) else action
         
         log_message = {
-            "action": action.value if isinstance(action, AuditAction) else action,
+            "action": action_value,
             "user_id": user_id,
             "user_name": user_name,
-            "user_role": user_role,
-            "ip_address": ip_address,
-            "resource_type": resource_type,
-            "resource_id": resource_id,
-            "details": details,
-            "status": status
+            "entity_type": entity_type,
+            "entity_id": entity_id,
+            "description": description,
+            "changes": changes
         }
         
         audit_logger.info(json.dumps(log_message, ensure_ascii=False, default=str))
@@ -191,15 +167,17 @@ audit_log = AuditLogger()
 
 
 # Helper functions for common audit scenarios
-async def log_login(session: AsyncSession, user_id: str, user_name: str, ip_address: str, success: bool = True):
+async def log_login(session: AsyncSession, user_id: str, user_name: str, user_role: str, success: bool = True):
     """Log login attempt"""
     await audit_log.log(
         session=session,
         action=AuditAction.LOGIN if success else AuditAction.LOGIN_FAILED,
         user_id=user_id,
         user_name=user_name,
-        ip_address=ip_address,
-        status="success" if success else "failed"
+        user_role=user_role,
+        entity_type="auth",
+        entity_id=user_id,
+        description="تسجيل دخول ناجح" if success else "محاولة تسجيل دخول فاشلة"
     )
 
 
@@ -210,8 +188,8 @@ async def log_order_action(
     user_id: str,
     user_name: str,
     user_role: str,
-    ip_address: str,
-    details: Optional[Dict] = None
+    description: str,
+    changes: Optional[Dict] = None
 ):
     """Log order-related action"""
     await audit_log.log(
@@ -220,10 +198,10 @@ async def log_order_action(
         user_id=user_id,
         user_name=user_name,
         user_role=user_role,
-        ip_address=ip_address,
-        resource_type="order",
-        resource_id=order_id,
-        details=details
+        entity_type="order",
+        entity_id=order_id,
+        description=description,
+        changes=changes
     )
 
 
@@ -232,7 +210,7 @@ async def log_data_export(
     export_type: str,
     user_id: str,
     user_name: str,
-    ip_address: str,
+    user_role: str,
     record_count: int
 ):
     """Log data export"""
@@ -241,7 +219,9 @@ async def log_data_export(
         action=AuditAction.DATA_EXPORT,
         user_id=user_id,
         user_name=user_name,
-        ip_address=ip_address,
-        resource_type=export_type,
-        details={"record_count": record_count}
+        user_role=user_role,
+        entity_type=export_type,
+        entity_id="export",
+        description=f"تصدير بيانات {export_type}",
+        changes={"record_count": record_count}
     )
