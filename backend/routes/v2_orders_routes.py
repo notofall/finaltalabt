@@ -18,7 +18,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func
 
-from database import PurchaseOrder, PurchaseOrderItem
+from database import PurchaseOrder, PurchaseOrderItem, MaterialRequest
 from database.connection import get_postgres_session
 from sqlalchemy import select
 
