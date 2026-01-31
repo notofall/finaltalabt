@@ -434,6 +434,137 @@ async def create_backup(
                 "status": pq.status, "priority": pq.priority, "notes": pq.notes
             })
         
+        # ============= Buildings System =============
+        
+        # Unit Templates
+        result = await session.execute(select(UnitTemplate))
+        for t in result.scalars().all():
+            backup_data["unit_templates"].append({
+                "id": t.id, "name": t.name, "description": getattr(t, 'description', None),
+                "project_id": t.project_id, "project_name": t.project_name,
+                "count": t.count, "created_by": t.created_by
+            })
+        
+        # Unit Template Materials
+        result = await session.execute(select(UnitTemplateMaterial))
+        for m in result.scalars().all():
+            backup_data["unit_template_materials"].append({
+                "id": m.id, "template_id": m.template_id,
+                "item_code": m.item_code, "item_name": m.item_name,
+                "unit": m.unit, "factor": m.factor, "unit_price": m.unit_price,
+                "catalog_item_id": getattr(m, 'catalog_item_id', None)
+            })
+        
+        # Project Floors
+        result = await session.execute(select(ProjectFloor))
+        for f in result.scalars().all():
+            backup_data["project_floors"].append({
+                "id": f.id, "project_id": f.project_id,
+                "floor_name": f.floor_name, "floor_number": f.floor_number,
+                "area": f.area, "notes": getattr(f, 'notes', None)
+            })
+        
+        # Project Area Materials
+        result = await session.execute(select(ProjectAreaMaterial))
+        for m in result.scalars().all():
+            backup_data["project_area_materials"].append({
+                "id": m.id, "project_id": m.project_id,
+                "catalog_item_id": getattr(m, 'catalog_item_id', None),
+                "item_code": m.item_code, "item_name": m.item_name,
+                "unit": m.unit, "calculation_method": m.calculation_method,
+                "factor": m.factor, "direct_quantity": m.direct_quantity,
+                "unit_price": m.unit_price, "calculation_type": m.calculation_type,
+                "selected_floor_id": getattr(m, 'selected_floor_id', None),
+                "tile_width": m.tile_width, "tile_height": m.tile_height,
+                "waste_percentage": m.waste_percentage, "notes": getattr(m, 'notes', None)
+            })
+        
+        # Supply Tracking
+        result = await session.execute(select(SupplyTracking))
+        for s in result.scalars().all():
+            backup_data["supply_tracking"].append({
+                "id": s.id, "project_id": s.project_id,
+                "item_code": s.item_code, "item_name": s.item_name,
+                "unit": s.unit, "required_quantity": s.required_quantity,
+                "ordered_quantity": getattr(s, 'ordered_quantity', 0),
+                "received_quantity": s.received_quantity,
+                "unit_price": s.unit_price, "source": s.source,
+                "source_note": getattr(s, 'source_note', None),
+                "notes": getattr(s, 'notes', None)
+            })
+        
+        # Buildings Permissions
+        result = await session.execute(select(BuildingsPermission))
+        for p in result.scalars().all():
+            backup_data["buildings_permissions"].append({
+                "id": p.id, "user_id": p.user_id, "user_name": p.user_name,
+                "project_id": p.project_id, "project_name": p.project_name,
+                "permission_type": p.permission_type,
+                "granted_by": p.granted_by, "granted_by_name": p.granted_by_name
+            })
+        
+        # ============= RFQ System =============
+        
+        # Quotation Requests
+        result = await session.execute(select(QuotationRequest))
+        for r in result.scalars().all():
+            backup_data["quotation_requests"].append({
+                "id": r.id, "request_number": r.request_number,
+                "title": r.title, "description": getattr(r, 'description', None),
+                "project_id": getattr(r, 'project_id', None),
+                "project_name": getattr(r, 'project_name', None),
+                "status": r.status, "priority": getattr(r, 'priority', 'normal'),
+                "deadline": r.deadline.isoformat() if r.deadline else None,
+                "created_by": r.created_by, "created_by_name": r.created_by_name,
+                "notes": getattr(r, 'notes', None)
+            })
+        
+        # Quotation Request Items
+        result = await session.execute(select(QuotationRequestItem))
+        for i in result.scalars().all():
+            backup_data["quotation_request_items"].append({
+                "id": i.id, "request_id": i.request_id,
+                "item_name": i.item_name, "quantity": i.quantity,
+                "unit": i.unit, "specifications": getattr(i, 'specifications', None),
+                "catalog_item_id": getattr(i, 'catalog_item_id', None),
+                "item_code": getattr(i, 'item_code', None)
+            })
+        
+        # Quotation Request Suppliers
+        result = await session.execute(select(QuotationRequestSupplier))
+        for s in result.scalars().all():
+            backup_data["quotation_request_suppliers"].append({
+                "id": s.id, "request_id": s.request_id,
+                "supplier_id": s.supplier_id, "supplier_name": s.supplier_name,
+                "status": s.status, "sent_at": s.sent_at.isoformat() if s.sent_at else None
+            })
+        
+        # Supplier Quotations
+        result = await session.execute(select(SupplierQuotation))
+        for q in result.scalars().all():
+            backup_data["supplier_quotations"].append({
+                "id": q.id, "request_id": q.request_id,
+                "supplier_id": q.supplier_id, "supplier_name": q.supplier_name,
+                "quotation_number": getattr(q, 'quotation_number', None),
+                "total_amount": q.total_amount, "discount_percentage": getattr(q, 'discount_percentage', 0),
+                "final_amount": q.final_amount, "validity_days": getattr(q, 'validity_days', 30),
+                "delivery_days": getattr(q, 'delivery_days', 7),
+                "payment_terms": getattr(q, 'payment_terms', None),
+                "status": q.status, "notes": getattr(q, 'notes', None),
+                "is_selected": getattr(q, 'is_selected', False)
+            })
+        
+        # Supplier Quotation Items
+        result = await session.execute(select(SupplierQuotationItem))
+        for i in result.scalars().all():
+            backup_data["supplier_quotation_items"].append({
+                "id": i.id, "quotation_id": i.quotation_id,
+                "request_item_id": getattr(i, 'request_item_id', None),
+                "item_name": i.item_name, "quantity": i.quantity,
+                "unit": i.unit, "unit_price": i.unit_price,
+                "total_price": i.total_price, "notes": getattr(i, 'notes', None)
+            })
+        
         # Create JSON
         json_content = json.dumps(backup_data, ensure_ascii=False, indent=2)
         
