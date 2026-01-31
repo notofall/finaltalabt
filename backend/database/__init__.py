@@ -40,6 +40,13 @@ from .models import (
     SupplierQuotation,
     SupplierQuotationItem
 )
+from .schema_version import (
+    SchemaVersion,
+    BackupMetadata,
+    CURRENT_SCHEMA_VERSION,
+    ALL_TABLES,
+    SCHEMA_CHANGELOG
+)
 
 __all__ = [
     # Config
@@ -79,5 +86,11 @@ __all__ = [
     "QuotationRequestItem",
     "QuotationRequestSupplier",
     "SupplierQuotation",
-    "SupplierQuotationItem"
+    "SupplierQuotationItem",
+    # Schema Version
+    "SchemaVersion",
+    "BackupMetadata",
+    "CURRENT_SCHEMA_VERSION",
+    "ALL_TABLES",
+    "SCHEMA_CHANGELOG"
 ]
