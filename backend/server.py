@@ -83,6 +83,7 @@ app.include_router(v2_system_router)
 app.include_router(v2_reports_router)
 app.include_router(v2_rfq_router)
 app.include_router(v2_backup_router)
+app.include_router(v2_global_reports_router)
 
 # ==================== CORS Configuration ====================
 app.add_middleware(
