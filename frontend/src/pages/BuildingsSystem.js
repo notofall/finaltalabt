@@ -75,6 +75,14 @@ const BuildingsSystem = () => {
     notes: ""
   });
   
+  // Batch Area Materials - إضافة مواد متعددة
+  const [batchAreaMaterials, setBatchAreaMaterials] = useState([]);
+  const [batchFloorScope, setBatchFloorScope] = useState("all_floors");
+  const [batchSelectedFloorId, setBatchSelectedFloorId] = useState("");
+  const [batchCatalogSearch, setBatchCatalogSearch] = useState("");
+  const [showBatchCatalogDropdown, setShowBatchCatalogDropdown] = useState(false);
+  const [savingBatch, setSavingBatch] = useState(false);
+  
   // Supply Tracking
   const [supplyItems, setSupplyItems] = useState([]);
   
