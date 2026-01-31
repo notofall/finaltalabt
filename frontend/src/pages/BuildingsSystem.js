@@ -2912,8 +2912,8 @@ const BuildingsSystem = () => {
                     className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white"
                   >
                     <option value="">-- اختر الدور --</option>
-                    {selectedProject?.floors?.map((floor) => (
-                      <option key={floor.id} value={floor.id}>{floor.name}</option>
+                    {floors.map((floor) => (
+                      <option key={floor.id} value={floor.id}>{floor.floor_name} (مساحة: {floor.area} م²)</option>
                     ))}
                   </select>
                 </div>
