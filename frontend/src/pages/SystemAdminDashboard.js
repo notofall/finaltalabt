@@ -157,7 +157,14 @@ export default function SystemAdminDashboard() {
       setUsers(usersRes.data);
       setCompanySettings(prev => ({ ...prev, ...settingsRes.data }));
       if (settingsRes.data.company_logo) {
-        setLogoPreview(settingsRes.data.company_logo);
+        // Use base64 if available, otherwise use URL
+        const logoSrc = settingsRes.data.company_logo_base64 || settingsRes.data.company_logo;
+        // If it's a relative URL, prepend the API base URL
+        if (logoSrc && !logoSrc.startsWith('data:') && !logoSrc.startsWith('http')) {
+          setLogoPreview(`${API_V2.replace('/api/v2', '')}${logoSrc}`);
+        } else {
+          setLogoPreview(logoSrc);
+        }
       }
     } catch (error) {
       console.error("Error fetching data:", error);
