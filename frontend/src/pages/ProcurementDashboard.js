@@ -2356,96 +2356,65 @@ const ProcurementDashboard = () => {
             <h2 className="text-lg font-bold flex items-center gap-2">
               <Truck className="w-5 h-5 text-green-600" />أوامر الشراء
             </h2>
-            {/* Filter Buttons for Orders - Reordered */}
-            <div className="flex flex-wrap gap-2">
-              <Button 
-                size="sm" 
-                variant={ordersViewMode === "pending" ? "default" : "outline"}
-                onClick={() => setOrdersViewMode("pending")}
-                className={`h-8 text-xs ${ordersViewMode === "pending" ? "bg-yellow-600" : "text-yellow-700 border-yellow-300"}`}
-              >
-                بانتظار الاعتماد
-                <Badge className="mr-1 bg-yellow-500 text-white text-xs">
-                  {filteredOrders.filter(o => o.status === "pending_approval").length}
-                </Badge>
-              </Button>
-              <Button 
-                size="sm" 
-                variant={ordersViewMode === "pending_gm" ? "default" : "outline"}
-                onClick={() => setOrdersViewMode("pending_gm")}
-                className={`h-8 text-xs ${ordersViewMode === "pending_gm" ? "bg-purple-600" : "text-purple-700 border-purple-300"}`}
-              >
-                بانتظار المدير العام
-                <Badge className="mr-1 bg-purple-500 text-white text-xs">
-                  {filteredOrders.filter(o => o.status === "pending_gm_approval").length}
-                </Badge>
-              </Button>
-              <Button 
-                size="sm" 
-                variant={ordersViewMode === "approved" ? "default" : "outline"}
-                onClick={() => setOrdersViewMode("approved")}
-                className={`h-8 text-xs ${ordersViewMode === "approved" ? "bg-green-600" : "text-green-700 border-green-300"}`}
-              >
-                معتمدة
-                <Badge className="mr-1 bg-green-500 text-white text-xs">
-                  {filteredOrders.filter(o => ["approved", "printed"].includes(o.status)).length}
-                </Badge>
-              </Button>
-              <Button 
-                size="sm" 
-                variant={ordersViewMode === "shipped" ? "default" : "outline"}
-                onClick={() => setOrdersViewMode("shipped")}
-                className={`h-8 text-xs ${ordersViewMode === "shipped" ? "bg-blue-600" : "text-blue-700 border-blue-300"}`}
-              >
-                تم الشحن
-                <Badge className="mr-1 bg-blue-500 text-white text-xs">
-                  {filteredOrders.filter(o => ["shipped", "partially_delivered"].includes(o.status)).length}
-                </Badge>
-              </Button>
-              <Button 
-                size="sm" 
-                variant={ordersViewMode === "delivered" ? "default" : "outline"}
-                onClick={() => setOrdersViewMode("delivered")}
-                className={`h-8 text-xs ${ordersViewMode === "delivered" ? "bg-emerald-600" : "text-emerald-700 border-emerald-300"}`}
-              >
-                تم التسليم
-                <Badge className="mr-1 bg-emerald-500 text-white text-xs">
-                  {filteredOrders.filter(o => o.status === "delivered").length}
-                </Badge>
-              </Button>
-              <Button 
-                size="sm" 
-                variant={ordersViewMode === "rejected_gm" ? "default" : "outline"}
-                onClick={() => setOrdersViewMode("rejected_gm")}
-                className={`h-8 text-xs ${ordersViewMode === "rejected_gm" ? "bg-red-600" : "text-red-700 border-red-300"}`}
-              >
-                مرفوض GM
-                <Badge className="mr-1 bg-red-500 text-white text-xs">
-                  {filteredOrders.filter(o => o.status === "rejected_by_gm").length}
-                </Badge>
-              </Button>
-              <Button 
-                size="sm" 
-                variant={ordersViewMode === "unlinked" ? "default" : "outline"}
-                onClick={() => setOrdersViewMode("unlinked")}
-                className={`h-8 text-xs ${ordersViewMode === "unlinked" ? "bg-orange-600" : "text-orange-700 border-orange-300"}`}
-              >
-                غير مرتبط
-                <Badge className="mr-1 bg-orange-500 text-white text-xs">
-                  {filteredOrders.filter(o => o.items?.some(item => !item.catalog_item_id)).length}
-                </Badge>
-              </Button>
-              <Button 
-                size="sm" 
-                variant={ordersViewMode === "all" ? "default" : "outline"}
-                onClick={() => setOrdersViewMode("all")}
-                className={`h-8 text-xs ${ordersViewMode === "all" ? "bg-slate-800" : ""}`}
-              >
-                الكل
-                <Badge className="mr-1 bg-slate-600 text-white text-xs">{filteredOrders.length}</Badge>
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => exportPurchaseOrdersTableToPDF(filteredOrders)} disabled={!filteredOrders.length} className="h-8 w-8 p-0">
-                <Download className="w-3 h-3" />
+            {/* Filter Dropdown for Orders */}
+            <div className="flex items-center gap-2">
+              <Select value={ordersViewMode} onValueChange={setOrdersViewMode}>
+                <SelectTrigger className="w-[200px] h-9">
+                  <SelectValue placeholder="فلتر أوامر الشراء" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">
+                    <div className="flex items-center justify-between w-full">
+                      <span>بانتظار الاعتماد</span>
+                      <Badge className="mr-2 bg-yellow-500 text-white text-xs">{filteredOrders.filter(o => o.status === "pending_approval").length}</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="pending_gm">
+                    <div className="flex items-center justify-between w-full">
+                      <span>بانتظار المدير العام</span>
+                      <Badge className="mr-2 bg-purple-500 text-white text-xs">{filteredOrders.filter(o => o.status === "pending_gm_approval").length}</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="approved">
+                    <div className="flex items-center justify-between w-full">
+                      <span>معتمدة</span>
+                      <Badge className="mr-2 bg-green-500 text-white text-xs">{filteredOrders.filter(o => ["approved", "printed"].includes(o.status)).length}</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="shipped">
+                    <div className="flex items-center justify-between w-full">
+                      <span>تم الشحن</span>
+                      <Badge className="mr-2 bg-blue-500 text-white text-xs">{filteredOrders.filter(o => ["shipped", "partially_delivered"].includes(o.status)).length}</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="delivered">
+                    <div className="flex items-center justify-between w-full">
+                      <span>تم التسليم</span>
+                      <Badge className="mr-2 bg-emerald-500 text-white text-xs">{filteredOrders.filter(o => o.status === "delivered").length}</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="rejected_gm">
+                    <div className="flex items-center justify-between w-full">
+                      <span>مرفوض من المدير</span>
+                      <Badge className="mr-2 bg-red-500 text-white text-xs">{filteredOrders.filter(o => o.status === "rejected_by_gm").length}</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="unlinked">
+                    <div className="flex items-center justify-between w-full">
+                      <span>غير مرتبط بالكتالوج</span>
+                      <Badge className="mr-2 bg-orange-500 text-white text-xs">{filteredOrders.filter(o => o.items?.some(item => !item.catalog_item_id)).length}</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="all">
+                    <div className="flex items-center justify-between w-full">
+                      <span>الكل</span>
+                      <Badge className="mr-2 bg-slate-600 text-white text-xs">{filteredOrders.length}</Badge>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={() => exportPurchaseOrdersTableToPDF(filteredOrders)} disabled={!filteredOrders.length} className="h-9 w-9 p-0" title="تصدير PDF">
+                <Download className="w-4 h-4" />
               </Button>
             </div>
           </div>
