@@ -2798,16 +2798,20 @@ const BuildingsSystem = () => {
               <div>
                 <Label>الوحدة</Label>
                 <select
-                  value={editingAreaMaterial.unit}
+                  value={editingAreaMaterial.unit?.trim()}
                   onChange={(e) => setEditingAreaMaterial({ ...editingAreaMaterial, unit: e.target.value })}
                   className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white"
                 >
                   <option value="طن">طن</option>
-                  <option value="متر مربع">متر مربع</option>
-                  <option value="متر طولي">متر طولي</option>
+                  <option value="م²">متر مربع (م²)</option>
+                  <option value="م2">متر مربع (م2)</option>
+                  <option value="م.ط">متر طولي (م.ط)</option>
+                  <option value="م ط">متر طولي</option>
                   <option value="قطعة">قطعة</option>
+                  <option value="حبة">حبة</option>
                   <option value="كيس">كيس</option>
                   <option value="لوح">لوح</option>
+                  <option value="كجم">كيلوجرام</option>
                 </select>
               </div>
 
