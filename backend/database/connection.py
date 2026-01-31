@@ -150,6 +150,9 @@ async def init_postgres_db() -> None:
         async_session_pg = async_session_maker
     
     try:
+        # Import schema version models to ensure they are created
+        from .schema_version import SchemaVersion, BackupMetadata, CURRENT_SCHEMA_VERSION
+        
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         
@@ -165,10 +168,52 @@ async def init_postgres_db() -> None:
         # Run migrations for project system
         await run_project_migrations()
         
+        # Record schema version
+        await record_initial_schema_version()
+        
         logger.info("✅ PostgreSQL tables initialized successfully")
     except Exception as e:
         logger.error(f"❌ Failed to initialize PostgreSQL tables: {e}")
         raise
+
+
+async def record_initial_schema_version() -> None:
+    """Record the initial schema version if not exists"""
+    global engine
+    
+    if engine is None:
+        return
+    
+    try:
+        from .schema_version import CURRENT_SCHEMA_VERSION
+        
+        async with engine.begin() as conn:
+            # Check if schema_versions table exists and has records
+            try:
+                result = await conn.execute(text("SELECT COUNT(*) FROM schema_versions WHERE is_current = true"))
+                count = result.scalar()
+                
+                if count == 0:
+                    # Insert initial version
+                    await conn.execute(
+                        text("""
+                            INSERT INTO schema_versions (id, version, description, applied_by, is_current)
+                            VALUES (:id, :version, :description, :applied_by, :is_current)
+                        """),
+                        {
+                            "id": str(__import__('uuid').uuid4()),
+                            "version": CURRENT_SCHEMA_VERSION,
+                            "description": "Initial schema version",
+                            "applied_by": "system",
+                            "is_current": True
+                        }
+                    )
+                    logger.info(f"✅ Recorded initial schema version: {CURRENT_SCHEMA_VERSION}")
+            except Exception as e:
+                # Table might not exist yet
+                logger.warning(f"Could not record schema version: {e}")
+    except Exception as e:
+        logger.warning(f"Schema version recording warning: {e}")
 
 
 async def run_buildings_migrations() -> None:
