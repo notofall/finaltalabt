@@ -244,7 +244,7 @@ async def create_backup(
             "backup_info": {
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "created_by": current_user.name,
-                "version": "2.0"
+                "version": "2.1"
             },
             "users": [],
             "projects": [],
@@ -259,7 +259,20 @@ async def create_backup(
             "audit_logs": [],
             "system_settings": [],
             "price_catalog": [],
-            "planned_quantities": []
+            "planned_quantities": [],
+            # Buildings System
+            "unit_templates": [],
+            "unit_template_materials": [],
+            "project_floors": [],
+            "project_area_materials": [],
+            "supply_tracking": [],
+            "buildings_permissions": [],
+            # RFQ System
+            "quotation_requests": [],
+            "quotation_request_items": [],
+            "quotation_request_suppliers": [],
+            "supplier_quotations": [],
+            "supplier_quotation_items": []
         }
         
         # Users
