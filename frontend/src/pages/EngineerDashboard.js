@@ -35,7 +35,7 @@ const EngineerDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       // Fetch company settings for PDF export
       const token = localStorage.getItem('token');
@@ -57,7 +57,7 @@ const EngineerDashboard = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [API_V2_URL, getAuthHeaders]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
