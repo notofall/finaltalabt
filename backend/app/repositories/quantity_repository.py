@@ -212,7 +212,7 @@ class QuantityRepository:
     # ==================== REPORTS ====================
     
     async def get_summary_report(self, project_id: Optional[str] = None) -> Dict:
-        """Get summary report for planned quantities"""
+        """Get summary report for planned quantities - matching frontend expectations"""
         query = select(PlannedQuantity)
         
         if project_id:
@@ -221,9 +221,21 @@ class QuantityRepository:
         result = await self.session.execute(query)
         items = result.scalars().all()
         
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        
         total_planned_qty = sum(item.planned_quantity or 0 for item in items)
         total_ordered_qty = sum(item.ordered_quantity or 0 for item in items)
         total_remaining_qty = sum(item.remaining_quantity or 0 for item in items)
+        
+        # Count overdue and due soon
+        overdue_count = len([
+            item for item in items 
+            if item.expected_order_date and item.expected_order_date < now and (item.remaining_quantity or 0) > 0
+        ])
+        due_soon_count = len([
+            item for item in items
+            if item.expected_order_date and now <= item.expected_order_date <= now + timedelta(days=10) and (item.remaining_quantity or 0) > 0
+        ])
         
         # Status breakdown
         status_counts = {}
@@ -231,45 +243,116 @@ class QuantityRepository:
             status = item.status or 'unknown'
             status_counts[status] = status_counts.get(status, 0) + 1
         
+        # Group by project
+        projects_data = {}
+        for item in items:
+            project_name = item.project_name or "غير محدد"
+            if project_name not in projects_data:
+                projects_data[project_name] = {
+                    "project_name": project_name,
+                    "project_id": item.project_id,
+                    "total_items": 0,
+                    "planned_qty": 0,
+                    "ordered_qty": 0,
+                    "remaining_qty": 0
+                }
+            projects_data[project_name]["total_items"] += 1
+            projects_data[project_name]["planned_qty"] += item.planned_quantity or 0
+            projects_data[project_name]["ordered_qty"] += item.ordered_quantity or 0
+            projects_data[project_name]["remaining_qty"] += item.remaining_quantity or 0
+        
         return {
-            "total_items": len(items),
-            "total_planned_quantity": total_planned_qty,
-            "total_ordered_quantity": total_ordered_qty,
-            "total_remaining_quantity": total_remaining_qty,
-            "status_breakdown": status_counts
+            "summary": {
+                "total_items": len(items),
+                "total_planned_qty": total_planned_qty,
+                "total_ordered_qty": total_ordered_qty,
+                "total_remaining_qty": total_remaining_qty,
+                "completion_rate": round((total_ordered_qty / total_planned_qty * 100), 1) if total_planned_qty > 0 else 0,
+                "overdue_count": overdue_count,
+                "due_soon_count": due_soon_count
+            },
+            "status_breakdown": status_counts,
+            "by_project": list(projects_data.values())
         }
     
-    async def get_alerts(self, days_threshold: int = 7) -> List[Dict]:
-        """Get alerts for items needing attention"""
-        threshold_date = datetime.now(timezone.utc).replace(tzinfo=None).replace(tzinfo=None) + timedelta(days=days_threshold)
+    async def get_alerts(self, days_threshold: int = 7) -> Dict:
+        """Get alerts for items needing attention - matching frontend structure"""
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        threshold_date = now + timedelta(days=days_threshold)
         
-        # Items with expected order date coming soon
+        # Get all planned quantities with remaining quantity
         result = await self.session.execute(
-            select(PlannedQuantity)
-            .where(
-                and_(
-                    PlannedQuantity.expected_order_date <= threshold_date,
-                    PlannedQuantity.remaining_quantity > 0,
-                    PlannedQuantity.status != 'completed'
-                )
-            )
-            .order_by(PlannedQuantity.expected_order_date)
-            .limit(20)
+            select(PlannedQuantity).where(PlannedQuantity.remaining_quantity > 0)
         )
-        items = result.scalars().all()
+        all_items = result.scalars().all()
         
-        return [
-            {
-                "id": item.id,
-                "item_name": item.item_name,
-                "project_name": item.project_name,
-                "remaining_quantity": item.remaining_quantity,
-                "expected_order_date": item.expected_order_date.isoformat() if item.expected_order_date else None,
-                "priority": item.priority,
-                "alert_type": "upcoming_order"
-            }
-            for item in items
+        # Overdue items (past expected order date)
+        overdue_items = [
+            item for item in all_items
+            if item.expected_order_date and item.expected_order_date < now
         ]
+        
+        # Due soon items (within threshold days)
+        due_soon_items = [
+            item for item in all_items
+            if item.expected_order_date and now <= item.expected_order_date <= threshold_date
+        ]
+        
+        # High priority items (priority = 1)
+        high_priority_items = [
+            item for item in all_items
+            if item.priority == 1
+        ]
+        
+        return {
+            "overdue": {
+                "count": len(overdue_items),
+                "items": [
+                    {
+                        "id": item.id,
+                        "item_name": item.item_name,
+                        "project_name": item.project_name,
+                        "remaining_qty": item.remaining_quantity,
+                        "unit": item.unit,
+                        "expected_date": item.expected_order_date.isoformat() if item.expected_order_date else None,
+                        "days_overdue": (now - item.expected_order_date).days if item.expected_order_date else 0,
+                        "priority": item.priority
+                    }
+                    for item in sorted(overdue_items, key=lambda x: x.expected_order_date or now)[:20]
+                ]
+            },
+            "due_soon": {
+                "count": len(due_soon_items),
+                "items": [
+                    {
+                        "id": item.id,
+                        "item_name": item.item_name,
+                        "project_name": item.project_name,
+                        "remaining_qty": item.remaining_quantity,
+                        "unit": item.unit,
+                        "expected_date": item.expected_order_date.isoformat() if item.expected_order_date else None,
+                        "days_until": (item.expected_order_date - now).days if item.expected_order_date else 0,
+                        "priority": item.priority
+                    }
+                    for item in sorted(due_soon_items, key=lambda x: x.expected_order_date or now)[:20]
+                ]
+            },
+            "high_priority": {
+                "count": len(high_priority_items),
+                "items": [
+                    {
+                        "id": item.id,
+                        "item_name": item.item_name,
+                        "project_name": item.project_name,
+                        "remaining_qty": item.remaining_quantity,
+                        "unit": item.unit,
+                        "expected_date": item.expected_order_date.isoformat() if item.expected_order_date else None,
+                        "priority": item.priority
+                    }
+                    for item in sorted(high_priority_items, key=lambda x: x.expected_order_date or now)[:20]
+                ]
+            }
+        }
     
     async def get_project_by_id(self, project_id: str) -> Optional[Project]:
         """Get project by ID"""
