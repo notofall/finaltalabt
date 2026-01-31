@@ -2497,15 +2497,15 @@ const BuildingsSystem = () => {
                 value={batchCatalogSearch}
                 onChange={(e) => {
                   setBatchCatalogSearch(e.target.value);
-                  setShowBatchCatalogDropdown(e.target.value.length > 0);
+                  setShowBatchCatalogDropdown(e.target.value.length >= 2);
                 }}
-                placeholder="🔍 ابحث في الكتالوج بالاسم أو الكود..."
+                placeholder="🔍 ابحث في الكتالوج (اكتب حرفين على الأقل)..."
                 className="bg-slate-700 border-emerald-600 focus:border-emerald-400"
               />
               
               {/* قائمة نتائج البحث */}
-              {showBatchCatalogDropdown && filteredBatchCatalog.length > 0 && (
-                <div className="absolute z-50 w-full mt-1 bg-slate-700 border border-slate-500 rounded-lg shadow-xl max-h-48 overflow-auto">
+              {showBatchCatalogDropdown && batchCatalogSearch.length >= 2 && filteredBatchCatalog.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-slate-700 border border-slate-500 rounded-lg shadow-xl max-h-64 overflow-auto">
                   {filteredBatchCatalog.map((item) => (
                     <div
                       key={item.id}
