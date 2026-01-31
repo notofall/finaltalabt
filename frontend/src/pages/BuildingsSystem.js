@@ -2025,7 +2025,7 @@ const BuildingsSystem = () => {
                               return (
                                 <tr key={mat.id} className="border-b border-slate-700/50 text-white">
                                   <td className="p-3">{mat.item_name}</td>
-                                  <td className="p-3">{mat.unit}</td>
+                                  <td className="p-3">{formatUnit(mat.unit)}</td>
                                   <td className="p-3">{mat.calculation_method === "direct" ? mat.direct_quantity : mat.factor}</td>
                                   <td className="p-3">
                                     <Badge variant={mat.calculation_type === "all_floors" ? "default" : "secondary"} className={mat.calculation_type === "all_floors" ? "bg-emerald-600" : "bg-blue-600"}>
