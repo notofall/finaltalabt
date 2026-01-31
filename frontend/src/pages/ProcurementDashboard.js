@@ -2401,8 +2401,8 @@ const ProcurementDashboard = () => {
                   </SelectItem>
                   <SelectItem value="gm_approved_pending">
                     <div className="flex items-center justify-between w-full">
-                      <span>معتمد من المدير العام</span>
-                      <Badge className="mr-2 bg-indigo-500 text-white text-xs">{filteredOrders.filter(o => o.gm_approved_by_name && o.status === "approved").length}</Badge>
+                      <span>بانتظار تأكيد المشتريات</span>
+                      <Badge className="mr-2 bg-indigo-500 text-white text-xs">{filteredOrders.filter(o => o.status === "pending_procurement_confirmation").length}</Badge>
                     </div>
                   </SelectItem>
                   <SelectItem value="unlinked">
