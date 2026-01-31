@@ -2509,61 +2509,173 @@ const BuildingsSystem = () => {
                 <div className="bg-slate-700 p-2 font-bold text-emerald-400 flex justify-between">
                   <span>المواد المضافة ({batchAreaMaterials.length})</span>
                 </div>
-                <div className="max-h-64 overflow-y-auto">
+                <div className="max-h-[400px] overflow-y-auto">
                   {batchAreaMaterials.map((mat, idx) => (
-                    <div key={idx} className="p-3 border-b border-slate-700 last:border-b-0 bg-slate-800/50">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
+                    <div key={idx} className="border-b border-slate-700 last:border-b-0 bg-slate-800/50">
+                      {/* رأس المادة - قابل للنقر */}
+                      <div 
+                        className="p-3 flex justify-between items-center cursor-pointer hover:bg-slate-700/50"
+                        onClick={() => setExpandedMaterialIndex(expandedMaterialIndex === idx ? null : idx)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <ChevronRight className={`w-4 h-4 transition-transform ${expandedMaterialIndex === idx ? 'rotate-90' : ''}`} />
                           <span className="font-medium text-white">{mat.item_name}</span>
-                          {mat.item_code && <span className="text-xs text-slate-400 mr-1">({mat.item_code})</span>}
+                          {mat.item_code && <span className="text-xs text-slate-400">({mat.item_code})</span>}
                         </div>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="text-red-400 hover:text-red-300 hover:bg-red-900/30 h-6 w-6 p-0"
-                          onClick={() => removeMaterialFromBatch(idx)}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <div>
-                          <Label className="text-xs text-slate-400">المعامل (/م²)</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={mat.factor}
-                            onChange={(e) => updateBatchMaterial(idx, 'factor', parseFloat(e.target.value) || 0)}
-                            className="bg-slate-700 border-slate-600 h-8 text-sm"
-                            placeholder="0"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs text-slate-400">الوحدة</Label>
-                          <select
-                            value={mat.unit}
-                            onChange={(e) => updateBatchMaterial(idx, 'unit', e.target.value)}
-                            className="w-full bg-slate-700 border border-slate-600 rounded-md p-1 text-white text-sm h-8"
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-400">
+                            {mat.calculation_method === "factor" ? `معامل: ${mat.factor}` : `كمية: ${mat.direct_quantity}`}
+                          </span>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="text-red-400 hover:text-red-300 hover:bg-red-900/30 h-6 w-6 p-0"
+                            onClick={(e) => { e.stopPropagation(); removeMaterialFromBatch(idx); }}
                           >
-                            <option value="طن">طن</option>
-                            <option value="كجم">كجم</option>
-                            <option value="م²">م²</option>
-                            <option value="م³">م³</option>
-                            <option value="قطعة">قطعة</option>
-                            <option value="متر">متر</option>
-                          </select>
-                        </div>
-                        <div>
-                          <Label className="text-xs text-slate-400">السعر (ر.س)</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={mat.unit_price}
-                            onChange={(e) => updateBatchMaterial(idx, 'unit_price', parseFloat(e.target.value) || 0)}
-                            className="bg-slate-700 border-slate-600 h-8 text-sm"
-                          />
+                            <X className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
+                      
+                      {/* تفاصيل المادة - قابلة للتوسيع */}
+                      {expandedMaterialIndex === idx && (
+                        <div className="p-3 pt-0 space-y-3 border-t border-slate-700">
+                          {/* طريقة الحساب */}
+                          <div className="p-2 bg-slate-700/50 rounded-lg">
+                            <Label className="text-emerald-400 text-xs font-bold mb-2 block">طريقة الحساب</Label>
+                            <div className="flex gap-4">
+                              <label className="flex items-center gap-2 cursor-pointer text-sm">
+                                <input
+                                  type="radio"
+                                  checked={mat.calculation_method === "factor"}
+                                  onChange={() => updateBatchMaterial(idx, 'calculation_method', 'factor')}
+                                  className="accent-emerald-500"
+                                />
+                                <span>بالمعامل (كمية/م²)</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer text-sm">
+                                <input
+                                  type="radio"
+                                  checked={mat.calculation_method === "direct"}
+                                  onChange={() => updateBatchMaterial(idx, 'calculation_method', 'direct')}
+                                  className="accent-emerald-500"
+                                />
+                                <span>كمية مباشرة</span>
+                              </label>
+                            </div>
+                          </div>
+
+                          {/* حقول حسب طريقة الحساب */}
+                          <div className="grid grid-cols-3 gap-2">
+                            {mat.calculation_method === "factor" ? (
+                              <div>
+                                <Label className="text-xs text-slate-400">المعامل (/م²)</Label>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={mat.factor}
+                                  onChange={(e) => updateBatchMaterial(idx, 'factor', parseFloat(e.target.value) || 0)}
+                                  className="bg-slate-700 border-slate-600 h-8 text-sm"
+                                  placeholder="مثال: 120"
+                                />
+                              </div>
+                            ) : (
+                              <div>
+                                <Label className="text-xs text-slate-400">الكمية</Label>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={mat.direct_quantity}
+                                  onChange={(e) => updateBatchMaterial(idx, 'direct_quantity', parseFloat(e.target.value) || 0)}
+                                  className="bg-slate-700 border-slate-600 h-8 text-sm"
+                                  placeholder="أدخل الكمية"
+                                />
+                              </div>
+                            )}
+                            <div>
+                              <Label className="text-xs text-slate-400">الوحدة</Label>
+                              <select
+                                value={mat.unit}
+                                onChange={(e) => updateBatchMaterial(idx, 'unit', e.target.value)}
+                                className="w-full bg-slate-700 border border-slate-600 rounded-md p-1 text-white text-sm h-8"
+                              >
+                                <option value="طن">طن</option>
+                                <option value="كجم">كجم</option>
+                                <option value="م²">م²</option>
+                                <option value="م³">م³</option>
+                                <option value="قطعة">قطعة</option>
+                                <option value="متر">متر</option>
+                                <option value="لتر">لتر</option>
+                                <option value="جالون">جالون</option>
+                              </select>
+                            </div>
+                            <div>
+                              <Label className="text-xs text-slate-400">السعر (ر.س)</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={mat.unit_price}
+                                onChange={(e) => updateBatchMaterial(idx, 'unit_price', parseFloat(e.target.value) || 0)}
+                                className="bg-slate-700 border-slate-600 h-8 text-sm"
+                              />
+                            </div>
+                          </div>
+
+                          {/* نسبة الهالك */}
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <Label className="text-xs text-slate-400">نسبة الهالك (%)</Label>
+                              <Input
+                                type="number"
+                                step="0.1"
+                                value={mat.waste_percentage}
+                                onChange={(e) => updateBatchMaterial(idx, 'waste_percentage', parseFloat(e.target.value) || 0)}
+                                placeholder="مثال: 5"
+                                className="bg-slate-700 border-slate-600 h-8 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs text-slate-400">ملاحظات</Label>
+                              <Input
+                                value={mat.notes || ""}
+                                onChange={(e) => updateBatchMaterial(idx, 'notes', e.target.value)}
+                                placeholder="اختياري..."
+                                className="bg-slate-700 border-slate-600 h-8 text-sm"
+                              />
+                            </div>
+                          </div>
+
+                          {/* مقاس البلاط */}
+                          <div className="p-2 bg-amber-900/20 rounded-lg border border-amber-700/30">
+                            <Label className="text-amber-400 text-xs font-bold mb-2 block flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              مقاس البلاط/اللوح (اختياري)
+                            </Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <Label className="text-xs text-slate-400">العرض (سم)</Label>
+                                <Input
+                                  type="number"
+                                  value={mat.tile_width}
+                                  onChange={(e) => updateBatchMaterial(idx, 'tile_width', parseFloat(e.target.value) || 0)}
+                                  placeholder="60"
+                                  className="bg-slate-700 border-slate-600 h-8 text-sm"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs text-slate-400">الطول (سم)</Label>
+                                <Input
+                                  type="number"
+                                  value={mat.tile_height}
+                                  onChange={(e) => updateBatchMaterial(idx, 'tile_height', parseFloat(e.target.value) || 0)}
+                                  placeholder="60"
+                                  className="bg-slate-700 border-slate-600 h-8 text-sm"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
