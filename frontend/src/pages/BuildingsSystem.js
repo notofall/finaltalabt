@@ -2661,6 +2661,9 @@ const BuildingsSystem = () => {
                               <AlertCircle className="w-3 h-3" />
                               مقاس البلاط/اللوح (اختياري)
                             </Label>
+                            <p className="text-xs text-amber-300/70 mb-2">
+                              عند إدخال المقاس، سيتم حساب عدد القطع تلقائياً: المساحة ÷ مساحة البلاطة
+                            </p>
                             <div className="grid grid-cols-2 gap-2">
                               <div>
                                 <Label className="text-xs text-slate-400">العرض (سم)</Label>
@@ -2678,11 +2681,16 @@ const BuildingsSystem = () => {
                                   type="number"
                                   value={mat.tile_height}
                                   onChange={(e) => updateBatchMaterial(idx, 'tile_height', parseFloat(e.target.value) || 0)}
-                                  placeholder="60"
+                                  placeholder="120"
                                   className="bg-slate-700 border-slate-600 h-8 text-sm"
                                 />
                               </div>
                             </div>
+                            {mat.tile_width > 0 && mat.tile_height > 0 && (
+                              <p className="text-xs text-emerald-400 mt-2">
+                                ✓ مساحة البلاطة: {((mat.tile_width / 100) * (mat.tile_height / 100)).toFixed(3)} م²
+                              </p>
+                            )}
                           </div>
                         </div>
                       )}
