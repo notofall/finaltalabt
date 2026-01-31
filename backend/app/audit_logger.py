@@ -44,6 +44,7 @@ class AuditAction(str, Enum):
     ORDER_REJECT = "order_reject"
     ORDER_CANCEL = "order_cancel"
     ORDER_UPDATE = "order_update"
+    ORDER_DELETE = "order_delete"
     
     # Request actions
     REQUEST_CREATE = "request_create"
