@@ -136,7 +136,7 @@ export default function GeneralManagerDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [token, pendingPage, gmApprovedPage, procurementApprovedPage]);
+  }, [token]);
 
   useEffect(() => {
     fetchData();
