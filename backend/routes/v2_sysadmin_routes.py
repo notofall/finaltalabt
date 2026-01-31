@@ -3,11 +3,13 @@ V2 Sysadmin Routes - System administration with proper layering
 Uses: SettingsService -> SettingsRepository
 """
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi.responses import FileResponse
 from typing import Dict, Optional
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 import os
 import uuid
+import base64
 from pathlib import Path
 
 from database import get_postgres_session
