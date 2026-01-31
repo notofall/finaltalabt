@@ -4931,9 +4931,10 @@ const ProcurementDashboard = () => {
             <DialogTitle className="text-center text-red-600">حذف أمر الشراء</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-slate-600 text-center">
-              ⚠️ سيتم حذف أمر الشراء نهائياً. هذا الإجراء لا يمكن التراجع عنه.
-            </p>
+            <div className="text-sm text-slate-600 text-center space-y-1">
+              <p>⚠️ سيتم حذف أمر الشراء نهائياً.</p>
+              <p className="text-blue-600">✓ سيتم إرجاع الطلب المرتبط لحالته السابقة (معتمد من المهندس) لإصدار أمر شراء جديد.</p>
+            </div>
             {orderToDelete && (
               <div className="bg-red-50 p-3 rounded text-sm border border-red-200">
                 <p><strong>رقم الأمر:</strong> <span className="font-mono">{orderToDelete.order_number}</span></p>
