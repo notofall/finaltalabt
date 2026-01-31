@@ -70,9 +70,9 @@ class GMRepository:
         user_id: str, 
         user_name: str
     ) -> PurchaseOrder:
-        """Approve order by GM"""
+        """Approve order by GM - يحول الحالة لانتظار تأكيد مدير المشتريات"""
         now = datetime.now(timezone.utc).replace(tzinfo=None)
-        order.status = "approved"
+        order.status = "pending_procurement_confirmation"
         order.gm_approved_by = user_id
         order.gm_approved_by_name = user_name
         order.gm_approved_at = now
