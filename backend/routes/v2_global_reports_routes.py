@@ -196,19 +196,19 @@ async def get_global_summary(
         all_items = [i for i in all_items if i.order_id in order_ids]
     
     total_ordered_qty = sum(i.quantity or 0 for i in all_items)
-    total_received_qty = sum(i.received_quantity or 0 for i in all_items)
+    total_received_qty = sum(i.delivered_quantity or 0 for i in all_items)
     total_remaining_qty = total_ordered_qty - total_received_qty
     
     # الأصناف المتأخرة (مطلوبة ولم تُستلم بالكامل)
     pending_items = []
     for item in all_items:
-        remaining = (item.quantity or 0) - (item.received_quantity or 0)
+        remaining = (item.quantity or 0) - (item.delivered_quantity or 0)
         if remaining > 0:
             pending_items.append({
                 "item_name": item.name,
                 "unit": item.unit,
                 "ordered_qty": item.quantity,
-                "received_qty": item.received_quantity or 0,
+                "received_qty": item.delivered_quantity or 0,
                 "remaining_qty": remaining,
                 "order_id": item.order_id
             })
@@ -233,7 +233,7 @@ async def get_global_summary(
             proj_name = order.project_name or "غير محدد"
             if proj_name in supply_by_project:
                 supply_by_project[proj_name]["ordered_qty"] += item.quantity or 0
-                supply_by_project[proj_name]["received_qty"] += item.received_quantity or 0
+                supply_by_project[proj_name]["received_qty"] += item.delivered_quantity or 0
     
     # حساب المتبقي ونسبة الإنجاز
     for proj_name, data in supply_by_project.items():
@@ -465,7 +465,7 @@ async def get_supply_summary(
     
     for item in items:
         ordered = item.quantity or 0
-        received = item.received_quantity or 0
+        received = item.delivered_quantity or 0
         remaining = ordered - received
         
         # البحث عن الأمر
@@ -491,7 +491,7 @@ async def get_supply_summary(
             not_received.append(item_data)
     
     total_ordered = sum(i.quantity or 0 for i in items)
-    total_received = sum(i.received_quantity or 0 for i in items)
+    total_received = sum(i.delivered_quantity or 0 for i in items)
     
     return {
         "summary": {
@@ -604,7 +604,7 @@ async def export_global_report_excel(
     ws_summary[f'A{row}'].font = Font(bold=True)
     row += 1
     total_ordered = sum(i.quantity or 0 for i in all_items)
-    total_received = sum(i.received_quantity or 0 for i in all_items)
+    total_received = sum(i.delivered_quantity or 0 for i in all_items)
     ws_summary[f'A{row}'] = f"الكميات المطلوبة: {total_ordered:,.2f}"
     row += 1
     ws_summary[f'A{row}'] = f"الكميات المستلمة: {total_received:,.2f}"
@@ -702,7 +702,7 @@ async def export_global_report_excel(
         for row_num, item in enumerate(all_items, 2):
             order = next((o for o in orders if o.id == item.order_id), None)
             ordered = item.quantity or 0
-            received = item.received_quantity or 0
+            received = item.delivered_quantity or 0
             remaining = ordered - received
             rate = round((received / ordered * 100), 1) if ordered > 0 else 0
             
