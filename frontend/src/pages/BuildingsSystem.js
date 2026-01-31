@@ -1809,7 +1809,7 @@ const BuildingsSystem = () => {
                                     <div key={mat.id} className="flex items-center justify-between text-sm bg-slate-800/50 p-2 rounded">
                                       <span className="text-white">{mat.item_name}</span>
                                       <div className="flex items-center gap-3">
-                                        <span className="text-slate-400">{mat.quantity_per_unit} {mat.unit}/وحدة</span>
+                                        <span className="text-slate-400">{mat.quantity_per_unit} {formatUnit(mat.unit)}/وحدة</span>
                                         <Button
                                           size="sm"
                                           variant="ghost"
