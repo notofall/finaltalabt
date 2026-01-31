@@ -485,10 +485,45 @@ export default function SystemAdminDashboard() {
 
   useEffect(() => {
     fetchData();
-    fetchSchemaInfo();
-    fetchDeletePermission();
-    fetchDeletedOrders();
-  }, [fetchData, fetchSchemaInfo, fetchDeletePermission, fetchDeletedOrders]);
+  }, [fetchData]);
+
+  // Separate effect for backup-related data
+  useEffect(() => {
+    const loadBackupData = async () => {
+      // Schema Info
+      try {
+        const [infoRes, statsRes] = await Promise.all([
+          axios.get(`${API_V2}/backup/schema-info`, getAuthHeaders()),
+          axios.get(`${API_V2}/backup/database-stats`, getAuthHeaders())
+        ]);
+        setSchemaInfo(infoRes.data);
+        setDbStatsBackup(statsRes.data);
+      } catch (error) {
+        console.error("Error fetching schema info:", error);
+      }
+
+      // Delete Permission
+      try {
+        const res = await axios.get(`${API_V2}/settings/procurement/delete-permission`, getAuthHeaders());
+        setProcurementDeletePermission(res.data.enabled);
+      } catch (error) {
+        console.error("Error fetching delete permission:", error);
+      }
+
+      // Deleted Orders
+      setDeletedOrdersLoading(true);
+      try {
+        const res = await axios.get(`${API_V2}/system/deleted-orders`, getAuthHeaders());
+        setDeletedOrders(res.data.items);
+      } catch (error) {
+        console.error("Error fetching deleted orders:", error);
+      } finally {
+        setDeletedOrdersLoading(false);
+      }
+    };
+
+    loadBackupData();
+  }, [API_V2, getAuthHeaders]);
 
   // User Management
   const handleCreateUser = async () => {
