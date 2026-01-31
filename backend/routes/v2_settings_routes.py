@@ -118,3 +118,65 @@ async def get_approval_limit(
     """
     limit = await service.get_approval_limit()
     return {"approval_limit": limit}
+
+
+# ==================== Procurement Delete Permission ====================
+
+class DeletePermissionUpdate(BaseModel):
+    enabled: bool
+
+
+@router.get("/procurement/delete-permission")
+async def get_delete_permission(
+    current_user = Depends(get_current_user),
+    service: SettingsService = Depends(get_settings_service)
+):
+    """
+    الحصول على حالة صلاحية حذف أوامر الشراء لمدير المشتريات
+    """
+    if current_user.role != UserRole.SYSTEM_ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="فقط مدير النظام يمكنه عرض هذا الإعداد"
+        )
+    
+    value = await service.get_setting("procurement_can_delete_orders")
+    return {
+        "enabled": value == "true",
+        "setting_key": "procurement_can_delete_orders"
+    }
+
+
+@router.put("/procurement/delete-permission")
+async def update_delete_permission(
+    data: DeletePermissionUpdate,
+    current_user = Depends(get_current_user),
+    service: SettingsService = Depends(get_settings_service)
+):
+    """
+    تحديث صلاحية حذف أوامر الشراء لمدير المشتريات
+    فقط مدير النظام يمكنه تحديث هذه الصلاحية
+    """
+    if current_user.role != UserRole.SYSTEM_ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="فقط مدير النظام يمكنه تحديث هذا الإعداد"
+        )
+    
+    await service.set_setting(
+        key="procurement_can_delete_orders",
+        value="true" if data.enabled else "false",
+        user_id=current_user.id,
+        user_name=current_user.name,
+        description="صلاحية حذف أوامر الشراء لمدير المشتريات"
+    )
+    
+    # Log to audit
+    from app.audit_logger import audit_log, AuditAction
+    from database import get_postgres_session
+    
+    return {
+        "message": "تم تحديث صلاحية الحذف بنجاح",
+        "enabled": data.enabled
+    }
+
