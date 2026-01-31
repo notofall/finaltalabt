@@ -615,7 +615,7 @@ async def update_order(
     order_service: OrderService = Depends(get_order_service),
     current_user = Depends(get_current_user)
 ):
-    """تحديث أمر شراء"""
+    """تحديث أمر شراء - بما في ذلك أسعار الأصناف"""
     from database import PurchaseOrder
     from sqlalchemy import select
     
@@ -630,16 +630,43 @@ async def update_order(
         raise HTTPException(status_code=404, detail="أمر الشراء غير موجود")
     
     # Update allowed fields
-    allowed_fields = ["notes", "terms_conditions", "expected_delivery_date"]
+    allowed_fields = ["notes", "terms_conditions", "expected_delivery_date", 
+                      "supplier_name", "supplier_id", "category_id", "supplier_invoice_number"]
     for field in allowed_fields:
         if field in data and data[field] is not None:
             setattr(order, field, data[field])
+    
+    # Update item prices if provided
+    item_prices = data.get("item_prices", [])
+    if item_prices:
+        # Get all items for this order
+        items_result = await session.execute(
+            select(PurchaseOrderItem)
+            .where(PurchaseOrderItem.order_id == str(order_id))
+            .order_by(PurchaseOrderItem.created_at)
+        )
+        items = items_result.scalars().all()
+        
+        # Update prices
+        new_total = 0
+        for price_info in item_prices:
+            idx = price_info.get("index", -1)
+            unit_price = price_info.get("unit_price", 0)
+            
+            if 0 <= idx < len(items):
+                item = items[idx]
+                item.unit_price = unit_price
+                item.total_price = unit_price * (item.quantity or 0)
+                new_total += item.total_price
+        
+        # Update order total
+        order.total_amount = new_total
     
     from datetime import datetime, timezone
     order.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     await session.commit()
     
-    return {"message": "تم تحديث أمر الشراء بنجاح"}
+    return {"message": "تم تحديث أمر الشراء بنجاح", "total_amount": order.total_amount}
 
 
 @router.put("/{order_id}/items/{item_id}/catalog-link")
