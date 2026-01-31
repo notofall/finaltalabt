@@ -86,6 +86,7 @@ class AreaMaterialCreate(BaseModel):
 
 class AreaMaterialUpdate(BaseModel):
     item_name: Optional[str] = None
+    unit: Optional[str] = None
     calculation_method: Optional[str] = None
     factor: Optional[float] = None
     direct_quantity: Optional[float] = None
@@ -96,6 +97,8 @@ class AreaMaterialUpdate(BaseModel):
     tile_height: Optional[float] = None
     waste_percentage: Optional[float] = None
     notes: Optional[str] = None
+    catalog_item_id: Optional[str] = None
+    item_code: Optional[str] = None
 
 
 class SupplyUpdate(BaseModel):
