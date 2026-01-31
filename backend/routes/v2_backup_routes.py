@@ -105,13 +105,18 @@ async def create_full_backup(
     - معلومات الإصدار
     - البيانات الوصفية
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     require_system_admin(current_user)
     
     try:
+        logger.info(f"Starting full backup by user: {current_user.name}")
         backup_service = BackupService(session)
         result = await backup_service.create_full_backup(
             created_by=current_user.name,
-            notes=notes
+            notes=notes,
+            save_to_file=False  # Don't save to file on server
         )
         
         # إرجاع الملف للتحميل
@@ -119,6 +124,8 @@ async def create_full_backup(
         
         timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
         filename = f"backup_full_{CURRENT_SCHEMA_VERSION}_{timestamp}.json"
+        
+        logger.info(f"Backup created successfully, size: {len(json_content)} bytes")
         
         return Response(
             content=json_content.encode('utf-8'),
@@ -131,6 +138,7 @@ async def create_full_backup(
             }
         )
     except Exception as e:
+        logger.error(f"Backup failed: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"فشل في إنشاء النسخة الاحتياطية: {str(e)}"
