@@ -284,8 +284,15 @@ class BuildingsService(BaseService):
                 # Direct quantity input
                 base_quantity = getattr(m, 'direct_quantity', 0) or 0
             else:
-                # Calculate by factor
-                base_quantity = floor_area * m.factor
+                # Calculate by factor (factor is in kg/m² for steel, convert to tons if unit is طن)
+                raw_quantity = floor_area * m.factor
+                
+                # تحويل تلقائي من كجم لطن إذا كانت الوحدة طن
+                unit_lower = (m.unit or '').lower().strip()
+                if unit_lower in ['طن', 'ton', 'tons']:
+                    base_quantity = raw_quantity / 1000  # Convert kg to tons
+                else:
+                    base_quantity = raw_quantity
             
             # Handle tile calculation (by dimensions)
             tile_width = getattr(m, 'tile_width', 0) or 0
