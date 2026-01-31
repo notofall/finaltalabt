@@ -1844,11 +1844,14 @@ const ProcurementDashboard = () => {
   const getOrderStatusBadge = (status) => {
     const map = {
       pending_approval: { label: "بانتظار الاعتماد", color: "bg-yellow-100 text-yellow-800 border-yellow-300" },
+      pending_gm_approval: { label: "بانتظار المدير العام", color: "bg-purple-100 text-purple-800 border-purple-300" },
+      pending_procurement_confirmation: { label: "بانتظار تأكيد المشتريات", color: "bg-indigo-100 text-indigo-800 border-indigo-300" },
       approved: { label: "معتمد", color: "bg-green-100 text-green-800 border-green-300" },
       printed: { label: "تمت الطباعة", color: "bg-blue-100 text-blue-800 border-blue-300" },
       shipped: { label: "تم الشحن", color: "bg-purple-100 text-purple-800 border-purple-300" },
       partially_delivered: { label: "تسليم جزئي", color: "bg-orange-100 text-orange-800 border-orange-300" },
       delivered: { label: "تم التسليم", color: "bg-emerald-100 text-emerald-800 border-emerald-300" },
+      rejected_by_gm: { label: "مرفوض من المدير العام", color: "bg-red-100 text-red-800 border-red-300" },
     };
     const info = map[status] || { label: status, color: "bg-slate-100 text-slate-800" };
     return <Badge className={`${info.color} border text-xs`}>{info.label}</Badge>;
@@ -1861,6 +1864,7 @@ const ProcurementDashboard = () => {
   // Filter orders by status
   const pendingApprovalOrders = filteredOrders.filter(o => o.status === "pending_approval");
   const pendingGMApprovalOrders = filteredOrders.filter(o => o.status === "pending_gm_approval");
+  const pendingProcurementConfirmation = filteredOrders.filter(o => o.status === "pending_procurement_confirmation");
   const rejectedByGMOrders = filteredOrders.filter(o => o.status === "rejected_by_gm");
   const approvedOrders = filteredOrders.filter(o => o.status !== "pending_approval");
   
