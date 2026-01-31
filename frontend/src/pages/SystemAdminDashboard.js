@@ -485,6 +485,8 @@ export default function SystemAdminDashboard() {
   useEffect(() => {
     fetchData();
     fetchSchemaInfo();
+    fetchDeletePermission();
+    fetchDeletedOrders();
   }, [fetchData]);
 
   // User Management
