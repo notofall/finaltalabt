@@ -193,20 +193,64 @@ class RFQPDFGenerator:
         
         elements = []
         
-        # Company Header
+        # Company Header with Logo
         if company_settings:
-            company_name = company_settings.get('company_name', 'شركة المشتريات')
-            elements.append(Paragraph(self._process_arabic(company_name), self.title_style))
+            # Check if we should show logo
+            show_logo = company_settings.get('pdf_show_logo', 'true')
+            if isinstance(show_logo, str):
+                show_logo = show_logo.lower() == 'true'
             
-            company_address = company_settings.get('company_address', '')
-            if company_address:
-                elements.append(Paragraph(self._process_arabic(company_address), self.normal_style))
+            # Try to add logo
+            logo_img = self._get_logo_image(company_settings) if show_logo else None
             
-            company_phone = company_settings.get('company_phone', '')
-            company_email = company_settings.get('company_email', '')
-            if company_phone or company_email:
-                contact_info = f"{company_phone} | {company_email}".strip(' | ')
-                elements.append(Paragraph(contact_info, self.normal_style))
+            if logo_img:
+                # Create header with logo and company info side by side
+                company_name = company_settings.get('company_name', 'شركة المشتريات')
+                company_address = company_settings.get('company_address', '')
+                company_phone = company_settings.get('company_phone', '')
+                company_email = company_settings.get('company_email', '')
+                
+                # Build company info text
+                info_parts = [self._process_arabic(company_name)]
+                if company_address:
+                    info_parts.append(self._process_arabic(company_address))
+                if company_phone or company_email:
+                    info_parts.append(f"{company_phone} | {company_email}".strip(' | '))
+                
+                company_info = '<br/>'.join(info_parts)
+                company_para = Paragraph(company_info, ParagraphStyle(
+                    'CompanyInfo',
+                    parent=self.title_style,
+                    fontSize=14,
+                    alignment=TA_RIGHT,
+                    leading=18
+                ))
+                
+                # Header table with logo on right, info on left (RTL layout)
+                header_table = Table(
+                    [[company_para, logo_img]],
+                    colWidths=[12*cm, 4*cm]
+                )
+                header_table.setStyle(TableStyle([
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('ALIGN', (0, 0), (0, 0), 'RIGHT'),
+                    ('ALIGN', (1, 0), (1, 0), 'LEFT'),
+                ]))
+                elements.append(header_table)
+            else:
+                # No logo, just company name
+                company_name = company_settings.get('company_name', 'شركة المشتريات')
+                elements.append(Paragraph(self._process_arabic(company_name), self.title_style))
+                
+                company_address = company_settings.get('company_address', '')
+                if company_address:
+                    elements.append(Paragraph(self._process_arabic(company_address), self.normal_style))
+                
+                company_phone = company_settings.get('company_phone', '')
+                company_email = company_settings.get('company_email', '')
+                if company_phone or company_email:
+                    contact_info = f"{company_phone} | {company_email}".strip(' | ')
+                    elements.append(Paragraph(contact_info, self.normal_style))
         else:
             elements.append(Paragraph(self._process_arabic("طلب عرض سعر"), self.title_style))
         
