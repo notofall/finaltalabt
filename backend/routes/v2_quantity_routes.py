@@ -35,6 +35,8 @@ def require_quantity_access(user):
     allowed_roles = [
         UserRole.QUANTITY_ENGINEER,
         UserRole.PROCUREMENT_MANAGER,
+        UserRole.GENERAL_MANAGER,
+        UserRole.SUPERVISOR,
         UserRole.SYSTEM_ADMIN
     ]
     if user.role not in allowed_roles:
