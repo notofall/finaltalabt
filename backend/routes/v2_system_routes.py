@@ -20,7 +20,13 @@ from database import (
     get_postgres_session, User, Project, Supplier, BudgetCategory,
     DefaultBudgetCategory, MaterialRequest, MaterialRequestItem,
     PurchaseOrder, PurchaseOrderItem, DeliveryRecord, AuditLog,
-    SystemSetting, PriceCatalogItem, PlannedQuantity
+    SystemSetting, PriceCatalogItem, PlannedQuantity,
+    # Buildings System Tables
+    UnitTemplate, UnitTemplateMaterial, ProjectFloor, ProjectAreaMaterial,
+    SupplyTracking, BuildingsPermission,
+    # RFQ Tables
+    QuotationRequest, QuotationRequestItem, QuotationRequestSupplier,
+    SupplierQuotation, SupplierQuotationItem
 )
 from routes.v2_auth_routes import get_current_user, UserRole
 
