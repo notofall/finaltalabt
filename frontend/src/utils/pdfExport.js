@@ -803,111 +803,125 @@ export const exportPurchaseOrdersTableToPDF = (orders, exportedBy = null, dateRa
 // تصدير عرض سعر واحد (RFQ)
 export const exportRFQToPDF = (rfq, companySettings = null) => {
   const settings = companySettings || getCompanySettings();
-  const companyHeader = generateCompanyHeader(settings);
   const companyFooter = generateCompanyFooter(settings);
   
   const items = Array.isArray(rfq.items) ? rfq.items : [];
   const suppliers = Array.isArray(rfq.suppliers) ? rfq.suppliers : [];
   
   const itemRows = items.map((item, idx) => `
-    <tr style="background: ${idx % 2 === 0 ? '#f8fafc' : '#fff'};">
-      <td style="text-align: center; font-weight: 600;">${idx + 1}</td>
-      <td>${item.item_code || '-'}</td>
-      <td style="font-weight: 600;">${item.name || item.item_name}</td>
-      <td style="text-align: center;">${item.quantity}</td>
-      <td style="text-align: center;">${item.unit}</td>
-      <td>${item.notes || '-'}</td>
+    <tr style="background: ${idx % 2 === 0 ? '#f9fafb' : '#fff'};">
+      <td style="text-align: center; width: 30px; font-size: 9px;">${idx + 1}</td>
+      <td style="font-size: 10px; font-weight: 500;">${item.item_code || '-'}</td>
+      <td style="font-size: 10px;">${item.name || item.item_name}</td>
+      <td style="text-align: center; width: 50px;">${item.quantity}</td>
+      <td style="text-align: center; width: 55px;">${item.unit}</td>
+      <td style="font-size: 9px; color: #666;">${item.notes || '-'}</td>
     </tr>
   `).join('');
   
   const supplierRows = suppliers.map((s, idx) => `
-    <tr style="background: ${idx % 2 === 0 ? '#f8fafc' : '#fff'};">
-      <td style="text-align: center;">${idx + 1}</td>
-      <td style="font-weight: 600;">${s.supplier_name}</td>
-      <td>${s.contact_person || '-'}</td>
-      <td>${s.phone || '-'}</td>
-      <td>${s.email || '-'}</td>
-      <td><span class="badge badge-${s.status === 'quoted' ? 'green' : s.status === 'pending' ? 'yellow' : 'gray'}">${getRFQSupplierStatus(s.status)}</span></td>
+    <tr style="background: ${idx % 2 === 0 ? '#f9fafb' : '#fff'};">
+      <td style="text-align: center; width: 30px; font-size: 9px;">${idx + 1}</td>
+      <td style="font-size: 10px; font-weight: 600;">${s.supplier_name}</td>
+      <td style="font-size: 10px;">${s.contact_person || '-'}</td>
+      <td style="font-size: 10px;">${s.phone || '-'}</td>
+      <td style="font-size: 10px;">${s.email || '-'}</td>
+      <td style="text-align: center;"><span class="badge badge-${s.status === 'quoted' ? 'green' : s.status === 'pending' ? 'yellow' : 'gray'}">${getRFQSupplierStatus(s.status)}</span></td>
     </tr>
   `).join('');
 
+  // Combined header with 3 sections like PO
+  const combinedHeader = `
+    <table style="width: 100%; border: 2px solid #2563eb; border-radius: 8px; margin-bottom: 15px; background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); border-collapse: separate; border-spacing: 0;">
+      <tr>
+        <!-- Company Info - Right Side -->
+        <td style="width: 35%; text-align: right; padding: 15px; vertical-align: top;">
+          ${settings.company_name ? `<div style="font-size: 18px; font-weight: bold; color: #2563eb;">${settings.company_name}</div>` : ''}
+          ${settings.company_address ? `<div style="font-size: 11px; color: #666; margin-top: 3px;">${settings.company_address}</div>` : ''}
+          ${settings.company_phone || settings.company_email ? `<div style="font-size: 11px; color: #666; margin-top: 2px;">${settings.company_phone || ''} ${settings.company_phone && settings.company_email ? ' | ' : ''} ${settings.company_email || ''}</div>` : ''}
+          ${settings.report_header ? `<div style="font-size: 11px; color: #444; margin-top: 3px;">${settings.report_header}</div>` : ''}
+        </td>
+        
+        <!-- Logo - Center -->
+        <td style="width: 30%; text-align: center; padding: 15px; vertical-align: middle;">
+          ${settings.company_logo ? `<img src="${settings.company_logo}" style="max-height: 70px; max-width: 150px;" onerror="this.style.display='none'" />` : ''}
+        </td>
+        
+        <!-- RFQ Info - Left Side -->
+        <td style="width: 35%; text-align: left; padding: 15px; vertical-align: top; border-right: 1px dashed #ddd;">
+          <div style="font-size: 22px; font-weight: bold; color: #2563eb;">طلب عرض سعر</div>
+          <div style="font-size: 14px; color: #333; margin-top: 8px;"><strong>رقم:</strong> ${rfq.rfq_number || '-'}</div>
+          <div style="font-size: 12px; color: #666; margin-top: 5px;"><strong>طلب رقم:</strong> ${rfq.request_number || '-'}</div>
+        </td>
+      </tr>
+    </table>
+  `;
+
   const html = `
-    ${companyHeader}
-    <div class="header" style="border-bottom: 3px solid #2563eb; padding-bottom: 15px;">
-      <div class="title" style="color: #2563eb;">طلب عرض سعر</div>
-      <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-        <div>
-          <span style="font-size: 12px; color: #6b7280;">رقم الطلب:</span>
-          <span style="font-size: 14px; font-weight: 700; color: #ea580c; margin-right: 5px;">${rfq.rfq_number || '-'}</span>
-        </div>
-        <div>
-          <span style="font-size: 12px; color: #6b7280;">التاريخ:</span>
-          <span style="font-size: 13px; font-weight: 600; margin-right: 5px;">${formatDate(rfq.created_at)}</span>
-        </div>
+    ${combinedHeader}
+    
+    <div class="info-box">
+      <div class="info-grid">
+        <div class="info-item"><span class="info-label">المشروع:</span> <span class="info-value">${rfq.project_name || '-'}</span></div>
+        <div class="info-item"><span class="info-label">تاريخ الإصدار:</span> <span class="info-value">${formatDateShort(rfq.created_at)}</span></div>
+        <div class="info-item"><span class="info-label">صلاحية العرض:</span> <span class="info-value">${rfq.validity_days || 7} يوم</span></div>
+        <div class="info-item"><span class="info-label">الحالة:</span> <span class="badge badge-${rfq.status === 'completed' ? 'green' : rfq.status === 'in_progress' ? 'yellow' : 'blue'}">${getRFQStatus(rfq.status)}</span></div>
+        <div class="info-item"><span class="info-label">أنشئ بواسطة:</span> <span class="info-value">${rfq.created_by_name || '-'}</span></div>
+        <div class="info-item"><span class="info-label">عدد الموردين:</span> <span class="info-value" style="color: #2563eb;">${suppliers.length}</span></div>
       </div>
     </div>
     
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; background: #f8fafc; padding: 12px; border-radius: 8px;">
-      <div>
-        <p style="font-size: 11px; color: #6b7280; margin: 0;">المشروع</p>
-        <p style="font-size: 13px; font-weight: 600; margin: 3px 0 0 0;">${rfq.project_name || '-'}</p>
-      </div>
-      <div>
-        <p style="font-size: 11px; color: #6b7280; margin: 0;">طلب المشرف</p>
-        <p style="font-size: 13px; font-weight: 600; margin: 3px 0 0 0;">${rfq.request_number || '-'}</p>
-      </div>
-      <div>
-        <p style="font-size: 11px; color: #6b7280; margin: 0;">صلاحية العرض (أيام)</p>
-        <p style="font-size: 13px; font-weight: 600; margin: 3px 0 0 0;">${rfq.validity_days || 7}</p>
-      </div>
-      <div>
-        <p style="font-size: 11px; color: #6b7280; margin: 0;">الحالة</p>
-        <p style="font-size: 13px; font-weight: 600; margin: 3px 0 0 0;"><span class="badge badge-${rfq.status === 'completed' ? 'green' : rfq.status === 'in_progress' ? 'yellow' : 'blue'}">${getRFQStatus(rfq.status)}</span></p>
-      </div>
-    </div>
-    
-    <div style="margin-top: 20px;">
-      <h3 style="font-size: 14px; color: #1e3a5f; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px;">الأصناف المطلوبة (${items.length})</h3>
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 40px;">#</th>
-            <th>الكود</th>
-            <th>الصنف</th>
-            <th style="text-align: center;">الكمية</th>
-            <th style="text-align: center;">الوحدة</th>
-            <th>ملاحظات</th>
-          </tr>
-        </thead>
-        <tbody>${itemRows}</tbody>
-      </table>
-    </div>
+    <div class="section-title" style="color: #1e3a5f;">الأصناف المطلوبة (${items.length})</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 30px; background: #2563eb;">#</th>
+          <th style="background: #2563eb;">الكود</th>
+          <th style="background: #2563eb;">الصنف</th>
+          <th style="width: 50px; background: #2563eb;">الكمية</th>
+          <th style="width: 55px; background: #2563eb;">الوحدة</th>
+          <th style="background: #2563eb;">ملاحظات</th>
+        </tr>
+      </thead>
+      <tbody>${itemRows}</tbody>
+    </table>
     
     ${suppliers.length > 0 ? `
-    <div style="margin-top: 25px;">
-      <h3 style="font-size: 14px; color: #1e3a5f; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px;">الموردين المدعوين (${suppliers.length})</h3>
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 40px;">#</th>
-            <th>المورد</th>
-            <th>جهة الاتصال</th>
-            <th>الهاتف</th>
-            <th>البريد</th>
-            <th>الحالة</th>
-          </tr>
-        </thead>
-        <tbody>${supplierRows}</tbody>
-      </table>
-    </div>
+    <div class="section-title" style="color: #1e3a5f; margin-top: 20px;">الموردين المدعوين (${suppliers.length})</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 30px; background: #059669;">#</th>
+          <th style="background: #059669;">المورد</th>
+          <th style="background: #059669;">جهة الاتصال</th>
+          <th style="background: #059669;">الهاتف</th>
+          <th style="background: #059669;">البريد</th>
+          <th style="width: 80px; background: #059669;">الحالة</th>
+        </tr>
+      </thead>
+      <tbody>${supplierRows}</tbody>
+    </table>
     ` : ''}
     
     ${rfq.notes ? `
-    <div style="margin-top: 20px; background: #fef3c7; padding: 12px; border-radius: 8px;">
-      <p style="font-size: 12px; font-weight: 600; color: #92400e; margin: 0 0 5px 0;">ملاحظات:</p>
-      <p style="font-size: 12px; color: #78350f; margin: 0;">${rfq.notes}</p>
-    </div>
+      <div class="notes-box" style="background: #fef3c7; border-color: #fbbf24;">
+        <strong style="color: #92400e; font-size: 10px;">ملاحظات:</strong> <span style="font-size: 10px;">${rfq.notes}</span>
+      </div>
     ` : ''}
+    
+    <div class="signature-area">
+      <div class="signature-box">
+        <div class="signature-line">توقيع مدير المشتريات</div>
+        <p style="font-size: 8px; color: #9ca3af; margin-top: 3px;">التاريخ: ___________</p>
+      </div>
+      <div class="signature-box">
+        <div class="signature-line">توقيع المورد</div>
+        <p style="font-size: 8px; color: #9ca3af; margin-top: 3px;">التاريخ: ___________</p>
+      </div>
+      <div class="signature-box">
+        <div class="signature-line">ختم الشركة</div>
+      </div>
+    </div>
     
     <div class="footer">
       <p>نظام إدارة طلبات المواد - تاريخ التصدير: ${formatDateShort(new Date().toISOString())}</p>
