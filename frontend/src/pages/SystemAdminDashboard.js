@@ -630,7 +630,7 @@ export default function SystemAdminDashboard() {
   const [backupValidation, setBackupValidation] = useState(null);
 
   // Fetch Schema Info
-  const fetchSchemaInfo = async () => {
+  const fetchSchemaInfo = useCallback(async () => {
     try {
       const [infoRes, statsRes] = await Promise.all([
         axios.get(`${API_V2}/backup/schema-info`, getAuthHeaders()),
@@ -641,7 +641,7 @@ export default function SystemAdminDashboard() {
     } catch (error) {
       console.error("Error fetching schema info:", error);
     }
-  };
+  }, [API_V2, getAuthHeaders]);
 
   const handleBackup = async () => {
     setBackupLoading(true);
