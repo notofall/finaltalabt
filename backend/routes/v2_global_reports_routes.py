@@ -300,10 +300,49 @@ async def get_buildings_summary(
     result = await session.execute(query)
     materials = result.scalars().all()
     
+    # Get projects
+    projects_query = select(Project)
+    projects_result = await session.execute(projects_query)
+    all_projects = {p.id: p for p in projects_result.scalars().all()}
+    
+    # Get floors
+    from database import ProjectFloor
+    floors_query = select(ProjectFloor)
+    floors_result = await session.execute(floors_query)
+    all_floors = floors_result.scalars().all()
+    floors_by_project = {}
+    for f in all_floors:
+        if f.project_id not in floors_by_project:
+            floors_by_project[f.project_id] = []
+        floors_by_project[f.project_id].append(f)
+    
+    def calc_qty(m, project_floors):
+        if not project_floors:
+            return m.direct_quantity or 0
+        if m.calculation_type == "selected_floor" and m.selected_floor_id:
+            floor = next((f for f in project_floors if f.id == m.selected_floor_id), None)
+            floor_area = floor.area if floor else 0
+        else:
+            floor_area = sum(f.area or 0 for f in project_floors)
+        if m.calculation_method == "direct":
+            return m.direct_quantity or 0
+        raw_qty = floor_area * (m.factor or 0)
+        if m.unit and 'طن' in m.unit:
+            return raw_qty / 1000
+        return raw_qty
+    
     # تجميع حسب المشروع
     by_project = {}
+    total_value = 0
+    
     for m in materials:
-        proj_name = m.project_name or "غير محدد"
+        project = all_projects.get(m.project_id)
+        proj_name = project.name if project else "غير محدد"
+        project_floors = floors_by_project.get(m.project_id, [])
+        qty = calc_qty(m, project_floors)
+        value = qty * (m.unit_price or 0)
+        total_value += value
+        
         if proj_name not in by_project:
             by_project[proj_name] = {
                 "project_id": m.project_id,
@@ -313,21 +352,21 @@ async def get_buildings_summary(
                 "items": []
             }
         by_project[proj_name]["total_items"] += 1
-        by_project[proj_name]["total_value"] += (m.calculated_quantity or 0) * (m.unit_price or 0)
+        by_project[proj_name]["total_value"] += value
         by_project[proj_name]["items"].append({
             "id": m.id,
             "item_name": m.item_name,
             "unit": m.unit,
-            "quantity": m.calculated_quantity,
+            "quantity": round(qty, 2),
             "unit_price": m.unit_price,
-            "total_price": round((m.calculated_quantity or 0) * (m.unit_price or 0), 2),
+            "total_price": round(value, 2),
             "calculation_type": m.calculation_type,
             "notes": m.notes
         })
     
     return {
         "total_items": len(materials),
-        "total_value": round(sum((m.calculated_quantity or 0) * (m.unit_price or 0) for m in materials), 2),
+        "total_value": round(total_value, 2),
         "by_project": list(by_project.values())
     }
 
