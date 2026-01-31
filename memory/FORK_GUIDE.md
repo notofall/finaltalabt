@@ -394,7 +394,7 @@ datetime.now(timezone.utc)
 ### URLs
 ```
 Production: http://13.235.247.19
-Preview: https://talafix.preview.emergentagent.com
+Preview: https://backup-restore-13.preview.emergentagent.com
 API Base: /api/v2/
 ```
 
