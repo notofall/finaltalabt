@@ -180,7 +180,7 @@ class MaterialRequest(Base):
     __tablename__ = "material_requests"
     
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid_lib.uuid4()))
-    request_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, index=True)
+    request_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, index=True, unique=True)
     request_seq: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), nullable=False, index=True)
     project_name: Mapped[str] = mapped_column(String(255), nullable=False)
