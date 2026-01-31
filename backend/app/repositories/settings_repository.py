@@ -70,7 +70,7 @@ class SettingsRepository:
     async def get_company_settings(self) -> Dict[str, str]:
         """Get all company-related settings"""
         company_keys = [
-            "company_name", "company_logo", "company_address", "company_phone",
+            "company_name", "company_logo", "company_logo_base64", "company_address", "company_phone",
             "company_email", "report_header", "report_footer", "pdf_primary_color", "pdf_show_logo"
         ]
         return await self.get_settings_by_keys(company_keys)
