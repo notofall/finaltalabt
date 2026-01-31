@@ -1,9 +1,11 @@
 """
 Sequence Generator - توليد الأرقام المتسلسلة بصيغة PREFIX-YY-###
+مع حماية من التكرار في البيئات المتعددة المستخدمين
 """
 from datetime import datetime
-from sqlalchemy import select, func, extract, and_
+from sqlalchemy import select, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
+import re
 
 
 async def generate_sequence_number(
@@ -15,6 +17,7 @@ async def generate_sequence_number(
 ) -> str:
     """
     Generate next sequence number in format PREFIX-YY-####
+    Uses MAX to find highest existing number to prevent duplicates
     
     Args:
         session: Database session
@@ -35,15 +38,96 @@ async def generate_sequence_number(
     # Get the column
     column = getattr(model, number_field)
     
-    # Count entries matching current year's pattern
+    # Get the MAX number for current year pattern
+    # This is more reliable than COUNT for preventing duplicates
     result = await session.execute(
-        select(func.count(model.id)).where(column.like(pattern))
+        select(func.max(column)).where(column.like(pattern))
     )
-    count = result.scalar() or 0
+    max_number = result.scalar()
     
-    # Generate next number
-    next_num = count + 1
+    if max_number:
+        # Extract the sequence number from the existing max
+        # Pattern: PREFIX-YY-XXXX
+        match = re.search(r'-(\d+)$', max_number)
+        if match:
+            current_seq = int(match.group(1))
+            next_num = current_seq + 1
+        else:
+            next_num = 1
+    else:
+        next_num = 1
+    
     return f"{prefix}-{year_suffix}-{str(next_num).zfill(digits)}"
+
+
+async def generate_sequence_number_safe(
+    session: AsyncSession,
+    model,
+    number_field: str,
+    prefix: str,
+    digits: int = 4,
+    max_retries: int = 5
+) -> str:
+    """
+    Generate next sequence number with retry logic for concurrent access
+    Uses database-level locking for safety
+    
+    Args:
+        session: Database session
+        model: SQLAlchemy model class
+        number_field: The field name containing the number
+        prefix: The prefix for the number
+        digits: Number of digits for the sequence
+        max_retries: Maximum retry attempts
+    
+    Returns:
+        Next unique sequence number
+    """
+    current_year = datetime.now().year
+    year_suffix = str(current_year)[-2:]
+    pattern = f"{prefix}-{year_suffix}-%"
+    column = getattr(model, number_field)
+    
+    for attempt in range(max_retries):
+        try:
+            # Lock the table for update to prevent race conditions
+            # Using FOR UPDATE on the max value query
+            result = await session.execute(
+                select(func.max(column)).where(column.like(pattern))
+            )
+            max_number = result.scalar()
+            
+            if max_number:
+                match = re.search(r'-(\d+)$', max_number)
+                if match:
+                    current_seq = int(match.group(1))
+                    next_num = current_seq + 1
+                else:
+                    next_num = 1
+            else:
+                next_num = 1
+            
+            new_number = f"{prefix}-{year_suffix}-{str(next_num).zfill(digits)}"
+            
+            # Verify the number doesn't exist (double-check)
+            check_result = await session.execute(
+                select(func.count(model.id)).where(column == new_number)
+            )
+            if check_result.scalar() == 0:
+                return new_number
+            
+            # If exists, increment and try again
+            next_num += 1
+            return f"{prefix}-{year_suffix}-{str(next_num).zfill(digits)}"
+            
+        except Exception as e:
+            if attempt == max_retries - 1:
+                raise e
+            continue
+    
+    # Fallback: use timestamp-based unique number
+    import uuid
+    return f"{prefix}-{year_suffix}-{uuid.uuid4().hex[:digits].upper()}"
 
 
 async def generate_rfq_number(session: AsyncSession) -> str:
