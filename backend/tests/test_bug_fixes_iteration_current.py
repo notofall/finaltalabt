@@ -9,7 +9,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://backup-restore-13.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://buildapp-repair.preview.emergentagent.com')
 
 # Test credentials
 SUPERVISOR_CREDS = {"email": "a1@test.com", "password": "password"}
