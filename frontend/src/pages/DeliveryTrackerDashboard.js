@@ -44,7 +44,7 @@ const DeliveryTrackerDashboard = () => {
   const [deliveryNotes, setDeliveryNotes] = useState("");
   const [deliveryItems, setDeliveryItems] = useState([]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [ordersRes, deliveredRes, statsRes, projectsRes, suppliersRes] = await Promise.all([
         axios.get(`${API_V2_URL}/delivery/pending`, getAuthHeaders()),
@@ -85,7 +85,7 @@ const DeliveryTrackerDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_V2_URL, getAuthHeaders]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
