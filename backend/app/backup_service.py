@@ -124,7 +124,9 @@ class BackupService:
         Returns:
             Dict containing backup data and metadata
         """
-        BACKUPS_DIR.mkdir(parents=True, exist_ok=True)
+        # إنشاء المجلد فقط إذا كنا سنحفظ في ملف
+        if save_to_file:
+            BACKUPS_DIR.mkdir(parents=True, exist_ok=True)
         
         # اكتشاف جميع الجداول
         tables = await self.discover_all_tables()
