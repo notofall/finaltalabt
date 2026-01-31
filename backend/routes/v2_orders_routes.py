@@ -847,11 +847,12 @@ async def delete_order(
     - المستخدم يجب أن يكون مدير مشتريات أو مدير النظام
     - مدير المشتريات يحتاج صلاحية من مدير النظام
     - يتم تسجيل الحذف في سجل التدقيق
+    - يتم إرجاع الطلب المرتبط لحالته السابقة (approved_by_engineer أو partially_ordered)
     """
     from routes.v2_auth_routes import UserRole
     from app.audit_logger import audit_log, AuditAction
     from app.repositories.settings_repository import SettingsRepository
-    from database import PurchaseOrder, PurchaseOrderItem
+    from database import PurchaseOrder, PurchaseOrderItem, MaterialRequest
     
     # Check permission
     if current_user.role == UserRole.SYSTEM_ADMIN:
@@ -882,9 +883,15 @@ async def delete_order(
             detail="أمر الشراء غير موجود"
         )
     
+    # Store request_id before deletion
+    request_id = order.request_id
+    request_status_updated = False
+    new_request_status = None
+    
     # Prepare audit data
     order_data = {
         "order_number": order.order_number,
+        "request_id": request_id,
         "project_name": order.project_name,
         "supplier_name": order.supplier_name,
         "total_amount": order.total_amount,
@@ -918,6 +925,36 @@ async def delete_order(
     # Delete order
     await session.delete(order)
     
+    # Update the related request status
+    if request_id:
+        # Check if there are other orders for this request
+        other_orders_result = await session.execute(
+            select(func.count(PurchaseOrder.id))
+            .where(PurchaseOrder.request_id == request_id)
+            .where(PurchaseOrder.id != str(order_id))
+        )
+        other_orders_count = other_orders_result.scalar() or 0
+        
+        # Get the request
+        request_result = await session.execute(
+            select(MaterialRequest).where(MaterialRequest.id == request_id)
+        )
+        request = request_result.scalar_one_or_none()
+        
+        if request:
+            if other_orders_count > 0:
+                # There are other orders, set to partially_ordered
+                new_request_status = "partially_ordered"
+            else:
+                # No other orders, return to approved_by_engineer
+                new_request_status = "approved_by_engineer"
+            
+            request.status = new_request_status
+            request.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            request_status_updated = True
+            order_data["request_status_updated"] = True
+            order_data["new_request_status"] = new_request_status
+    
     # Log to audit
     await audit_log.log(
         session=session,
@@ -927,15 +964,23 @@ async def delete_order(
         user_role=current_user.role,
         entity_type="purchase_order",
         entity_id=str(order_id),
-        description=f"حذف أمر الشراء {order.order_number} - السبب: {data.reason}",
+        description=f"حذف أمر الشراء {order.order_number} - السبب: {data.reason}" + 
+                    (f" - تم إرجاع الطلب للحالة: {new_request_status}" if request_status_updated else ""),
         changes=order_data
     )
     
     await session.commit()
     
-    return {
+    response = {
         "message": f"تم حذف أمر الشراء {order.order_number} بنجاح",
         "order_number": order.order_number,
         "deleted_by": current_user.name
     }
+    
+    if request_status_updated:
+        response["request_status_updated"] = True
+        response["new_request_status"] = new_request_status
+        response["request_message"] = f"تم إرجاع الطلب للحالة: {'معتمد من المهندس' if new_request_status == 'approved_by_engineer' else 'صدر منه أوامر جزئية'}"
+    
+    return response
 
