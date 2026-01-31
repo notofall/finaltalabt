@@ -42,7 +42,7 @@ const PrinterDashboard = () => {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const handlePrint = async (order) => {
     setPrinting(true);

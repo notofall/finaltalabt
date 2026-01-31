@@ -83,7 +83,7 @@ const EngineerDashboard = () => {
     toast.success("تم تحديث البيانات ومسح الذاكرة المؤقتة");
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
   
   // Reset page when filter changes
   useEffect(() => { setCurrentPage(1); }, [filterMode]);

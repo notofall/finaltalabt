@@ -87,7 +87,7 @@ const DeliveryTrackerDashboard = () => {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const getStatusBadge = (status) => {
     const statusMap = {

@@ -470,7 +470,7 @@ const ProcurementDashboard = () => {
     fetchAliases();
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   // Fetch Reports - تحميل التقارير (PostgreSQL)
   const fetchReports = async () => {
