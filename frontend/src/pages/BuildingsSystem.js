@@ -2662,7 +2662,7 @@ const BuildingsSystem = () => {
                               مقاس البلاط/اللوح (اختياري)
                             </Label>
                             <p className="text-xs text-amber-300/70 mb-2">
-                              عند إدخال المقاس، سيتم حساب عدد القطع تلقائياً: المساحة ÷ مساحة البلاطة
+                              الكمية النهائية ستكون بالمتر المربع (م²)
                             </p>
                             <div className="grid grid-cols-2 gap-2">
                               <div>
@@ -2687,9 +2687,14 @@ const BuildingsSystem = () => {
                               </div>
                             </div>
                             {mat.tile_width > 0 && mat.tile_height > 0 && (
-                              <p className="text-xs text-emerald-400 mt-2">
-                                ✓ مساحة البلاطة: {((mat.tile_width / 100) * (mat.tile_height / 100)).toFixed(3)} م²
-                              </p>
+                              <div className="mt-2 p-2 bg-slate-700/50 rounded text-xs">
+                                <p className="text-emerald-400">
+                                  ✓ مساحة البلاطة: {((mat.tile_width / 100) * (mat.tile_height / 100)).toFixed(3)} م²
+                                </p>
+                                <p className="text-slate-300 mt-1">
+                                  💡 الكمية = المساحة الكلية (م²) + نسبة الهالك
+                                </p>
+                              </div>
                             )}
                           </div>
                         </div>
