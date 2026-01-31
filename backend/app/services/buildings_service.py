@@ -291,18 +291,27 @@ class BuildingsService(BaseService):
             tile_width = getattr(m, 'tile_width', 0) or 0
             tile_height = getattr(m, 'tile_height', 0) or 0
             tiles_count = 0
+            area_quantity = floor_area  # الكمية بالمتر المربع
             
             if tile_width > 0 and tile_height > 0:
+                # اكتشاف تلقائي: إذا كانت القيمة أقل من 10، افترض أنها بالمتر
+                if tile_width < 10:
+                    tile_width = tile_width * 100  # تحويل من متر لسنتيمتر
+                if tile_height < 10:
+                    tile_height = tile_height * 100  # تحويل من متر لسنتيمتر
+                    
                 # Calculate tiles count: area / (width * height in m²)
                 tile_area_m2 = (tile_width / 100) * (tile_height / 100)  # Convert cm to m
                 if tile_area_m2 > 0:
                     tiles_count = floor_area / tile_area_m2
-                    base_quantity = tiles_count  # Override with tiles count
+                    # الكمية الأساسية تبقى بالمتر المربع، وعدد الحبات يُحسب بشكل منفصل
+                    base_quantity = area_quantity  # لا نستبدل الكمية بعدد الحبات
             
             # Apply waste percentage
             waste_pct = getattr(m, 'waste_percentage', 0) or 0
             original_quantity = base_quantity
             quantity_with_waste = base_quantity * (1 + waste_pct / 100)
+            tiles_with_waste = tiles_count * (1 + waste_pct / 100) if tiles_count > 0 else 0
             
             total_price = quantity_with_waste * m.unit_price
             
@@ -315,7 +324,8 @@ class BuildingsService(BaseService):
                 "floor_name": selected_floor_name,
                 "floor_area": floor_area,
                 "tile_dimensions": f"{int(tile_width)}×{int(tile_height)}" if tile_width > 0 else None,
-                "tiles_count": round(tiles_count) if tiles_count > 0 else None,
+                "tiles_count": round(tiles_count, 2) if tiles_count > 0 else None,
+                "tiles_with_waste": round(tiles_with_waste, 2) if tiles_with_waste > 0 else None,
                 "waste_percentage": waste_pct,
                 "original_quantity": round(original_quantity, 2),
                 "quantity": round(quantity_with_waste, 2),
