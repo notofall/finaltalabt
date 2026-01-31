@@ -82,6 +82,7 @@ const BuildingsSystem = () => {
   const [batchCatalogSearch, setBatchCatalogSearch] = useState("");
   const [showBatchCatalogDropdown, setShowBatchCatalogDropdown] = useState(false);
   const [savingBatch, setSavingBatch] = useState(false);
+  const [expandedMaterialIndex, setExpandedMaterialIndex] = useState(null);
   
   // Supply Tracking
   const [supplyItems, setSupplyItems] = useState([]);
