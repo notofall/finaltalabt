@@ -1157,7 +1157,7 @@ const BuildingsSystem = () => {
     } catch (error) {
       console.error("Error fetching reports:", error);
     }
-  }, [API_URL, getAuthHeaders]);
+  }, [BUILDINGS_API, getAuthHeaders]);
 
   useEffect(() => {
     fetchDashboard();
