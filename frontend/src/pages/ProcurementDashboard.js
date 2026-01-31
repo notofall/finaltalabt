@@ -2135,62 +2135,46 @@ const ProcurementDashboard = () => {
               الطلبات
               {refreshing && <Loader2 className="w-4 h-4 animate-spin text-orange-500" />}
             </h2>
-            {/* Filter Buttons */}
-            <div className="flex flex-wrap gap-2">
-              <Button 
-                size="sm" 
-                variant={requestViewMode === "approved" ? "default" : "outline"}
-                onClick={() => setRequestViewMode("approved")}
-                className={`h-8 text-xs ${requestViewMode === "approved" ? "bg-green-600" : "text-green-700 border-green-300"}`}
-              >
-                معتمدة
-                <Badge className="mr-1 bg-green-500 text-white text-xs">
-                  {requests.filter(r => ["approved_by_engineer", "partially_ordered"].includes(r.status)).length}
-                </Badge>
-              </Button>
-              <Button 
-                size="sm" 
-                variant={requestViewMode === "pending" ? "default" : "outline"}
-                onClick={() => setRequestViewMode("pending")}
-                className={`h-8 text-xs ${requestViewMode === "pending" ? "bg-yellow-600" : "text-yellow-700 border-yellow-300"}`}
-              >
-                بانتظار المهندس
-                <Badge className="mr-1 bg-yellow-500 text-white text-xs">
-                  {requests.filter(r => r.status === "pending_engineer").length}
-                </Badge>
-              </Button>
-              <Button 
-                size="sm" 
-                variant={requestViewMode === "rejected" ? "default" : "outline"}
-                onClick={() => setRequestViewMode("rejected")}
-                className={`h-8 text-xs ${requestViewMode === "rejected" ? "bg-red-600" : "text-red-700 border-red-300"}`}
-              >
-                مرفوض
-                <Badge className="mr-1 bg-red-500 text-white text-xs">
-                  {requests.filter(r => r.status === "rejected_by_manager" || r.status === "rejected_by_engineer").length}
-                </Badge>
-              </Button>
-              <Button 
-                size="sm" 
-                variant={requestViewMode === "ordered" ? "default" : "outline"}
-                onClick={() => setRequestViewMode("ordered")}
-                className={`h-8 text-xs ${requestViewMode === "ordered" ? "bg-blue-600" : "text-blue-700 border-blue-300"}`}
-              >
-                تم الإصدار
-                <Badge className="mr-1 bg-blue-500 text-white text-xs">
-                  {requests.filter(r => r.status === "purchase_order_issued").length}
-                </Badge>
-              </Button>
-              <Button 
-                size="sm" 
-                variant={requestViewMode === "all" ? "default" : "outline"}
-                onClick={() => setRequestViewMode("all")}
-                className={`h-8 text-xs ${requestViewMode === "all" ? "bg-slate-800" : ""}`}
-              >
-                الكل
-                <Badge className="mr-1 bg-slate-600 text-white text-xs">{requests.length}</Badge>
-              </Button>
-              <Button variant="outline" size="sm" onClick={fetchData} className="h-8 w-8 p-0"><RefreshCw className="w-3 h-3" /></Button>
+            {/* Filter Dropdown */}
+            <div className="flex items-center gap-2">
+              <Select value={requestViewMode} onValueChange={setRequestViewMode}>
+                <SelectTrigger className="w-[180px] h-9">
+                  <SelectValue placeholder="فلتر الطلبات" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="approved">
+                    <div className="flex items-center justify-between w-full">
+                      <span>معتمدة</span>
+                      <Badge className="mr-2 bg-green-500 text-white text-xs">{requests.filter(r => ["approved_by_engineer", "partially_ordered"].includes(r.status)).length}</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="pending">
+                    <div className="flex items-center justify-between w-full">
+                      <span>بانتظار المهندس</span>
+                      <Badge className="mr-2 bg-yellow-500 text-white text-xs">{requests.filter(r => r.status === "pending_engineer").length}</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="rejected">
+                    <div className="flex items-center justify-between w-full">
+                      <span>مرفوض</span>
+                      <Badge className="mr-2 bg-red-500 text-white text-xs">{requests.filter(r => r.status === "rejected_by_manager" || r.status === "rejected_by_engineer").length}</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="ordered">
+                    <div className="flex items-center justify-between w-full">
+                      <span>تم الإصدار</span>
+                      <Badge className="mr-2 bg-blue-500 text-white text-xs">{requests.filter(r => r.status === "purchase_order_issued").length}</Badge>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="all">
+                    <div className="flex items-center justify-between w-full">
+                      <span>الكل</span>
+                      <Badge className="mr-2 bg-slate-600 text-white text-xs">{requests.length}</Badge>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={fetchData} className="h-9 w-9 p-0"><RefreshCw className="w-4 h-4" /></Button>
             </div>
           </div>
 
