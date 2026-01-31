@@ -116,6 +116,7 @@ async def upload_company_logo(
 ):
     """
     رفع شعار الشركة - System Admin only
+    يحفظ الملف + base64 للاستخدام في PDF
     """
     require_system_admin(current_user)
     
@@ -132,11 +133,18 @@ async def upload_company_logo(
     filename = f"logo_{uuid.uuid4().hex[:8]}.{ext}"
     filepath = UPLOAD_DIR / filename
     
-    # حفظ الملف
+    # حفظ الملف وتحويله إلى base64
     try:
         content = await file.read()
+        
+        # حفظ الملف
         with open(filepath, "wb") as f:
             f.write(content)
+        
+        # تحويل إلى base64 للاستخدام في PDF
+        base64_image = base64.b64encode(content).decode('utf-8')
+        logo_base64 = f"data:{file.content_type};base64,{base64_image}"
+        
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -144,14 +152,40 @@ async def upload_company_logo(
         )
     
     # تحديث إعدادات الشركة
-    logo_url = f"/uploads/{filename}"
+    logo_url = f"/api/v2/sysadmin/uploads/{filename}"
     await service.update_company_settings(
-        settings={"company_logo": logo_url},
+        settings={
+            "company_logo": logo_url,
+            "company_logo_base64": logo_base64  # حفظ base64 للاستخدام في PDF
+        },
         user_id=current_user.id,
         user_name=current_user.name
     )
     
-    return {"logo": logo_url, "message": "تم رفع الشعار بنجاح"}
+    return {"logo": logo_url, "logo_base64": logo_base64, "message": "تم رفع الشعار بنجاح"}
+
+
+@router.get("/uploads/{filename}")
+async def serve_uploaded_file(filename: str):
+    """
+    خدمة الملفات المرفوعة (الشعار)
+    """
+    filepath = UPLOAD_DIR / filename
+    if not filepath.exists():
+        raise HTTPException(status_code=404, detail="الملف غير موجود")
+    
+    # Determine content type
+    ext = filename.split(".")[-1].lower()
+    content_types = {
+        "png": "image/png",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "gif": "image/gif",
+        "webp": "image/webp"
+    }
+    content_type = content_types.get(ext, "application/octet-stream")
+    
+    return FileResponse(filepath, media_type=content_type)
 
 
 @router.get("/settings")
