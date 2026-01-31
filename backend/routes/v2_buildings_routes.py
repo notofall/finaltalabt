@@ -2049,20 +2049,22 @@ async def export_boq_pdf(
     # Area Materials table
     if calc_data['area_materials']:
         elements.append(Paragraph(arabic("مواد المساحة"), heading_style))
-        area_data = [[arabic("الإجمالي"), arabic("السعر"), arabic("الكمية"), arabic("الهالك%"), arabic("المعامل"), arabic("الوحدة"), arabic("المادة")]]
+        area_data = [[arabic("الإجمالي"), arabic("السعر"), arabic("الحبات"), arabic("الكمية"), arabic("الهالك%"), arabic("المعامل"), arabic("الوحدة"), arabic("المادة")]]
         for mat in calc_data['area_materials']:
+            tiles_count = mat.get('tiles_with_waste') or mat.get('tiles_count') or '-'
             area_data.append([
                 f"{mat['total_price']:,.2f}",
                 str(mat['unit_price']),
+                str(tiles_count) if tiles_count != '-' else '-',
                 str(mat['quantity']),
                 str(mat.get('waste_percentage', 0)),
                 str(mat.get('factor', 0)),
                 arabic(mat['unit']),
                 arabic(mat['item_name'][:25])
             ])
-        area_data.append([f"{calc_data['total_area_materials_cost']:,.2f}", arabic("الإجمالي:"), "", "", "", "", ""])
+        area_data.append([f"{calc_data['total_area_materials_cost']:,.2f}", arabic("الإجمالي:"), "", "", "", "", "", ""])
         
-        area_table = Table(area_data, colWidths=[80, 60, 60, 50, 50, 50, 110])
+        area_table = Table(area_data, colWidths=[70, 50, 55, 55, 40, 40, 45, 100])
         area_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), 'Arabic'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0.18, 0.49, 0.2)),
