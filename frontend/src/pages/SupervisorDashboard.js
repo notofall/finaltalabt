@@ -75,7 +75,7 @@ const SupervisorDashboard = () => {
   const [editEngineerId, setEditEngineerId] = useState("");
   const [editExpectedDeliveryDate, setEditExpectedDeliveryDate] = useState("");
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       // Fetch company settings for PDF export
       const token = localStorage.getItem('token');
@@ -103,7 +103,7 @@ const SupervisorDashboard = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [API_V2_URL, getAuthHeaders]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
