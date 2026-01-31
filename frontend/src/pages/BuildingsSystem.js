@@ -1190,6 +1190,16 @@ const BuildingsSystem = () => {
     }
   }, [selectCatalogDialogOpen, areaMaterialDialogOpen, catalogSearch, fetchCatalogItems]);
 
+  // البحث في Batch Area Materials Dialog
+  useEffect(() => {
+    if (batchCatalogSearch && batchCatalogSearch.length >= 2) {
+      const debounceTimer = setTimeout(() => {
+        fetchCatalogItems(batchCatalogSearch);
+      }, 300);
+      return () => clearTimeout(debounceTimer);
+    }
+  }, [batchCatalogSearch, fetchCatalogItems]);
+
   const getFloorName = (num) => {
     if (num === -1) return "اللبشة";
     if (num === 0) return "الأرضي";
