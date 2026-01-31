@@ -740,14 +740,14 @@ export default function SystemAdminDashboard() {
   };
 
   // Procurement Delete Permission
-  const fetchDeletePermission = async () => {
+  const fetchDeletePermission = useCallback(async () => {
     try {
       const res = await axios.get(`${API_V2}/settings/procurement/delete-permission`, getAuthHeaders());
       setProcurementDeletePermission(res.data.enabled);
     } catch (error) {
       console.error("Error fetching delete permission:", error);
     }
-  };
+  }, [API_V2, getAuthHeaders]);
 
   const handleToggleDeletePermission = async () => {
     try {
@@ -763,7 +763,7 @@ export default function SystemAdminDashboard() {
   };
 
   // Deleted Orders
-  const fetchDeletedOrders = async () => {
+  const fetchDeletedOrders = useCallback(async () => {
     setDeletedOrdersLoading(true);
     try {
       const res = await axios.get(`${API_V2}/system/deleted-orders`, getAuthHeaders());
@@ -773,7 +773,7 @@ export default function SystemAdminDashboard() {
     } finally {
       setDeletedOrdersLoading(false);
     }
-  };
+  }, [API_V2, getAuthHeaders]);
 
   // Data Cleanup - using V2 API
   const handleCleanData = async () => {
