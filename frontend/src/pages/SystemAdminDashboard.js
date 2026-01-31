@@ -656,8 +656,14 @@ export default function SystemAdminDashboard() {
         ...getAuthHeaders(),
         headers: { ...getAuthHeaders().headers, "Content-Type": "multipart/form-data" }
       });
-      setLogoPreview(res.data.logo);
-      setCompanySettings(prev => ({ ...prev, company_logo: res.data.logo }));
+      // Use base64 for preview and URL for storage
+      const logoSrc = res.data.logo_base64 || res.data.logo;
+      if (logoSrc && !logoSrc.startsWith('data:') && !logoSrc.startsWith('http')) {
+        setLogoPreview(`${API_V2.replace('/api/v2', '')}${logoSrc}`);
+      } else {
+        setLogoPreview(logoSrc);
+      }
+      setCompanySettings(prev => ({ ...prev, company_logo: res.data.logo, company_logo_base64: res.data.logo_base64 }));
       toast.success("تم رفع الشعار بنجاح");
     } catch (error) {
       toast.error(error.response?.data?.detail || "فشل في رفع الشعار");
