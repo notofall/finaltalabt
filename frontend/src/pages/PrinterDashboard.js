@@ -21,7 +21,7 @@ const PrinterDashboard = () => {
   const [printing, setPrinting] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       // Fetch company settings for PDF export
       const token = localStorage.getItem('token');
@@ -40,7 +40,7 @@ const PrinterDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_V2_URL, getAuthHeaders]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
