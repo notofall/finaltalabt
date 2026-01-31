@@ -664,20 +664,6 @@ export default function SystemAdminDashboard() {
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [backupValidation, setBackupValidation] = useState(null);
 
-  // Fetch Schema Info
-  const fetchSchemaInfo = useCallback(async () => {
-    try {
-      const [infoRes, statsRes] = await Promise.all([
-        axios.get(`${API_V2}/backup/schema-info`, getAuthHeaders()),
-        axios.get(`${API_V2}/backup/database-stats`, getAuthHeaders())
-      ]);
-      setSchemaInfo(infoRes.data);
-      setDbStatsBackup(statsRes.data);
-    } catch (error) {
-      console.error("Error fetching schema info:", error);
-    }
-  }, [API_V2, getAuthHeaders]);
-
   const handleBackup = async () => {
     setBackupLoading(true);
     try {
@@ -703,7 +689,6 @@ export default function SystemAdminDashboard() {
       link.remove();
       
       toast.success("تم تحميل النسخة الاحتياطية الكاملة");
-      fetchSchemaInfo(); // Refresh stats
     } catch (error) {
       toast.error("فشل في إنشاء النسخة الاحتياطية");
     } finally {
