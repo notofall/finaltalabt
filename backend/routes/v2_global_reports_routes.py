@@ -60,14 +60,61 @@ async def get_global_summary(
     buildings_result = await session.execute(buildings_query)
     area_materials = buildings_result.scalars().all()
     
-    # حساب إجماليات المباني
-    total_buildings_qty = sum(m.calculated_quantity or 0 for m in area_materials)
-    total_buildings_value = sum((m.calculated_quantity or 0) * (m.unit_price or 0) for m in area_materials)
+    # Get projects with floors for calculating quantities
+    projects_query = select(Project)
+    projects_result = await session.execute(projects_query)
+    all_projects = {p.id: p for p in projects_result.scalars().all()}
     
-    # تجميع حسب المشروع
+    # جلب الأدوار لكل مشروع
+    from database import ProjectFloor
+    floors_query = select(ProjectFloor)
+    floors_result = await session.execute(floors_query)
+    all_floors = floors_result.scalars().all()
+    floors_by_project = {}
+    for f in all_floors:
+        if f.project_id not in floors_by_project:
+            floors_by_project[f.project_id] = []
+        floors_by_project[f.project_id].append(f)
+    
+    # حساب الكمية لكل مادة
+    def calculate_material_quantity(m, project_floors):
+        """حساب كمية المادة بناءً على الأدوار"""
+        if not project_floors:
+            return m.direct_quantity or 0
+        
+        # حساب مساحة الأدوار
+        if m.calculation_type == "selected_floor" and m.selected_floor_id:
+            floor = next((f for f in project_floors if f.id == m.selected_floor_id), None)
+            floor_area = floor.area if floor else 0
+        else:
+            floor_area = sum(f.area or 0 for f in project_floors)
+        
+        if m.calculation_method == "direct":
+            return m.direct_quantity or 0
+        else:
+            # factor method
+            raw_qty = floor_area * (m.factor or 0)
+            # تحويل للطن إذا كانت الوحدة طن
+            if m.unit and 'طن' in m.unit:
+                return raw_qty / 1000
+            return raw_qty
+    
+    # حساب إجماليات المباني
+    total_buildings_qty = 0
+    total_buildings_value = 0
     buildings_by_project = {}
+    
     for m in area_materials:
-        proj_name = m.project_name or "غير محدد"
+        project_floors = floors_by_project.get(m.project_id, [])
+        qty = calculate_material_quantity(m, project_floors)
+        value = qty * (m.unit_price or 0)
+        
+        total_buildings_qty += qty
+        total_buildings_value += value
+        
+        proj_name = all_projects.get(m.project_id, {})
+        proj_name = getattr(proj_name, 'name', 'غير محدد') if proj_name else "غير محدد"
+        
         if proj_name not in buildings_by_project:
             buildings_by_project[proj_name] = {
                 "project_id": m.project_id,
@@ -78,14 +125,14 @@ async def get_global_summary(
                 "items": []
             }
         buildings_by_project[proj_name]["items_count"] += 1
-        buildings_by_project[proj_name]["total_quantity"] += m.calculated_quantity or 0
-        buildings_by_project[proj_name]["total_value"] += (m.calculated_quantity or 0) * (m.unit_price or 0)
+        buildings_by_project[proj_name]["total_quantity"] += qty
+        buildings_by_project[proj_name]["total_value"] += value
         buildings_by_project[proj_name]["items"].append({
             "item_name": m.item_name,
             "unit": m.unit,
-            "quantity": m.calculated_quantity,
+            "quantity": round(qty, 2),
             "unit_price": m.unit_price,
-            "total_price": (m.calculated_quantity or 0) * (m.unit_price or 0)
+            "total_price": round(value, 2)
         })
     
     # ========== 2. تقارير أوامر الشراء ==========
