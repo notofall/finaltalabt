@@ -823,6 +823,16 @@ const BuildingsSystem = () => {
   const updateBatchMaterial = (index, field, value) => {
     const updated = [...batchAreaMaterials];
     updated[index] = { ...updated[index], [field]: value };
+    
+    // عند إدخال مقاس البلاط، تعيين المعامل = 1 تلقائياً
+    if ((field === 'tile_width' || field === 'tile_height') && value > 0) {
+      const mat = updated[index];
+      if (mat.tile_width > 0 && mat.tile_height > 0 && mat.factor === 0) {
+        updated[index].factor = 1;
+        updated[index].unit = "قطعة";
+      }
+    }
+    
     setBatchAreaMaterials(updated);
   };
 
