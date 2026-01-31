@@ -60,6 +60,7 @@ from routes.v2_domain_routes import router as v2_domain_router
 from routes.v2_system_routes import router as v2_system_router
 from routes.v2_reports_routes import router as v2_reports_router
 from routes.v2_rfq_routes import router as v2_rfq_router
+from routes.v2_backup_routes import router as v2_backup_router
 
 # V2 Routes
 app.include_router(v2_projects_router)
@@ -80,6 +81,7 @@ app.include_router(v2_domain_router)
 app.include_router(v2_system_router)
 app.include_router(v2_reports_router)
 app.include_router(v2_rfq_router)
+app.include_router(v2_backup_router)
 
 # ==================== CORS Configuration ====================
 app.add_middleware(
