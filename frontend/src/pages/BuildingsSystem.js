@@ -793,14 +793,23 @@ const BuildingsSystem = () => {
       return;
     }
     
-    setBatchAreaMaterials([...batchAreaMaterials, {
+    const newMaterial = {
       catalog_item_id: catalogItem.id,
       item_code: catalogItem.item_code || "",
       item_name: catalogItem.name,
       unit: catalogItem.unit || "طن",
+      calculation_method: "factor",
       factor: 0,
-      unit_price: catalogItem.price || 0
-    }]);
+      direct_quantity: 0,
+      unit_price: catalogItem.price || 0,
+      waste_percentage: 0,
+      tile_width: 0,
+      tile_height: 0,
+      notes: ""
+    };
+    
+    setBatchAreaMaterials([...batchAreaMaterials, newMaterial]);
+    setExpandedMaterialIndex(batchAreaMaterials.length); // فتح المادة الجديدة للتعديل
     setBatchCatalogSearch("");
     setShowBatchCatalogDropdown(false);
   };
