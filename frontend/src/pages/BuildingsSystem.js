@@ -21,6 +21,15 @@ import ChangePasswordDialog from "../components/ChangePasswordDialog";
 import BuildingsPermissions from "../components/BuildingsPermissions";
 import SupplyAdvancedReport from "../components/SupplyAdvancedReport";
 
+// دالة لتحويل الوحدات للعرض الصحيح
+const formatUnit = (unit) => {
+  if (!unit) return unit;
+  return unit
+    .replace(/م2/g, 'م²')
+    .replace(/م ط/g, 'م.ط')
+    .replace(/m2/gi, 'm²');
+};
+
 const BuildingsSystem = () => {
   const { user, logout, API_URL, API_V2_URL, getAuthHeaders } = useAuth();
   const navigate = useNavigate();
