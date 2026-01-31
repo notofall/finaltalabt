@@ -4915,6 +4915,55 @@ const ProcurementDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Order Dialog - نافذة حذف أمر الشراء */}
+      <Dialog open={deleteOrderDialog} onOpenChange={setDeleteOrderDialog}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-center text-red-600">حذف أمر الشراء</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600 text-center">
+              ⚠️ سيتم حذف أمر الشراء نهائياً. هذا الإجراء لا يمكن التراجع عنه.
+            </p>
+            {orderToDelete && (
+              <div className="bg-red-50 p-3 rounded text-sm border border-red-200">
+                <p><strong>رقم الأمر:</strong> <span className="font-mono">{orderToDelete.order_number}</span></p>
+                <p><strong>المشروع:</strong> {orderToDelete.project_name}</p>
+                <p><strong>المورد:</strong> {orderToDelete.supplier_name}</p>
+                <p><strong>المبلغ:</strong> {orderToDelete.total_amount?.toLocaleString()} ريال</p>
+              </div>
+            )}
+            <div>
+              <Label className="text-red-600">سبب الحذف *</Label>
+              <Textarea 
+                placeholder="اذكر سبب حذف هذا الأمر (سيتم تسجيله في سجل التدقيق)..."
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                rows={3}
+                className="mt-1 border-red-200 focus:border-red-400"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                className="flex-1" 
+                onClick={() => { setDeleteOrderDialog(false); setOrderToDelete(null); setDeleteReason(""); }}
+              >
+                إلغاء
+              </Button>
+              <Button 
+                variant="destructive" 
+                className="flex-1" 
+                onClick={handleDeleteOrder}
+                disabled={!deleteReason.trim()}
+              >
+                تأكيد الحذف
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
