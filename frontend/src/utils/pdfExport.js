@@ -3,6 +3,7 @@ import axios from 'axios';
 import { BACKEND_URL } from '../config/api';
 
 const API_URL = BACKEND_URL;
+const BASE_URL = BACKEND_URL; // For static files like logos
 
 // Company settings cache
 let companySettingsCache = null;
@@ -24,6 +25,18 @@ export const getCompanySettings = () => {
   };
 };
 
+// Convert relative logo URL to full URL
+const getFullLogoUrl = (logoPath) => {
+  if (!logoPath) return '';
+  if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) {
+    return logoPath;
+  }
+  if (logoPath.startsWith('/')) {
+    return `${BASE_URL}${logoPath}`;
+  }
+  return logoPath;
+};
+
 // Fetch company settings from API and cache them - Using V2 API
 export const fetchAndCacheCompanySettings = async (token) => {
   try {
@@ -34,8 +47,8 @@ export const fetchAndCacheCompanySettings = async (token) => {
     if (res.data) {
       console.log('Company settings fetched:', res.data);
       // تحويل الشعار لـ URL كامل إذا كان نسبي
-      if (res.data.company_logo && res.data.company_logo.startsWith('/')) {
-        res.data.company_logo = `${API_URL}${res.data.company_logo}`;
+      if (res.data.company_logo) {
+        res.data.company_logo = getFullLogoUrl(res.data.company_logo);
       }
       companySettingsCache = res.data;
       return res.data;
