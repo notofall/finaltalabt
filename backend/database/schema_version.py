@@ -2,7 +2,7 @@
 Schema Version Management
 إدارة إصدارات قاعدة البيانات للنسخ الاحتياطي والاسترداد
 """
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy import Column, String, DateTime, Integer, Text, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 import uuid as uuid_lib
@@ -20,7 +20,7 @@ class SchemaVersion(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid_lib.uuid4()))
     version: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     description: Mapped[str] = mapped_column(Text, nullable=False)
-    applied_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    applied_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     applied_by: Mapped[str] = mapped_column(String(255), nullable=True)
     is_current: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -37,7 +37,7 @@ class BackupMetadata(Base):
     file_path: Mapped[str] = mapped_column(String(500), nullable=True)
     file_size: Mapped[int] = mapped_column(Integer, default=0)
     records_count: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     created_by: Mapped[str] = mapped_column(String(255), nullable=False)
     notes: Mapped[str] = mapped_column(Text, nullable=True)
     is_valid: Mapped[bool] = mapped_column(Boolean, default=True)
