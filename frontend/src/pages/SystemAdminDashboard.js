@@ -95,6 +95,12 @@ export default function SystemAdminDashboard() {
   const [nginxConfig, setNginxConfig] = useState(null);
   const [dnsInstructions, setDnsInstructions] = useState(null);
 
+  // Permissions & Audit State
+  const [procurementDeletePermission, setProcurementDeletePermission] = useState(false);
+  const [deletedOrders, setDeletedOrders] = useState([]);
+  const [deletedOrdersLoading, setDeletedOrdersLoading] = useState(false);
+  const [showDeletedOrderDetails, setShowDeletedOrderDetails] = useState(null);
+
   const roleLabels = {
     system_admin: "مدير النظام",
     supervisor: "مشرف موقع",
