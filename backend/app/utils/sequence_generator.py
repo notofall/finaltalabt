@@ -133,7 +133,7 @@ async def generate_sequence_number_safe(
 async def generate_rfq_number(session: AsyncSession) -> str:
     """Generate next RFQ number: RFQ-YY-####"""
     from database.models import QuotationRequest
-    return await generate_sequence_number(
+    return await generate_sequence_number_safe(
         session=session,
         model=QuotationRequest,
         number_field='rfq_number',
@@ -145,7 +145,7 @@ async def generate_rfq_number(session: AsyncSession) -> str:
 async def generate_quotation_number(session: AsyncSession) -> str:
     """Generate next supplier quotation number: SQ-YY-####"""
     from database.models import SupplierQuotation
-    return await generate_sequence_number(
+    return await generate_sequence_number_safe(
         session=session,
         model=SupplierQuotation,
         number_field='quotation_number',
@@ -157,7 +157,7 @@ async def generate_quotation_number(session: AsyncSession) -> str:
 async def generate_po_number(session: AsyncSession) -> str:
     """Generate next purchase order number: PO-YY-####"""
     from database.models import PurchaseOrder
-    return await generate_sequence_number(
+    return await generate_sequence_number_safe(
         session=session,
         model=PurchaseOrder,
         number_field='order_number',
@@ -169,7 +169,7 @@ async def generate_po_number(session: AsyncSession) -> str:
 async def generate_request_number(session: AsyncSession) -> str:
     """Generate next material request number: MR-YY-####"""
     from database.models import MaterialRequest
-    return await generate_sequence_number(
+    return await generate_sequence_number_safe(
         session=session,
         model=MaterialRequest,
         number_field='request_number',
