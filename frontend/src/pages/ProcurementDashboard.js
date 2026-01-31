@@ -2581,6 +2581,18 @@ const ProcurementDashboard = () => {
                                     <Button size="sm" variant="ghost" onClick={() => openEditOrderDialog(order)} className="h-8 w-8 p-0"><Edit className="w-4 h-4 text-blue-600" /></Button>
                                   )}
                                   <Button size="sm" variant="ghost" onClick={() => exportPurchaseOrderToPDF(order)} className="h-8 w-8 p-0"><Download className="w-4 h-4 text-green-600" /></Button>
+                                  {order.status === "pending_procurement_confirmation" && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      onClick={() => confirmProcurementOrder(order)} 
+                                      className="h-8 px-2 text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-700"
+                                      title="تأكيد الأمر"
+                                    >
+                                      <Check className="w-4 h-4 ml-1" />
+                                      تأكيد
+                                    </Button>
+                                  )}
                                   {canDeleteOrders && order.status !== "delivered" && (
                                     <Button size="sm" variant="ghost" onClick={() => openDeleteOrderDialog(order)} className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"><Trash2 className="w-4 h-4" /></Button>
                                   )}
