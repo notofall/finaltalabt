@@ -1123,13 +1123,16 @@ async def sync_supply_tracking(
                 floor_area = total_area
             base_quantity = floor_area * m.factor
         
-        # Handle tile calculation
+        # Handle tile calculation - حساب البلاط
         tile_width = getattr(m, 'tile_width', 0) or 0
         tile_height = getattr(m, 'tile_height', 0) or 0
+        tile_count = 0
         if tile_width > 0 and tile_height > 0 and floor_area > 0:
             tile_area_m2 = (tile_width / 100) * (tile_height / 100)
             if tile_area_m2 > 0:
-                base_quantity = floor_area / tile_area_m2
+                tile_count = floor_area / tile_area_m2  # عدد البلاطات للمعلومية فقط
+                # الكمية النهائية تبقى بالمتر المربع
+                base_quantity = floor_area
         
         # Apply waste percentage
         waste_pct = getattr(m, 'waste_percentage', 0) or 0
