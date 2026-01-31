@@ -619,7 +619,12 @@ async def export_global_report_excel(
         ws_buildings = wb.create_sheet("كميات المباني")
         ws_buildings.sheet_view.rightToLeft = True
         
-        headers = ['المشروع', 'اسم الصنف', 'الوحدة', 'الكمية', 'سعر الوحدة', 'الإجمالي']
+        # Get projects for names
+        projects_query = select(Project)
+        projects_result = await session.execute(projects_query)
+        all_projects = {p.id: p for p in projects_result.scalars().all()}
+        
+        headers = ['المشروع', 'اسم الصنف', 'الوحدة', 'المعامل/الكمية', 'سعر الوحدة', 'طريقة الحساب']
         for col, header in enumerate(headers, 1):
             cell = ws_buildings.cell(row=1, column=col, value=header)
             cell.font = header_font
@@ -627,12 +632,17 @@ async def export_global_report_excel(
             cell.border = thin_border
         
         for row_num, m in enumerate(area_materials, 2):
-            ws_buildings.cell(row=row_num, column=1, value=m.project_name).border = thin_border
+            project = all_projects.get(m.project_id)
+            proj_name = project.name if project else "غير محدد"
+            qty_value = m.direct_quantity if m.calculation_method == "direct" else m.factor
+            calc_method = "كمية مباشرة" if m.calculation_method == "direct" else "معامل"
+            
+            ws_buildings.cell(row=row_num, column=1, value=proj_name).border = thin_border
             ws_buildings.cell(row=row_num, column=2, value=m.item_name).border = thin_border
             ws_buildings.cell(row=row_num, column=3, value=m.unit).border = thin_border
-            ws_buildings.cell(row=row_num, column=4, value=m.calculated_quantity).border = thin_border
+            ws_buildings.cell(row=row_num, column=4, value=qty_value or 0).border = thin_border
             ws_buildings.cell(row=row_num, column=5, value=m.unit_price).border = thin_border
-            ws_buildings.cell(row=row_num, column=6, value=round((m.calculated_quantity or 0) * (m.unit_price or 0), 2)).border = thin_border
+            ws_buildings.cell(row=row_num, column=6, value=calc_method).border = thin_border
         
         ws_buildings.column_dimensions['A'].width = 25
         ws_buildings.column_dimensions['B'].width = 30
