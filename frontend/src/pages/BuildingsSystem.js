@@ -2029,12 +2029,27 @@ const BuildingsSystem = () => {
                               if (mat.calculation_method === "direct") {
                                 quantity = mat.direct_quantity || 0;
                               } else {
-                                quantity = floorArea * (mat.factor || 0);
+                                // المعامل بالكيلوجرام للمتر المربع
+                                let rawQuantity = floorArea * (mat.factor || 0);
+                                
+                                // تحويل تلقائي من كجم لطن إذا كانت الوحدة طن
+                                const unitLower = (mat.unit || '').toLowerCase().trim();
+                                if (unitLower === 'طن' || unitLower === 'ton' || unitLower === 'tons') {
+                                  quantity = rawQuantity / 1000;
+                                } else {
+                                  quantity = rawQuantity;
+                                }
                               }
                               
                               // حساب البلاط
                               if (mat.tile_width > 0 && mat.tile_height > 0 && floorArea > 0) {
-                                const tileAreaM2 = (mat.tile_width / 100) * (mat.tile_height / 100);
+                                // اكتشاف تلقائي: إذا كانت القيمة أقل من 10، افترض أنها بالمتر
+                                let tileW = mat.tile_width;
+                                let tileH = mat.tile_height;
+                                if (tileW < 10) tileW = tileW * 100;
+                                if (tileH < 10) tileH = tileH * 100;
+                                
+                                const tileAreaM2 = (tileW / 100) * (tileH / 100);
                                 if (tileAreaM2 > 0) {
                                   quantity = floorArea / tileAreaM2;
                                 }
