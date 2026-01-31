@@ -887,7 +887,8 @@ async def delete_order(
     elif current_user.role == UserRole.PROCUREMENT_MANAGER:
         # Check if procurement manager has delete permission
         settings_repo = SettingsRepository(session)
-        can_delete = await settings_repo.get_setting("procurement_can_delete_orders")
+        setting = await settings_repo.get_setting("procurement_can_delete_orders")
+        can_delete = setting.value if setting else "false"
         
         if can_delete != "true":
             raise HTTPException(
