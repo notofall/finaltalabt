@@ -196,6 +196,12 @@ const ProcurementDashboard = () => {
   const [unlinkedItems, setUnlinkedItems] = useState([]);  // [{index, name, unit, item_code, category_id}]
   const [pendingOrderData, setPendingOrderData] = useState(null);  // Store order data while linking items
 
+  // Delete Order State
+  const [canDeleteOrders, setCanDeleteOrders] = useState(false);
+  const [deleteOrderDialog, setDeleteOrderDialog] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
+  const [deleteReason, setDeleteReason] = useState("");
+
   const fetchData = useCallback(async () => {
     try {
       // Fetch company settings for PDF export
