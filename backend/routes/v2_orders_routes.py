@@ -822,3 +822,119 @@ async def update_supplier_invoice(
     await session.commit()
     
     return {"message": "تم تحديث رقم الفاتورة بنجاح"}
+
+
+
+# ==================== Delete Order (with Permission) ====================
+
+class DeleteOrderReason(BaseModel):
+    reason: str
+
+
+@router.delete("/{order_id}")
+async def delete_order(
+    order_id: UUID,
+    data: DeleteOrderReason,
+    session: AsyncSession = Depends(get_postgres_session),
+    order_service: OrderService = Depends(get_order_service),
+    current_user = Depends(get_current_user)
+):
+    """
+    حذف أمر الشراء (للمشتريات مع الصلاحية)
+    
+    الشروط:
+    - المستخدم يجب أن يكون مدير مشتريات أو مدير النظام
+    - مدير المشتريات يحتاج صلاحية من مدير النظام
+    - يتم تسجيل الحذف في سجل التدقيق
+    """
+    from routes.v2_auth_routes import UserRole
+    from app.audit_logger import audit_log, AuditAction
+    from app.repositories.settings_repository import SettingsRepository
+    from database import PurchaseOrder, PurchaseOrderItem
+    
+    # Check permission
+    if current_user.role == UserRole.SYSTEM_ADMIN:
+        # System admin always has permission
+        pass
+    elif current_user.role == UserRole.PROCUREMENT_MANAGER:
+        # Check if procurement manager has delete permission
+        settings_repo = SettingsRepository(session)
+        can_delete = await settings_repo.get_setting("procurement_can_delete_orders")
+        
+        if can_delete != "true":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="ليس لديك صلاحية حذف أوامر الشراء. تواصل مع مدير النظام لمنحك الصلاحية."
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="صلاحيات غير كافية لحذف أوامر الشراء"
+        )
+    
+    # Get order
+    order = await order_service.get_order(order_id)
+    
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="أمر الشراء غير موجود"
+        )
+    
+    # Prepare audit data
+    order_data = {
+        "order_number": order.order_number,
+        "project_name": order.project_name,
+        "supplier_name": order.supplier_name,
+        "total_amount": order.total_amount,
+        "status": order.status,
+        "created_at": str(order.created_at),
+        "delete_reason": data.reason,
+        "items_count": 0
+    }
+    
+    # Get order items before deletion
+    items_result = await session.execute(
+        select(PurchaseOrderItem).where(PurchaseOrderItem.order_id == str(order_id))
+    )
+    items = items_result.scalars().all()
+    order_data["items_count"] = len(items)
+    order_data["items"] = [
+        {
+            "name": item.name,
+            "quantity": item.quantity,
+            "unit": item.unit,
+            "unit_price": item.unit_price,
+            "total_price": item.total_price
+        }
+        for item in items
+    ]
+    
+    # Delete items first
+    for item in items:
+        await session.delete(item)
+    
+    # Delete order
+    await session.delete(order)
+    
+    # Log to audit
+    await audit_log.log(
+        session=session,
+        action=AuditAction.ORDER_DELETE,
+        user_id=str(current_user.id),
+        user_name=current_user.name,
+        user_role=current_user.role,
+        entity_type="purchase_order",
+        entity_id=str(order_id),
+        description=f"حذف أمر الشراء {order.order_number} - السبب: {data.reason}",
+        changes=order_data
+    )
+    
+    await session.commit()
+    
+    return {
+        "message": f"تم حذف أمر الشراء {order.order_number} بنجاح",
+        "order_number": order.order_number,
+        "deleted_by": current_user.name
+    }
+
