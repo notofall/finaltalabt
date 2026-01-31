@@ -18,7 +18,8 @@ from database.schema_version import (
 
 logger = logging.getLogger(__name__)
 
-BACKUPS_DIR = Path("/app/backups")
+# استخدام مسار نسبي للتطبيق بدلاً من مسار ثابت
+BACKUPS_DIR = Path(__file__).parent.parent / "backups"
 
 
 class BackupService:
