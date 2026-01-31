@@ -1831,7 +1831,7 @@ async def export_boq_excel(
     ws4 = wb.create_sheet("مواد المساحة")
     ws4.sheet_view.rightToLeft = True
     
-    headers = ["المادة", "الوحدة", "المعامل", "الدور", "الهالك%", "الكمية", "السعر", "الإجمالي"]
+    headers = ["المادة", "الوحدة", "المعامل", "الدور", "الهالك%", "الكمية", "عدد الحبات", "السعر", "الإجمالي"]
     for col, header in enumerate(headers, 1):
         cell = ws4.cell(row=1, column=col, value=header)
         cell.font = header_font
@@ -1846,13 +1846,16 @@ async def export_boq_excel(
         ws4.cell(row=row, column=4, value=mat.get('floor_name', 'جميع الأدوار')).border = border
         ws4.cell(row=row, column=5, value=mat.get('waste_percentage', 0)).border = border
         ws4.cell(row=row, column=6, value=mat['quantity']).border = border
-        ws4.cell(row=row, column=7, value=mat['unit_price']).border = border
-        ws4.cell(row=row, column=8, value=mat['total_price']).border = border
+        # عدد الحبات (إن وجد)
+        tiles_count = mat.get('tiles_with_waste') or mat.get('tiles_count') or '-'
+        ws4.cell(row=row, column=7, value=tiles_count).border = border
+        ws4.cell(row=row, column=8, value=mat['unit_price']).border = border
+        ws4.cell(row=row, column=9, value=mat['total_price']).border = border
     
     # Total row
     total_row = len(calc_data['area_materials']) + 2
-    ws4.cell(row=total_row, column=7, value="الإجمالي:").font = Font(bold=True)
-    ws4.cell(row=total_row, column=8, value=calc_data['total_area_materials_cost']).font = Font(bold=True)
+    ws4.cell(row=total_row, column=8, value="الإجمالي:").font = Font(bold=True)
+    ws4.cell(row=total_row, column=9, value=calc_data['total_area_materials_cost']).font = Font(bold=True)
     
     # Adjust column widths - use column index to avoid MergedCell issues
     from openpyxl.utils import get_column_letter
