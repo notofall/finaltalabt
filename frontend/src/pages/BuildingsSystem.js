@@ -833,10 +833,12 @@ const BuildingsSystem = () => {
       return;
     }
 
-    // تحقق من إدخال المعامل لكل مادة
-    const invalidMaterials = batchAreaMaterials.filter(m => m.factor <= 0);
+    // تحقق من إدخال المعامل أو الكمية لكل مادة
+    const invalidMaterials = batchAreaMaterials.filter(m => 
+      m.calculation_method === "factor" ? m.factor <= 0 : m.direct_quantity <= 0
+    );
     if (invalidMaterials.length > 0) {
-      toast.error("أدخل المعامل لجميع المواد");
+      toast.error("أدخل المعامل أو الكمية لجميع المواد");
       return;
     }
 
@@ -849,12 +851,8 @@ const BuildingsSystem = () => {
           `${BUILDINGS_API}/projects/${selectedProject.id}/area-materials`,
           {
             ...material,
-            calculation_method: "factor",
             calculation_type: batchFloorScope,
-            selected_floor_id: batchFloorScope === "selected_floor" ? batchSelectedFloorId : "",
-            waste_percentage: 0,
-            tile_width: 0,
-            tile_height: 0
+            selected_floor_id: batchFloorScope === "selected_floor" ? batchSelectedFloorId : ""
           },
           getAuthHeaders()
         );
@@ -866,6 +864,7 @@ const BuildingsSystem = () => {
       setBatchAreaMaterials([]);
       setBatchFloorScope("all_floors");
       setBatchSelectedFloorId("");
+      setExpandedMaterialIndex(null);
       fetchProjectDetails(selectedProject.id);
     } catch (error) {
       console.error("Error saving batch materials:", error);
