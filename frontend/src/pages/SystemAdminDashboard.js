@@ -1348,55 +1348,134 @@ export default function SystemAdminDashboard() {
 
           {/* Backup Tab */}
           <TabsContent value="backup">
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Download className="h-5 w-5" /> النسخ الاحتياطي
-                  </CardTitle>
-                  <CardDescription>تصدير جميع بيانات النظام</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    سيتم تحميل ملف JSON يحتوي على جميع بيانات النظام بما في ذلك المستخدمين والمشاريع والطلبات وأوامر الشراء.
-                  </p>
-                  <Button onClick={handleBackup} className="w-full">
-                    <Download className="ml-2 h-4 w-4" /> تحميل النسخة الاحتياطية
-                  </Button>
-                </CardContent>
-              </Card>
+            <div className="space-y-6">
+              {/* Schema Info Card */}
+              {schemaInfo && (
+                <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Server className="h-5 w-5 text-indigo-600" /> معلومات قاعدة البيانات
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid md:grid-cols-4 gap-4">
+                      <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                        <div className="text-2xl font-bold text-indigo-600">{schemaInfo.current_version}</div>
+                        <div className="text-sm text-gray-500">إصدار المخطط</div>
+                      </div>
+                      <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                        <div className="text-2xl font-bold text-green-600">{schemaInfo.tables_count}</div>
+                        <div className="text-sm text-gray-500">عدد الجداول</div>
+                      </div>
+                      <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                        <div className="text-2xl font-bold text-blue-600">{dbStatsBackup?.total_records || 0}</div>
+                        <div className="text-sm text-gray-500">إجمالي السجلات</div>
+                      </div>
+                      <div className="text-center p-3 bg-white rounded-lg shadow-sm">
+                        <div className="text-2xl font-bold text-purple-600">{schemaInfo.app_version}</div>
+                        <div className="text-sm text-gray-500">إصدار التطبيق</div>
+                      </div>
+                    </div>
+                    
+                    {/* Changelog */}
+                    {schemaInfo.changelog && Object.keys(schemaInfo.changelog).length > 0 && (
+                      <div className="mt-4 p-3 bg-white rounded-lg">
+                        <h4 className="font-medium text-gray-700 mb-2">سجل التغييرات</h4>
+                        <div className="space-y-2 max-h-32 overflow-y-auto text-sm">
+                          {Object.entries(schemaInfo.changelog).slice(0, 3).map(([version, info]) => (
+                            <div key={version} className="flex items-start gap-2">
+                              <Badge variant="outline" className="shrink-0">{version}</Badge>
+                              <span className="text-gray-600">{info.description}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Upload className="h-5 w-5" /> استعادة البيانات
-                  </CardTitle>
-                  <CardDescription>استيراد بيانات من نسخة احتياطية</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    قم برفع ملف النسخة الاحتياطية (JSON) لاستعادة البيانات. البيانات الموجودة لن يتم استبدالها.
-                  </p>
-                  <Input type="file" accept=".json" onChange={handleRestore} />
-                </CardContent>
-              </Card>
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Download className="h-5 w-5" /> النسخ الاحتياطي الكامل
+                    </CardTitle>
+                    <CardDescription>تصدير جميع بيانات النظام</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 mb-4">
+                      سيتم تحميل ملف JSON يحتوي على جميع بيانات النظام ({dbStatsBackup?.total_tables || 0} جدول، {dbStatsBackup?.total_records || 0} سجل) مع معلومات الإصدار للاسترداد المتوافق.
+                    </p>
+                    <Button onClick={handleBackup} className="w-full" disabled={backupLoading}>
+                      {backupLoading ? (
+                        <RefreshCw className="ml-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="ml-2 h-4 w-4" />
+                      )}
+                      {backupLoading ? "جاري الإنشاء..." : "تحميل النسخة الاحتياطية"}
+                    </Button>
+                  </CardContent>
+                </Card>
 
-              <Card className="md:col-span-2 border-red-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-red-600">
-                    <AlertTriangle className="h-5 w-5" /> تنظيف البيانات
-                  </CardTitle>
-                  <CardDescription>حذف جميع البيانات مع الاحتفاظ بمستخدم واحد</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-red-600 mb-4">
-                    ⚠️ تحذير: هذا الإجراء سيحذف جميع البيانات بشكل نهائي ولا يمكن التراجع عنه!
-                  </p>
-                  <Button variant="destructive" onClick={() => setShowCleanupDialog(true)}>
-                    <Trash2 className="ml-2 h-4 w-4" /> تنظيف جميع البيانات
-                  </Button>
-                </CardContent>
-              </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Upload className="h-5 w-5" /> استعادة البيانات
+                    </CardTitle>
+                    <CardDescription>استيراد بيانات من نسخة احتياطية</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 mb-4">
+                      قم برفع ملف النسخة الاحتياطية (JSON). سيتم التحقق من توافق الإصدار قبل الاسترداد. البيانات الموجودة لن يتم استبدالها.
+                    </p>
+                    <Input 
+                      type="file" 
+                      accept=".json" 
+                      onChange={handleRestore} 
+                      disabled={restoreLoading}
+                    />
+                    {restoreLoading && (
+                      <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                        جاري التحقق والاسترداد...
+                      </div>
+                    )}
+                    {backupValidation && (
+                      <div className={`mt-2 p-2 rounded text-sm ${backupValidation.valid ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                        {backupValidation.valid ? (
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4" />
+                            <span>النسخة صالحة (إصدار {backupValidation.backup_version})</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <XCircle className="h-4 w-4" />
+                            <span>{backupValidation.errors?.join(", ")}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="md:col-span-2 border-red-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-red-600">
+                      <AlertTriangle className="h-5 w-5" /> تنظيف البيانات
+                    </CardTitle>
+                    <CardDescription>حذف جميع البيانات مع الاحتفاظ بمستخدم واحد</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-red-600 mb-4">
+                      ⚠️ تحذير: هذا الإجراء سيحذف جميع البيانات بشكل نهائي ولا يمكن التراجع عنه!
+                    </p>
+                    <Button variant="destructive" onClick={() => setShowCleanupDialog(true)}>
+                      <Trash2 className="ml-2 h-4 w-4" /> تنظيف جميع البيانات
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
 
