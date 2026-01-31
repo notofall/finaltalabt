@@ -852,6 +852,75 @@ async def update_supplier_invoice(
 
 
 
+# ==================== Procurement Confirmation ====================
+
+@router.post("/{order_id}/procurement-confirm")
+async def procurement_confirm_order(
+    order_id: UUID,
+    session: AsyncSession = Depends(get_postgres_session),
+    current_user = Depends(get_current_user)
+):
+    """
+    تأكيد أمر الشراء من مدير المشتريات بعد موافقة المدير العام
+    """
+    from database.models import UserRole
+    
+    # التحقق من الصلاحيات
+    if current_user.role not in [UserRole.SYSTEM_ADMIN, UserRole.PROCUREMENT_MANAGER]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="فقط مدير المشتريات يمكنه تأكيد أوامر الشراء"
+        )
+    
+    # الحصول على الأمر
+    result = await session.execute(
+        select(PurchaseOrder).where(PurchaseOrder.id == str(order_id))
+    )
+    order = result.scalar_one_or_none()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="أمر الشراء غير موجود")
+    
+    # التحقق من حالة الأمر
+    if order.status != "pending_procurement_confirmation":
+        raise HTTPException(
+            status_code=400, 
+            detail=f"لا يمكن تأكيد أمر في حالة: {order.status}. يجب أن يكون بانتظار تأكيد المشتريات"
+        )
+    
+    # تحديث الحالة
+    order.status = "approved"
+    order.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    
+    await session.commit()
+    
+    # تسجيل في سجل المراجعة
+    try:
+        from app.audit_logger import audit_log, AuditAction
+        await audit_log(
+            session=session,
+            user_id=current_user.id,
+            user_name=current_user.name,
+            action=AuditAction.APPROVAL,
+            entity_type="purchase_order",
+            entity_id=str(order_id),
+            details={
+                "order_number": order.order_number,
+                "action": "procurement_confirmation",
+                "message": "تم تأكيد أمر الشراء من مدير المشتريات"
+            }
+        )
+    except Exception as e:
+        print(f"Audit log error: {e}")
+    
+    return {
+        "message": "تم تأكيد أمر الشراء بنجاح",
+        "order_id": str(order_id),
+        "order_number": order.order_number,
+        "new_status": "approved"
+    }
+
+
 # ==================== Delete Order (with Permission) ====================
 
 class DeleteOrderReason(BaseModel):
