@@ -732,6 +732,17 @@ const ProcurementDashboard = () => {
     setDeleteOrderDialog(true);
   };
 
+  // تأكيد أمر الشراء من مدير المشتريات
+  const confirmProcurementOrder = async (order) => {
+    try {
+      await axios.post(`${API_V2_URL}/orders/${order.id}/procurement-confirm`, {}, getAuthHeaders());
+      toast.success(`تم تأكيد أمر الشراء ${order.order_number} بنجاح`);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "فشل في تأكيد أمر الشراء");
+    }
+  };
+
   // Memoized filtered requests for performance
   const filteredRequests = useMemo(() => {
     let result = [...requests];
