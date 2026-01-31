@@ -695,6 +695,35 @@ const ProcurementDashboard = () => {
     }
   };
 
+  // Delete Purchase Order - حذف أمر الشراء
+  const handleDeleteOrder = async () => {
+    if (!orderToDelete || !deleteReason.trim()) {
+      toast.error("يرجى إدخال سبب الحذف");
+      return;
+    }
+
+    try {
+      await axios.delete(`${API_V2_URL}/orders/${orderToDelete.id}`, {
+        ...getAuthHeaders(),
+        data: { reason: deleteReason }
+      });
+      toast.success(`تم حذف أمر الشراء ${orderToDelete.order_number} بنجاح`);
+      setDeleteOrderDialog(false);
+      setOrderToDelete(null);
+      setDeleteReason("");
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "فشل في حذف أمر الشراء");
+    }
+  };
+
+  // Open delete order dialog
+  const openDeleteOrderDialog = (order) => {
+    setOrderToDelete(order);
+    setDeleteReason("");
+    setDeleteOrderDialog(true);
+  };
+
   // Memoized filtered requests for performance
   const filteredRequests = useMemo(() => {
     let result = [...requests];
