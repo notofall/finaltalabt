@@ -703,11 +703,19 @@ const ProcurementDashboard = () => {
     }
 
     try {
-      await axios.delete(`${API_V2_URL}/orders/${orderToDelete.id}`, {
+      const response = await axios.delete(`${API_V2_URL}/orders/${orderToDelete.id}`, {
         ...getAuthHeaders(),
         data: { reason: deleteReason }
       });
+      
+      // Show success message
       toast.success(`تم حذف أمر الشراء ${orderToDelete.order_number} بنجاح`);
+      
+      // Show request status update message if applicable
+      if (response.data.request_status_updated) {
+        toast.info(response.data.request_message, { duration: 5000 });
+      }
+      
       setDeleteOrderDialog(false);
       setOrderToDelete(null);
       setDeleteReason("");
