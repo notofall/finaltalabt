@@ -126,6 +126,52 @@ class RFQPDFGenerator:
             # Fallback to simple reverse if libraries not available
             return text[::-1]
     
+    def _get_logo_image(self, company_settings: Optional[Dict[str, Any]], max_width: float = 4*cm) -> Optional[Image]:
+        """Get logo image from base64 or file path"""
+        if not company_settings:
+            return None
+        
+        logo_data = company_settings.get('company_logo_base64') or company_settings.get('company_logo')
+        if not logo_data:
+            return None
+        
+        try:
+            # Check if it's base64 data
+            if logo_data.startswith('data:'):
+                # Extract base64 content
+                import re
+                match = re.match(r'data:image/\w+;base64,(.+)', logo_data)
+                if match:
+                    image_data = base64.b64decode(match.group(1))
+                    logo_buffer = BytesIO(image_data)
+                    img = Image(logo_buffer)
+                    
+                    # Scale image to fit
+                    aspect = img.imageHeight / img.imageWidth if img.imageWidth > 0 else 1
+                    img.drawWidth = min(max_width, img.imageWidth)
+                    img.drawHeight = img.drawWidth * aspect
+                    
+                    return img
+            else:
+                # Try to load from file path
+                import os
+                file_path = logo_data.replace('/api/v2/sysadmin/uploads/', '')
+                file_path = logo_data.replace('/uploads/', '')
+                
+                upload_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
+                full_path = os.path.join(upload_dir, os.path.basename(file_path))
+                
+                if os.path.exists(full_path):
+                    img = Image(full_path)
+                    aspect = img.imageHeight / img.imageWidth if img.imageWidth > 0 else 1
+                    img.drawWidth = min(max_width, img.imageWidth)
+                    img.drawHeight = img.drawWidth * aspect
+                    return img
+        except Exception as e:
+            print(f"Error loading logo: {e}")
+        
+        return None
+    
     def generate_rfq_pdf(
         self,
         rfq_data: Dict[str, Any],
