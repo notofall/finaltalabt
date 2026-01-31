@@ -612,25 +612,75 @@ export default function SystemAdminDashboard() {
     }
   };
 
-  // Backup & Restore - using V2 API
-  const handleBackup = async () => {
+  // Backup & Restore - using V2 Backup API
+  const [schemaInfo, setSchemaInfo] = useState(null);
+  const [dbStatsBackup, setDbStatsBackup] = useState(null);
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [restoreLoading, setRestoreLoading] = useState(false);
+  const [backupValidation, setBackupValidation] = useState(null);
+
+  // Fetch Schema Info
+  const fetchSchemaInfo = async () => {
     try {
-      const response = await axios.get(`${API_V2}/system/backup`, {
+      const [infoRes, statsRes] = await Promise.all([
+        axios.get(`${API_V2}/backup/schema-info`, getAuthHeaders()),
+        axios.get(`${API_V2}/backup/database-stats`, getAuthHeaders())
+      ]);
+      setSchemaInfo(infoRes.data);
+      setDbStatsBackup(statsRes.data);
+    } catch (error) {
+      console.error("Error fetching schema info:", error);
+    }
+  };
+
+  const handleBackup = async () => {
+    setBackupLoading(true);
+    try {
+      const response = await axios.get(`${API_V2}/backup/create-full`, {
         ...getAuthHeaders(),
         responseType: 'blob'
       });
       
+      // Get filename from header or generate one
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = `backup_full_${new Date().toISOString().split('T')[0]}.json`;
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename=(.+)/);
+        if (match) filename = match[1];
+      }
+      
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `backup_${new Date().toISOString().split('T')[0]}.json`);
+      link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
       link.remove();
       
-      toast.success("تم تحميل النسخة الاحتياطية");
+      toast.success("تم تحميل النسخة الاحتياطية الكاملة");
+      fetchSchemaInfo(); // Refresh stats
     } catch (error) {
       toast.error("فشل في إنشاء النسخة الاحتياطية");
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
+  // Validate backup file before restore
+  const handleValidateBackup = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await axios.post(`${API_V2}/backup/validate`, formData, {
+        ...getAuthHeaders(),
+        headers: { ...getAuthHeaders().headers, "Content-Type": "multipart/form-data" }
+      });
+      setBackupValidation(res.data);
+      return res.data;
+    } catch (error) {
+      toast.error("فشل في التحقق من ملف النسخة الاحتياطية");
+      return null;
     }
   };
 
@@ -638,19 +688,44 @@ export default function SystemAdminDashboard() {
     const file = e.target.files[0];
     if (!file) return;
 
+    setRestoreLoading(true);
+    
+    // Validate first
+    const validation = await handleValidateBackup(file);
+    if (!validation || !validation.valid) {
+      setRestoreLoading(false);
+      if (validation?.errors?.length > 0) {
+        toast.error(validation.errors.join(", "));
+      }
+      return;
+    }
+
+    // Show warnings if any
+    if (validation.warnings?.length > 0) {
+      toast.warning(validation.warnings.join(", "), { duration: 5000 });
+    }
+
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      const res = await axios.post(`${API_V2}/system/restore`, formData, {
+      const res = await axios.post(`${API_V2}/backup/restore-full`, formData, {
         ...getAuthHeaders(),
         headers: { ...getAuthHeaders().headers, "Content-Type": "multipart/form-data" }
       });
-      toast.success(`تم استعادة النسخة الاحتياطية: ${JSON.stringify(res.data.restored)}`);
+      
+      const restored = res.data.restored || {};
+      const totalRestored = Object.values(restored).reduce((a, b) => a + b, 0);
+      
+      toast.success(`تم استعادة ${totalRestored} سجل بنجاح`);
       setShowRestoreDialog(false);
+      setBackupValidation(null);
       fetchData();
+      fetchSchemaInfo();
     } catch (error) {
       toast.error(error.response?.data?.detail || "فشل في استعادة النسخة الاحتياطية");
+    } finally {
+      setRestoreLoading(false);
     }
   };
 
