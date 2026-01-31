@@ -2264,7 +2264,14 @@ const BuildingsSystem = () => {
                                       <td className="p-3">{mat.item_name}</td>
                                       <td className="p-3">{mat.unit}</td>
                                       <td className="p-3">{mat.factor}</td>
-                                      <td className="p-3">{mat.quantity?.toLocaleString()}</td>
+                                      <td className="p-3">
+                                        <div>{mat.quantity?.toLocaleString()} {mat.unit}</div>
+                                        {mat.tiles_count && (
+                                          <div className="text-xs text-slate-400 mt-1">
+                                            ({mat.tiles_with_waste?.toLocaleString() || mat.tiles_count?.toLocaleString()} حبة)
+                                          </div>
+                                        )}
+                                      </td>
                                       <td className="p-3">{mat.unit_price?.toLocaleString()}</td>
                                       <td className="p-3 text-emerald-400">{mat.total_price?.toLocaleString()}</td>
                                     </tr>
