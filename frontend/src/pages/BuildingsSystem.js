@@ -177,10 +177,11 @@ const BuildingsSystem = () => {
   }, [API_V2_URL, getAuthHeaders]);
 
   // Fetch catalog items
-  const fetchCatalogItems = useCallback(async () => {
+  const fetchCatalogItems = useCallback(async (searchTerm = null) => {
     try {
-      // Using V2 Catalog API
-      const searchParam = catalogSearch ? `?search=${encodeURIComponent(catalogSearch)}` : '';
+      // Using V2 Catalog API - use provided search term or catalogSearch
+      const search = searchTerm !== null ? searchTerm : catalogSearch;
+      const searchParam = search ? `?search=${encodeURIComponent(search)}` : '';
       
       const res = await axios.get(`${API_V2_URL}/catalog/items${searchParam}`, getAuthHeaders());
       setCatalogItems(res.data.items || []);
