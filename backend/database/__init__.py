@@ -32,7 +32,13 @@ from .models import (
     ProjectFloor,
     ProjectAreaMaterial,
     SupplyTracking,
-    BuildingsPermission
+    BuildingsPermission,
+    # RFQ Models
+    QuotationRequest,
+    QuotationRequestItem,
+    QuotationRequestSupplier,
+    SupplierQuotation,
+    SupplierQuotationItem
 )
 
 __all__ = [
