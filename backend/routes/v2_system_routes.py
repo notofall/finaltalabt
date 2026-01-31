@@ -229,6 +229,131 @@ async def clear_old_logs(
     }
 
 
+# ==================== Audit Logs ====================
+
+@router.get("/audit-logs")
+async def get_audit_logs(
+    action: Optional[str] = None,
+    entity_type: Optional[str] = None,
+    limit: int = 100,
+    skip: int = 0,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """
+    الحصول على سجلات التدقيق
+    
+    Parameters:
+    - action: فلتر حسب نوع العملية (order_delete, user_create, etc.)
+    - entity_type: فلتر حسب نوع الكيان (purchase_order, user, etc.)
+    - limit: عدد السجلات
+    - skip: تخطي السجلات
+    """
+    require_system_admin(current_user)
+    
+    query = select(AuditLog).order_by(AuditLog.created_at.desc())
+    
+    if action:
+        query = query.where(AuditLog.action == action)
+    
+    if entity_type:
+        query = query.where(AuditLog.entity_type == entity_type)
+    
+    query = query.offset(skip).limit(limit)
+    
+    result = await session.execute(query)
+    logs = result.scalars().all()
+    
+    # Get total count
+    count_query = select(func.count(AuditLog.id))
+    if action:
+        count_query = count_query.where(AuditLog.action == action)
+    if entity_type:
+        count_query = count_query.where(AuditLog.entity_type == entity_type)
+    
+    total_result = await session.execute(count_query)
+    total = total_result.scalar() or 0
+    
+    return {
+        "total": total,
+        "items": [
+            {
+                "id": str(log.id),
+                "action": log.action,
+                "user_id": log.user_id,
+                "user_name": log.user_name,
+                "user_role": log.user_role,
+                "entity_type": log.entity_type,
+                "entity_id": log.entity_id,
+                "description": log.description,
+                "changes": json.loads(log.changes) if log.changes else None,
+                "created_at": log.created_at.isoformat() if log.created_at else None
+            }
+            for log in logs
+        ]
+    }
+
+
+@router.get("/deleted-orders")
+async def get_deleted_orders(
+    limit: int = 50,
+    skip: int = 0,
+    current_user = Depends(get_current_user),
+    session: AsyncSession = Depends(get_postgres_session)
+):
+    """
+    الحصول على قائمة أوامر الشراء المحذوفة
+    
+    يعرض بيانات الأوامر التي تم حذفها من سجل التدقيق
+    """
+    require_system_admin(current_user)
+    
+    query = (
+        select(AuditLog)
+        .where(AuditLog.action == "order_delete")
+        .where(AuditLog.entity_type == "purchase_order")
+        .order_by(AuditLog.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    
+    result = await session.execute(query)
+    logs = result.scalars().all()
+    
+    # Get total count
+    count_query = (
+        select(func.count(AuditLog.id))
+        .where(AuditLog.action == "order_delete")
+        .where(AuditLog.entity_type == "purchase_order")
+    )
+    total_result = await session.execute(count_query)
+    total = total_result.scalar() or 0
+    
+    deleted_orders = []
+    for log in logs:
+        order_data = json.loads(log.changes) if log.changes else {}
+        deleted_orders.append({
+            "id": str(log.id),
+            "deleted_at": log.created_at.isoformat() if log.created_at else None,
+            "deleted_by": log.user_name,
+            "deleted_by_role": log.user_role,
+            "order_number": order_data.get("order_number"),
+            "project_name": order_data.get("project_name"),
+            "supplier_name": order_data.get("supplier_name"),
+            "total_amount": order_data.get("total_amount"),
+            "status": order_data.get("status"),
+            "delete_reason": order_data.get("delete_reason"),
+            "items_count": order_data.get("items_count", 0),
+            "items": order_data.get("items", []),
+            "original_created_at": order_data.get("created_at")
+        })
+    
+    return {
+        "total": total,
+        "items": deleted_orders
+    }
+
+
 # ==================== Backup ====================
 
 @router.get("/backup")
