@@ -29,17 +29,8 @@ class BackupService:
     
     async def get_current_schema_version(self) -> str:
         """الحصول على إصدار المخطط الحالي"""
-        try:
-            result = await self.session.execute(
-                select(SchemaVersion)
-                .where(SchemaVersion.is_current == True)
-                .order_by(SchemaVersion.applied_at.desc())
-                .limit(1)
-            )
-            version = result.scalar_one_or_none()
-            return version.version if version else CURRENT_SCHEMA_VERSION
-        except Exception:
-            return CURRENT_SCHEMA_VERSION
+        # دائماً نرجع الإصدار من الكود - أبسط وأضمن
+        return CURRENT_SCHEMA_VERSION
     
     async def record_schema_version(self, version: str, description: str, applied_by: str = "system") -> None:
         """تسجيل إصدار جديد للمخطط"""
