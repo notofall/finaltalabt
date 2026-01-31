@@ -784,6 +784,93 @@ const BuildingsSystem = () => {
     }
   };
 
+  // إضافة مادة للقائمة المؤقتة (Batch)
+  const addMaterialToBatch = (catalogItem) => {
+    // تحقق من عدم التكرار
+    if (batchAreaMaterials.find(m => m.catalog_item_id === catalogItem.id)) {
+      toast.error("هذه المادة موجودة بالفعل في القائمة");
+      return;
+    }
+    
+    setBatchAreaMaterials([...batchAreaMaterials, {
+      catalog_item_id: catalogItem.id,
+      item_code: catalogItem.item_code || "",
+      item_name: catalogItem.name,
+      unit: catalogItem.unit || "طن",
+      factor: 0,
+      unit_price: catalogItem.price || 0
+    }]);
+    setBatchCatalogSearch("");
+    setShowBatchCatalogDropdown(false);
+  };
+
+  // حذف مادة من القائمة المؤقتة
+  const removeMaterialFromBatch = (index) => {
+    setBatchAreaMaterials(batchAreaMaterials.filter((_, i) => i !== index));
+  };
+
+  // تحديث مادة في القائمة المؤقتة
+  const updateBatchMaterial = (index, field, value) => {
+    const updated = [...batchAreaMaterials];
+    updated[index] = { ...updated[index], [field]: value };
+    setBatchAreaMaterials(updated);
+  };
+
+  // حفظ جميع المواد دفعة واحدة
+  const saveBatchAreaMaterials = async () => {
+    if (!selectedProject || batchAreaMaterials.length === 0) {
+      toast.error("أضف مادة واحدة على الأقل");
+      return;
+    }
+
+    // تحقق من إدخال المعامل لكل مادة
+    const invalidMaterials = batchAreaMaterials.filter(m => m.factor <= 0);
+    if (invalidMaterials.length > 0) {
+      toast.error("أدخل المعامل لجميع المواد");
+      return;
+    }
+
+    setSavingBatch(true);
+    try {
+      let successCount = 0;
+      
+      for (const material of batchAreaMaterials) {
+        await axios.post(
+          `${BUILDINGS_API}/projects/${selectedProject.id}/area-materials`,
+          {
+            ...material,
+            calculation_method: "factor",
+            calculation_type: batchFloorScope,
+            selected_floor_id: batchFloorScope === "selected_floor" ? batchSelectedFloorId : "",
+            waste_percentage: 0,
+            tile_width: 0,
+            tile_height: 0
+          },
+          getAuthHeaders()
+        );
+        successCount++;
+      }
+      
+      toast.success(`تم إضافة ${successCount} مادة بنجاح`);
+      setAreaMaterialDialogOpen(false);
+      setBatchAreaMaterials([]);
+      setBatchFloorScope("all_floors");
+      setBatchSelectedFloorId("");
+      fetchProjectDetails(selectedProject.id);
+    } catch (error) {
+      console.error("Error saving batch materials:", error);
+      toast.error("فشل في حفظ بعض المواد");
+    } finally {
+      setSavingBatch(false);
+    }
+  };
+
+  // فلترة الكتالوج للبحث في Batch
+  const filteredBatchCatalog = catalogItems.filter(item =>
+    item.name?.toLowerCase().includes(batchCatalogSearch.toLowerCase()) ||
+    item.item_code?.toLowerCase().includes(batchCatalogSearch.toLowerCase())
+  ).slice(0, 8);
+
   // CRUD operations for area materials
   const createAreaMaterial = async () => {
     if (!selectedProject) return;
