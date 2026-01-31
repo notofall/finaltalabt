@@ -9,7 +9,7 @@ from typing import Optional, Any, Dict
 from enum import Enum
 from sqlalchemy import Column, String, Text, DateTime, Integer
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.base import Base
+from database.connection import Base
 
 # Configure audit logger
 audit_logger = logging.getLogger("audit")
