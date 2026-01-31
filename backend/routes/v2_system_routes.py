@@ -251,7 +251,7 @@ async def get_audit_logs(
     """
     require_system_admin(current_user)
     
-    query = select(AuditLog).order_by(AuditLog.created_at.desc())
+    query = select(AuditLog).order_by(AuditLog.timestamp.desc())
     
     if action:
         query = query.where(AuditLog.action == action)
@@ -287,7 +287,7 @@ async def get_audit_logs(
                 "entity_id": log.entity_id,
                 "description": log.description,
                 "changes": json.loads(log.changes) if log.changes else None,
-                "created_at": log.created_at.isoformat() if log.created_at else None
+                "created_at": log.timestamp.isoformat() if log.timestamp else None
             }
             for log in logs
         ]
@@ -312,7 +312,7 @@ async def get_deleted_orders(
         select(AuditLog)
         .where(AuditLog.action == "order_delete")
         .where(AuditLog.entity_type == "purchase_order")
-        .order_by(AuditLog.created_at.desc())
+        .order_by(AuditLog.timestamp.desc())
         .offset(skip)
         .limit(limit)
     )
@@ -334,7 +334,7 @@ async def get_deleted_orders(
         order_data = json.loads(log.changes) if log.changes else {}
         deleted_orders.append({
             "id": str(log.id),
-            "deleted_at": log.created_at.isoformat() if log.created_at else None,
+            "deleted_at": log.timestamp.isoformat() if log.timestamp else None,
             "deleted_by": log.user_name,
             "deleted_by_role": log.user_role,
             "order_number": order_data.get("order_number"),
