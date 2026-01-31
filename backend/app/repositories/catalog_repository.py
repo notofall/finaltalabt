@@ -43,7 +43,12 @@ class CatalogRepository:
         return result.scalar_one_or_none()
     
     async def search_items(self, query: str, limit: int = 50) -> List[PriceCatalog]:
-        """Search catalog items by name or code"""
+        """Search catalog items by name or code - with Arabic support"""
+        # تنظيف البحث
+        query = query.strip()
+        if not query:
+            return []
+        
         search_pattern = f"%{query}%"
         result = await self.session.execute(
             select(PriceCatalog)
@@ -51,9 +56,11 @@ class CatalogRepository:
                 PriceCatalog.is_active == True,
                 or_(
                     PriceCatalog.name.ilike(search_pattern),
-                    PriceCatalog.item_code.ilike(search_pattern)
+                    PriceCatalog.item_code.ilike(search_pattern),
+                    PriceCatalog.category_name.ilike(search_pattern)
                 )
             )
+            .order_by(PriceCatalog.name)
             .limit(limit)
         )
         return list(result.scalars().all())
