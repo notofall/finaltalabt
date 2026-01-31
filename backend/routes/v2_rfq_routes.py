@@ -616,10 +616,12 @@ async def download_rfq_pdf(
     company_settings = None
     try:
         from app.services.settings_service import SettingsService
-        settings_service = SettingsService(session)
+        from app.repositories.settings_repository import SettingsRepository
+        settings_repo = SettingsRepository(session)
+        settings_service = SettingsService(settings_repo)
         company_settings = await settings_service.get_company_settings()
-    except:
-        pass
+    except Exception as e:
+        print(f"Could not load company settings: {e}")
     
     # Generate PDF
     pdf_buffer = generate_rfq_pdf(rfq, company_settings)
