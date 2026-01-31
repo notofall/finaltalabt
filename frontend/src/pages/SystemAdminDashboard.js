@@ -17,8 +17,9 @@ import {
   Plus, Edit, Key, Shield, Building2, Image, FileText,
   LogOut, RefreshCw, AlertTriangle, History, Search, Filter,
   Server, Activity, HardDrive, Cpu, MemoryStick, Clock,
-  Terminal, CheckCircle2, XCircle, Info, Wrench, Globe, Lock, Copy, ExternalLink
+  Terminal, CheckCircle2, XCircle, Info, Wrench, Globe, Lock, Copy, ExternalLink, Eye
 } from "lucide-react";
+import { Switch } from "../components/ui/switch";
 import { API_V2_URL, API_URL } from "../config/api";
 
 export default function SystemAdminDashboard() {
