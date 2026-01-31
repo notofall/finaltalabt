@@ -13,6 +13,7 @@ from io import BytesIO
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List
 import os
+import base64
 
 # Import Arabic text processing libraries
 try:
