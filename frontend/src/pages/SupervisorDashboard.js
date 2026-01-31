@@ -200,9 +200,10 @@ const SupervisorDashboard = () => {
       }
     }, 300);
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newItemName, dialogOpen]);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
   
   // Filtered requests based on filter mode
   const getFilteredRequests = () => {
