@@ -887,11 +887,10 @@ const BuildingsSystem = () => {
     }
   };
 
-  // فلترة الكتالوج للبحث في Batch
-  const filteredBatchCatalog = catalogItems.filter(item =>
-    item.name?.toLowerCase().includes(batchCatalogSearch.toLowerCase()) ||
-    item.item_code?.toLowerCase().includes(batchCatalogSearch.toLowerCase())
-  ).slice(0, 8);
+  // فلترة الكتالوج للبحث في Batch - عرض نتائج API مباشرة
+  const filteredBatchCatalog = batchCatalogSearch.length >= 2 
+    ? catalogItems.slice(0, 20)  // عرض أول 20 نتيجة من API
+    : [];
 
   // CRUD operations for area materials
   const createAreaMaterial = async () => {
