@@ -964,12 +964,13 @@ const BuildingsSystem = () => {
 
   // Edit Area Material - تعديل مادة مساحة
   const openEditAreaMaterial = (material) => {
+    console.log("Opening edit for material:", material);
     setEditingAreaMaterial({
       id: material.id,
       catalog_item_id: material.catalog_item_id || "",
       item_code: material.item_code || "",
       item_name: material.item_name || "",
-      unit: material.unit || "طن",
+      unit: (material.unit || "طن").trim(),
       calculation_method: material.calculation_method || "factor",
       factor: material.factor || 0,
       direct_quantity: material.direct_quantity || 0,
