@@ -759,16 +759,6 @@ export default function SystemAdminDashboard() {
     }
   };
 
-  // Procurement Delete Permission
-  const fetchDeletePermission = useCallback(async () => {
-    try {
-      const res = await axios.get(`${API_V2}/settings/procurement/delete-permission`, getAuthHeaders());
-      setProcurementDeletePermission(res.data.enabled);
-    } catch (error) {
-      console.error("Error fetching delete permission:", error);
-    }
-  }, [API_V2, getAuthHeaders]);
-
   const handleToggleDeletePermission = async () => {
     try {
       const res = await axios.put(`${API_V2}/settings/procurement/delete-permission`, 
@@ -781,19 +771,6 @@ export default function SystemAdminDashboard() {
       toast.error(error.response?.data?.detail || "فشل في تحديث الصلاحية");
     }
   };
-
-  // Deleted Orders
-  const fetchDeletedOrders = useCallback(async () => {
-    setDeletedOrdersLoading(true);
-    try {
-      const res = await axios.get(`${API_V2}/system/deleted-orders`, getAuthHeaders());
-      setDeletedOrders(res.data.items);
-    } catch (error) {
-      console.error("Error fetching deleted orders:", error);
-    } finally {
-      setDeletedOrdersLoading(false);
-    }
-  }, [API_V2, getAuthHeaders]);
 
   // Data Cleanup - using V2 API
   const handleCleanData = async () => {
