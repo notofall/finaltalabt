@@ -2523,6 +2523,12 @@ const BuildingsSystem = () => {
                   ))}
                 </div>
               )}
+              {/* رسالة لا توجد نتائج */}
+              {showBatchCatalogDropdown && batchCatalogSearch.length >= 2 && filteredBatchCatalog.length === 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-slate-700 border border-slate-500 rounded-lg shadow-xl p-4 text-center text-slate-400">
+                  لا توجد نتائج لـ "{batchCatalogSearch}"
+                </div>
+              )}
             </div>
 
             {/* قائمة المواد المضافة */}
