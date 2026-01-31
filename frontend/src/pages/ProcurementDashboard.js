@@ -196,7 +196,7 @@ const ProcurementDashboard = () => {
   const [unlinkedItems, setUnlinkedItems] = useState([]);  // [{index, name, unit, item_code, category_id}]
   const [pendingOrderData, setPendingOrderData] = useState(null);  // Store order data while linking items
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       // Fetch company settings for PDF export
       const token = localStorage.getItem('token');
@@ -248,7 +248,7 @@ const ProcurementDashboard = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [API_V2_URL, getAuthHeaders]);
 
   // Quick refresh function for real-time updates
   const handleRefresh = async () => {
