@@ -985,22 +985,42 @@ const BuildingsSystem = () => {
   };
 
   const updateAreaMaterial = async () => {
-    if (!selectedProject || !editingAreaMaterial) return;
+    if (!selectedProject || !editingAreaMaterial) {
+      console.error("Missing data:", { selectedProject, editingAreaMaterial });
+      return;
+    }
     
     try {
-      await axios.put(
+      console.log("Updating material:", editingAreaMaterial);
+      const response = await axios.put(
         `${BUILDINGS_API}/projects/${selectedProject.id}/area-materials/${editingAreaMaterial.id}`,
-        editingAreaMaterial,
+        {
+          item_name: editingAreaMaterial.item_name,
+          unit: editingAreaMaterial.unit?.trim(),
+          calculation_method: editingAreaMaterial.calculation_method,
+          factor: editingAreaMaterial.factor,
+          direct_quantity: editingAreaMaterial.direct_quantity,
+          unit_price: editingAreaMaterial.unit_price,
+          calculation_type: editingAreaMaterial.calculation_type,
+          selected_floor_id: editingAreaMaterial.selected_floor_id || null,
+          tile_width: editingAreaMaterial.tile_width,
+          tile_height: editingAreaMaterial.tile_height,
+          waste_percentage: editingAreaMaterial.waste_percentage,
+          notes: editingAreaMaterial.notes,
+          catalog_item_id: editingAreaMaterial.catalog_item_id,
+          item_code: editingAreaMaterial.item_code
+        },
         getAuthHeaders()
       );
+      console.log("Update response:", response.data);
       
       toast.success("تم تحديث المادة بنجاح");
       setEditAreaMaterialDialogOpen(false);
       setEditingAreaMaterial(null);
       fetchProjectDetails(selectedProject.id);
     } catch (error) {
-      console.error("Error updating area material:", error);
-      toast.error("فشل في تحديث المادة");
+      console.error("Error updating area material:", error.response?.data || error);
+      toast.error(error.response?.data?.detail || "فشل في تحديث المادة");
     }
   };
 
