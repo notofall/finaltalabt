@@ -2402,234 +2402,197 @@ const BuildingsSystem = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Area Material Dialog - Enhanced */}
-      <Dialog open={areaMaterialDialogOpen} onOpenChange={setAreaMaterialDialogOpen}>
-        <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-lg max-h-[90vh] overflow-y-auto" dir="rtl">
+      {/* Area Material Dialog - Simplified Batch Add */}
+      <Dialog open={areaMaterialDialogOpen} onOpenChange={(open) => {
+        setAreaMaterialDialogOpen(open);
+        if (!open) {
+          setBatchAreaMaterials([]);
+          setBatchFloorScope("all_floors");
+          setBatchSelectedFloorId("");
+          setBatchCatalogSearch("");
+        }
+      }}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Building2 className="w-5 h-5 text-emerald-400" />
-              إضافة مادة مساحة جديدة
+              إضافة مواد مساحة
             </DialogTitle>
           </DialogHeader>
+          
           <div className="space-y-4">
-            {/* اختيار المادة */}
-            <div>
-              <Label className="text-slate-300">اختر المادة</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={newAreaMaterial.item_name}
-                  readOnly
-                  placeholder="اختر من الكتالوج..."
-                  className="bg-slate-700 border-slate-600"
-                />
-                <Button
-                  onClick={() => setSelectCatalogDialogOpen(true)}
-                  variant="outline"
-                  className="border-slate-600"
-                >
-                  اختيار
-                </Button>
-              </div>
-            </div>
-
-            {/* طريقة الحساب */}
+            {/* نطاق الحساب أولاً */}
             <div className="p-3 bg-slate-700/50 rounded-lg border border-slate-600">
-              <Label className="text-emerald-400 font-bold mb-2 block">طريقة الحساب</Label>
-              <div className="flex gap-4">
+              <Label className="text-emerald-400 font-bold mb-2 block">نطاق التطبيق</Label>
+              <div className="flex gap-4 mb-3">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
-                    name="calc_method"
-                    checked={newAreaMaterial.calculation_method === "factor"}
-                    onChange={() => setNewAreaMaterial({ ...newAreaMaterial, calculation_method: "factor" })}
+                    checked={batchFloorScope === "all_floors"}
+                    onChange={() => { setBatchFloorScope("all_floors"); setBatchSelectedFloorId(""); }}
                     className="accent-emerald-500"
                   />
-                  <span>بالمعامل (كمية/م²)</span>
+                  <span>جميع الأدوار</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
-                    name="calc_method"
-                    checked={newAreaMaterial.calculation_method === "direct"}
-                    onChange={() => setNewAreaMaterial({ ...newAreaMaterial, calculation_method: "direct" })}
+                    checked={batchFloorScope === "selected_floor"}
+                    onChange={() => setBatchFloorScope("selected_floor")}
                     className="accent-emerald-500"
                   />
-                  <span>كمية مباشرة</span>
+                  <span>دور محدد</span>
                 </label>
               </div>
-            </div>
-
-            {/* حقول حسب طريقة الحساب */}
-            {newAreaMaterial.calculation_method === "factor" ? (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>المعامل (/م²)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={newAreaMaterial.factor}
-                    onChange={(e) => setNewAreaMaterial({ ...newAreaMaterial, factor: parseFloat(e.target.value) || 0 })}
-                    placeholder="مثال: 120 كجم/م²"
-                    className="bg-slate-700 border-slate-600"
-                  />
-                  <p className="text-xs text-slate-400 mt-1">الكمية = المساحة × المعامل</p>
-                </div>
-                <div>
-                  <Label>الوحدة</Label>
-                  <select
-                    value={newAreaMaterial.unit}
-                    onChange={(e) => setNewAreaMaterial({ ...newAreaMaterial, unit: e.target.value })}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white"
-                  >
-                    <option value="طن">طن</option>
-                    <option value="كجم">كجم</option>
-                    <option value="م²">م²</option>
-                    <option value="م³">م³</option>
-                    <option value="قطعة">قطعة</option>
-                    <option value="متر">متر</option>
-                    <option value="لتر">لتر</option>
-                    <option value="جالون">جالون</option>
-                  </select>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>الكمية</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={newAreaMaterial.direct_quantity}
-                    onChange={(e) => setNewAreaMaterial({ ...newAreaMaterial, direct_quantity: parseFloat(e.target.value) || 0 })}
-                    placeholder="أدخل الكمية مباشرة"
-                    className="bg-slate-700 border-slate-600"
-                  />
-                </div>
-                <div>
-                  <Label>الوحدة</Label>
-                  <select
-                    value={newAreaMaterial.unit}
-                    onChange={(e) => setNewAreaMaterial({ ...newAreaMaterial, unit: e.target.value })}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white"
-                  >
-                    <option value="طن">طن</option>
-                    <option value="كجم">كجم</option>
-                    <option value="م²">م²</option>
-                    <option value="م³">م³</option>
-                    <option value="قطعة">قطعة</option>
-                    <option value="متر">متر</option>
-                    <option value="لتر">لتر</option>
-                    <option value="جالون">جالون</option>
-                  </select>
-                </div>
-              </div>
-            )}
-
-            {/* سعر الوحدة */}
-            <div>
-              <Label>سعر الوحدة (ر.س)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={newAreaMaterial.unit_price}
-                onChange={(e) => setNewAreaMaterial({ ...newAreaMaterial, unit_price: parseFloat(e.target.value) || 0 })}
-                placeholder="0.00"
-                className="bg-slate-700 border-slate-600"
-              />
-            </div>
-
-            {/* نطاق الحساب - يظهر دائماً */}
-            <div>
-              <Label>نطاق الحساب</Label>
-              <select
-                value={newAreaMaterial.calculation_type}
-                onChange={(e) => setNewAreaMaterial({ ...newAreaMaterial, calculation_type: e.target.value, selected_floor_id: "" })}
-                className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white"
-              >
-                <option value="all_floors">جميع الأدوار</option>
-                <option value="selected_floor">دور محدد</option>
-              </select>
-            </div>
-
-            {/* اختيار الدور */}
-            {newAreaMaterial.calculation_type === "selected_floor" && (
-              <div>
-                <Label>اختر الدور</Label>
+              
+              {batchFloorScope === "selected_floor" && (
                 <select
-                  value={newAreaMaterial.selected_floor_id}
-                  onChange={(e) => setNewAreaMaterial({ ...newAreaMaterial, selected_floor_id: e.target.value })}
+                  value={batchSelectedFloorId}
+                  onChange={(e) => setBatchSelectedFloorId(e.target.value)}
                   className="w-full bg-slate-700 border border-slate-600 rounded-md p-2 text-white"
                 >
-                  <option value="">-- اختر دور --</option>
+                  <option value="">-- اختر الدور --</option>
                   {floors.map((f) => (
                     <option key={f.id} value={f.id}>{f.floor_name} ({f.area} م²)</option>
                   ))}
                 </select>
+              )}
+            </div>
+
+            {/* البحث في الكتالوج */}
+            <div className="relative">
+              <Label className="text-slate-300">ابحث وأضف المواد</Label>
+              <Input
+                value={batchCatalogSearch}
+                onChange={(e) => {
+                  setBatchCatalogSearch(e.target.value);
+                  setShowBatchCatalogDropdown(e.target.value.length > 0);
+                }}
+                placeholder="🔍 ابحث في الكتالوج بالاسم أو الكود..."
+                className="bg-slate-700 border-emerald-600 focus:border-emerald-400"
+              />
+              
+              {/* قائمة نتائج البحث */}
+              {showBatchCatalogDropdown && filteredBatchCatalog.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-slate-700 border border-slate-500 rounded-lg shadow-xl max-h-48 overflow-auto">
+                  {filteredBatchCatalog.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => addMaterialToBatch(item)}
+                      className="p-2 hover:bg-emerald-600/30 cursor-pointer border-b border-slate-600 last:border-b-0 flex justify-between items-center"
+                    >
+                      <div>
+                        <span className="font-medium">{item.name}</span>
+                        {item.item_code && <span className="text-xs text-slate-400 mr-2">({item.item_code})</span>}
+                      </div>
+                      <div className="text-sm text-slate-400">
+                        {item.unit} {item.price > 0 && `• ${item.price} ر.س`}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* قائمة المواد المضافة */}
+            {batchAreaMaterials.length > 0 && (
+              <div className="border border-slate-600 rounded-lg overflow-hidden">
+                <div className="bg-slate-700 p-2 font-bold text-emerald-400 flex justify-between">
+                  <span>المواد المضافة ({batchAreaMaterials.length})</span>
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {batchAreaMaterials.map((mat, idx) => (
+                    <div key={idx} className="p-3 border-b border-slate-700 last:border-b-0 bg-slate-800/50">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <span className="font-medium text-white">{mat.item_name}</span>
+                          {mat.item_code && <span className="text-xs text-slate-400 mr-1">({mat.item_code})</span>}
+                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="text-red-400 hover:text-red-300 hover:bg-red-900/30 h-6 w-6 p-0"
+                          onClick={() => removeMaterialFromBatch(idx)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <Label className="text-xs text-slate-400">المعامل (/م²)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={mat.factor}
+                            onChange={(e) => updateBatchMaterial(idx, 'factor', parseFloat(e.target.value) || 0)}
+                            className="bg-slate-700 border-slate-600 h-8 text-sm"
+                            placeholder="0"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-slate-400">الوحدة</Label>
+                          <select
+                            value={mat.unit}
+                            onChange={(e) => updateBatchMaterial(idx, 'unit', e.target.value)}
+                            className="w-full bg-slate-700 border border-slate-600 rounded-md p-1 text-white text-sm h-8"
+                          >
+                            <option value="طن">طن</option>
+                            <option value="كجم">كجم</option>
+                            <option value="م²">م²</option>
+                            <option value="م³">م³</option>
+                            <option value="قطعة">قطعة</option>
+                            <option value="متر">متر</option>
+                          </select>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-slate-400">السعر (ر.س)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={mat.unit_price}
+                            onChange={(e) => updateBatchMaterial(idx, 'unit_price', parseFloat(e.target.value) || 0)}
+                            className="bg-slate-700 border-slate-600 h-8 text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* نسبة الهالك */}
-            <div>
-              <Label>نسبة الهالك (%) - اختياري</Label>
-              <Input
-                type="number"
-                step="0.1"
-                value={newAreaMaterial.waste_percentage}
-                onChange={(e) => setNewAreaMaterial({ ...newAreaMaterial, waste_percentage: parseFloat(e.target.value) || 0 })}
-                placeholder="مثال: 5"
-                className="bg-slate-700 border-slate-600"
-              />
-              <p className="text-xs text-slate-400 mt-1">ستُضاف للكمية المحسوبة</p>
-            </div>
-
-            {/* مقاس البلاط - اختياري */}
-            <div className="p-3 bg-amber-900/30 rounded-lg border border-amber-700/50">
-              <Label className="text-amber-400 font-bold mb-2 block flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" />
-                مقاس البلاط/اللوح (اختياري)
-              </Label>
-              <p className="text-xs text-amber-300/80 mb-3">للبلاط والجبس بورد فقط - سيتم حساب عدد القطع</p>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-slate-300">عرض البلاطة (سم)</Label>
-                  <Input
-                    type="number"
-                    value={newAreaMaterial.tile_width}
-                    onChange={(e) => setNewAreaMaterial({ ...newAreaMaterial, tile_width: parseFloat(e.target.value) || 0 })}
-                    placeholder="مثال: 60"
-                    className="bg-slate-700 border-slate-600"
-                  />
-                </div>
-                <div>
-                  <Label className="text-slate-300">طول البلاطة (سم)</Label>
-                  <Input
-                    type="number"
-                    value={newAreaMaterial.tile_height}
-                    onChange={(e) => setNewAreaMaterial({ ...newAreaMaterial, tile_height: parseFloat(e.target.value) || 0 })}
-                    placeholder="مثال: 60"
-                    className="bg-slate-700 border-slate-600"
-                  />
-                </div>
+            {batchAreaMaterials.length === 0 && (
+              <div className="text-center py-8 text-slate-400 border border-dashed border-slate-600 rounded-lg">
+                <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>ابحث واختر المواد من الكتالوج</p>
               </div>
-            </div>
-
-            {/* ملاحظات */}
-            <div>
-              <Label>ملاحظات (اختياري)</Label>
-              <Input
-                value={newAreaMaterial.notes || ""}
-                onChange={(e) => setNewAreaMaterial({ ...newAreaMaterial, notes: e.target.value })}
-                placeholder="أي ملاحظات إضافية..."
-                className="bg-slate-700 border-slate-600"
-              />
-            </div>
+            )}
           </div>
+
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setAreaMaterialDialogOpen(false)} className="border-slate-600">
+            <Button 
+              variant="outline" 
+              onClick={() => setAreaMaterialDialogOpen(false)} 
+              className="border-slate-600"
+            >
               إلغاء
             </Button>
-            <Button onClick={createAreaMaterial} className="bg-emerald-600 hover:bg-emerald-700">
-              إضافة
+            <Button 
+              onClick={saveBatchAreaMaterials} 
+              disabled={savingBatch || batchAreaMaterials.length === 0}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              {savingBatch ? (
+                <>
+                  <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                  جاري الحفظ...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 ml-2" />
+                  حفظ {batchAreaMaterials.length > 0 ? `(${batchAreaMaterials.length})` : ""}
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
