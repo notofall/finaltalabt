@@ -736,6 +736,42 @@ export default function SystemAdminDashboard() {
     }
   };
 
+  // Procurement Delete Permission
+  const fetchDeletePermission = async () => {
+    try {
+      const res = await axios.get(`${API_V2}/settings/procurement/delete-permission`, getAuthHeaders());
+      setProcurementDeletePermission(res.data.enabled);
+    } catch (error) {
+      console.error("Error fetching delete permission:", error);
+    }
+  };
+
+  const handleToggleDeletePermission = async () => {
+    try {
+      const res = await axios.put(`${API_V2}/settings/procurement/delete-permission`, 
+        { enabled: !procurementDeletePermission }, 
+        getAuthHeaders()
+      );
+      setProcurementDeletePermission(res.data.enabled);
+      toast.success(res.data.enabled ? "تم تفعيل صلاحية الحذف" : "تم إلغاء صلاحية الحذف");
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "فشل في تحديث الصلاحية");
+    }
+  };
+
+  // Deleted Orders
+  const fetchDeletedOrders = async () => {
+    setDeletedOrdersLoading(true);
+    try {
+      const res = await axios.get(`${API_V2}/system/deleted-orders`, getAuthHeaders());
+      setDeletedOrders(res.data.items);
+    } catch (error) {
+      console.error("Error fetching deleted orders:", error);
+    } finally {
+      setDeletedOrdersLoading(false);
+    }
+  };
+
   // Data Cleanup - using V2 API
   const handleCleanData = async () => {
     if (!cleanupEmail) {
