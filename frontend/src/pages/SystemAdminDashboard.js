@@ -1090,6 +1090,89 @@ export default function SystemAdminDashboard() {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Procurement Permissions Card */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" /> صلاحيات مدير المشتريات
+                </CardTitle>
+                <CardDescription>إدارة الصلاحيات الخاصة بمدير المشتريات</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <h4 className="font-medium">صلاحية حذف أوامر الشراء</h4>
+                    <p className="text-sm text-gray-500">السماح لمدير المشتريات بحذف أوامر الشراء (يتم تسجيل الحذف في سجل التدقيق)</p>
+                  </div>
+                  <Switch 
+                    checked={procurementDeletePermission} 
+                    onCheckedChange={handleToggleDeletePermission}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Deleted Orders Card */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trash2 className="h-5 w-5 text-red-500" /> أوامر الشراء المحذوفة
+                </CardTitle>
+                <CardDescription>سجل الأوامر التي تم حذفها من النظام</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {deletedOrdersLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <RefreshCw className="h-6 w-6 animate-spin text-gray-400" />
+                  </div>
+                ) : deletedOrders.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Trash2 className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                    <p>لا توجد أوامر شراء محذوفة</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="text-right p-3">رقم الأمر</th>
+                          <th className="text-right p-3">المشروع</th>
+                          <th className="text-right p-3">المورد</th>
+                          <th className="text-right p-3">المبلغ</th>
+                          <th className="text-right p-3">تاريخ الحذف</th>
+                          <th className="text-right p-3">حُذف بواسطة</th>
+                          <th className="text-right p-3">السبب</th>
+                          <th className="text-right p-3">تفاصيل</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {deletedOrders.map((order) => (
+                          <tr key={order.id} className="border-b hover:bg-gray-50">
+                            <td className="p-3 font-mono">{order.order_number || "-"}</td>
+                            <td className="p-3">{order.project_name}</td>
+                            <td className="p-3">{order.supplier_name}</td>
+                            <td className="p-3">{order.total_amount?.toLocaleString()} ريال</td>
+                            <td className="p-3">{order.deleted_at ? new Date(order.deleted_at).toLocaleDateString('ar-SA') : "-"}</td>
+                            <td className="p-3">{order.deleted_by}</td>
+                            <td className="p-3 max-w-[200px] truncate">{order.delete_reason || "-"}</td>
+                            <td className="p-3">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => setShowDeletedOrderDetails(order)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Domain Tab */}
