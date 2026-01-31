@@ -408,7 +408,7 @@ class BackupService:
                             params
                         )
                         imported_count += 1
-                    except Exception as e:
+                    except Exception:
                         # تجاهل السجلات المكررة
                         pass
                 

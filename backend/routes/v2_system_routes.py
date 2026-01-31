@@ -879,7 +879,7 @@ async def restore_backup(
             "note": "تم استعادة البيانات الغير موجودة فقط (البيانات الموجودة لم تُستبدل)"
         }
         
-    except Exception as e:
+    except Exception:
         await session.rollback()
         raise HTTPException(status_code=500, detail="فشل في استعادة البيانات. تحقق من صحة الملف.")
 
@@ -1007,7 +1007,7 @@ async def clean_all_data(
             "note": "تم حذف جميع البيانات ما عدا مستخدم مدير النظام المحدد"
         }
         
-    except Exception as e:
+    except Exception:
         await session.rollback()
         raise HTTPException(status_code=500, detail="فشل في تنظيف البيانات. حاول مرة أخرى.")
 

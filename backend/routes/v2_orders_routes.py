@@ -311,7 +311,6 @@ async def reject_order(
 # ==================== Additional Order Endpoints ====================
 
 from pydantic import BaseModel
-from typing import List as ListType
 
 class OrderItemCreate(BaseModel):
     name: str
@@ -351,7 +350,7 @@ async def create_order_from_request(
 ):
     """إنشاء أمر شراء من طلب موجود"""
     from datetime import datetime, timezone
-    from database import PurchaseOrder, PurchaseOrderItem, MaterialRequest, MaterialRequestItem, Project, Supplier
+    from database import PurchaseOrder, MaterialRequestItem, Project, Supplier
     from sqlalchemy import select
     import uuid as uuid_lib
     
@@ -513,7 +512,7 @@ async def create_order(
 ):
     """إنشاء أمر شراء جديد"""
     from datetime import datetime
-    from database import get_postgres_session, PurchaseOrder, PurchaseOrderItem, Project, Supplier
+    from database import get_postgres_session, PurchaseOrder, Project, Supplier
     from sqlalchemy import select
     import uuid as uuid_lib
     
@@ -652,7 +651,7 @@ async def link_item_to_catalog(
     current_user = Depends(get_current_user)
 ):
     """ربط عنصر بالكتالوج وإنشاء اسم بديل"""
-    from database import PurchaseOrderItem, ItemAlias, PriceCatalogItem
+    from database import ItemAlias, PriceCatalogItem
     from sqlalchemy import select
     import uuid as uuid_lib
     from datetime import datetime, timezone
@@ -720,7 +719,7 @@ async def sync_order_prices(
     current_user = Depends(get_current_user)
 ):
     """مزامنة أسعار أمر الشراء مع الكتالوج"""
-    from database import PurchaseOrder, PurchaseOrderItem, PriceCatalogItem
+    from database import PurchaseOrder, PriceCatalogItem
     from sqlalchemy import select
     
     session = order_service.order_repo.session
@@ -852,7 +851,7 @@ async def delete_order(
     from routes.v2_auth_routes import UserRole
     from app.audit_logger import audit_log, AuditAction
     from app.repositories.settings_repository import SettingsRepository
-    from database import PurchaseOrder, PurchaseOrderItem, MaterialRequest
+    from database import PurchaseOrder
     
     # Check permission
     if current_user.role == UserRole.SYSTEM_ADMIN:
