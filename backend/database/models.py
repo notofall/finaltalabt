@@ -226,7 +226,7 @@ class PurchaseOrder(Base):
     __tablename__ = "purchase_orders"
     
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid_lib.uuid4()))
-    order_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, index=True)
+    order_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, index=True, unique=True)
     order_seq: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     request_id: Mapped[str] = mapped_column(String(36), ForeignKey("material_requests.id"), nullable=False, index=True)
     request_number: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
