@@ -50,7 +50,7 @@ const SupplyTrackingView = () => {
 
   useEffect(() => {
     fetchSupplyTracking();
-  }, []);
+  }, [fetchSupplyTracking]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
