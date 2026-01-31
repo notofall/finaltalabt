@@ -2456,7 +2456,7 @@ const ProcurementDashboard = () => {
                   if (ordersViewMode === "all") return true;
                   if (ordersViewMode === "pending") return order.status === "pending_approval";
                   if (ordersViewMode === "pending_gm") return order.status === "pending_gm_approval";
-                  if (ordersViewMode === "gm_approved_pending") return order.gm_approved === true && order.status === "pending";
+                  if (ordersViewMode === "gm_approved_pending") return order.gm_approved_by_name && order.status === "approved";
                   if (ordersViewMode === "approved") return ["approved", "printed"].includes(order.status);
                   if (ordersViewMode === "shipped") return ["shipped", "partially_delivered"].includes(order.status);
                   if (ordersViewMode === "delivered") return order.status === "delivered";
