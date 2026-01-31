@@ -133,11 +133,13 @@ async def get_delete_permission(
 ):
     """
     الحصول على حالة صلاحية حذف أوامر الشراء لمدير المشتريات
+    مدير النظام ومدير المشتريات يمكنهم عرض هذا الإعداد
     """
-    if current_user.role != UserRole.SYSTEM_ADMIN:
+    # السماح لمدير النظام ومدير المشتريات بقراءة الصلاحية
+    if current_user.role not in [UserRole.SYSTEM_ADMIN, UserRole.PROCUREMENT_MANAGER]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="فقط مدير النظام يمكنه عرض هذا الإعداد"
+            detail="ليس لديك صلاحية لعرض هذا الإعداد"
         )
     
     value = await service.get_setting("procurement_can_delete_orders")
