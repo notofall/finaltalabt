@@ -824,12 +824,14 @@ const BuildingsSystem = () => {
     const updated = [...batchAreaMaterials];
     updated[index] = { ...updated[index], [field]: value };
     
-    // عند إدخال مقاس البلاط، تعيين المعامل = 1 تلقائياً
+    // عند إدخال مقاس البلاط، تعيين المعامل = 1 والوحدة = م² تلقائياً
     if ((field === 'tile_width' || field === 'tile_height') && value > 0) {
       const mat = updated[index];
-      if (mat.tile_width > 0 && mat.tile_height > 0 && mat.factor === 0) {
-        updated[index].factor = 1;
-        updated[index].unit = "قطعة";
+      if (mat.tile_width > 0 && mat.tile_height > 0) {
+        if (mat.factor === 0) {
+          updated[index].factor = 1;
+        }
+        updated[index].unit = "م²";  // الكمية بالمتر المربع
       }
     }
     
