@@ -247,6 +247,15 @@ const ProcurementDashboard = () => {
       // Filter supervisors and engineers for project management
       setSupervisors(usersData.filter(u => u.role === 'supervisor'));
       setEngineers(usersData.filter(u => u.role === 'engineer'));
+
+      // Check delete permission for procurement manager
+      try {
+        const permRes = await axios.get(`${API_V2_URL}/settings/procurement/delete-permission`, getAuthHeaders());
+        setCanDeleteOrders(permRes.data.enabled);
+      } catch (e) {
+        // Permission check failed - user might not have access to this endpoint
+        setCanDeleteOrders(false);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("فشل في تحميل البيانات");
