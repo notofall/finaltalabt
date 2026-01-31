@@ -2300,6 +2300,91 @@ export default function SystemAdminDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Deleted Order Details Dialog */}
+      <Dialog open={!!showDeletedOrderDetails} onOpenChange={() => setShowDeletedOrderDetails(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>تفاصيل الأمر المحذوف</DialogTitle>
+          </DialogHeader>
+          {showDeletedOrderDetails && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-500">رقم الأمر:</span>
+                  <span className="mr-2 font-mono">{showDeletedOrderDetails.order_number}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">المشروع:</span>
+                  <span className="mr-2">{showDeletedOrderDetails.project_name}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">المورد:</span>
+                  <span className="mr-2">{showDeletedOrderDetails.supplier_name}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">المبلغ الإجمالي:</span>
+                  <span className="mr-2 font-bold">{showDeletedOrderDetails.total_amount?.toLocaleString()} ريال</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">حالة الأمر قبل الحذف:</span>
+                  <span className="mr-2">{showDeletedOrderDetails.status}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">تاريخ الإنشاء:</span>
+                  <span className="mr-2">{showDeletedOrderDetails.original_created_at ? new Date(showDeletedOrderDetails.original_created_at).toLocaleDateString('ar-SA') : "-"}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">تاريخ الحذف:</span>
+                  <span className="mr-2">{showDeletedOrderDetails.deleted_at ? new Date(showDeletedOrderDetails.deleted_at).toLocaleDateString('ar-SA') : "-"}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">حُذف بواسطة:</span>
+                  <span className="mr-2">{showDeletedOrderDetails.deleted_by} ({showDeletedOrderDetails.deleted_by_role})</span>
+                </div>
+              </div>
+              
+              <div className="bg-red-50 p-3 rounded-lg">
+                <span className="text-gray-500 text-sm">سبب الحذف:</span>
+                <p className="text-red-700 mt-1">{showDeletedOrderDetails.delete_reason || "لم يتم تحديد سبب"}</p>
+              </div>
+
+              {showDeletedOrderDetails.items?.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">الأصناف ({showDeletedOrderDetails.items_count})</h4>
+                  <div className="max-h-48 overflow-y-auto border rounded">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="text-right p-2">الصنف</th>
+                          <th className="text-right p-2">الكمية</th>
+                          <th className="text-right p-2">الوحدة</th>
+                          <th className="text-right p-2">السعر</th>
+                          <th className="text-right p-2">الإجمالي</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {showDeletedOrderDetails.items.map((item, idx) => (
+                          <tr key={idx} className="border-t">
+                            <td className="p-2">{item.name}</td>
+                            <td className="p-2">{item.quantity}</td>
+                            <td className="p-2">{item.unit}</td>
+                            <td className="p-2">{item.unit_price?.toLocaleString()}</td>
+                            <td className="p-2">{item.total_price?.toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeletedOrderDetails(null)}>إغلاق</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
