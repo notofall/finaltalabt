@@ -651,7 +651,7 @@ const BuildingsSystem = () => {
     } catch (error) {
       console.error("Error fetching permissions:", error);
     }
-  }, [API_URL, getAuthHeaders]);
+  }, [BUILDINGS_API, getAuthHeaders]);
 
   // CRUD operations for templates
   const createTemplate = async () => {
