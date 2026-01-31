@@ -2271,10 +2271,10 @@ const BuildingsSystem = () => {
                                   {calculations.area_materials.map((mat, idx) => (
                                     <tr key={idx} className="border-b border-slate-700/50 text-white">
                                       <td className="p-3">{mat.item_name}</td>
-                                      <td className="p-3">{mat.unit}</td>
+                                      <td className="p-3">{formatUnit(mat.unit)}</td>
                                       <td className="p-3">{mat.factor}</td>
                                       <td className="p-3">
-                                        <div>{mat.quantity?.toLocaleString()} {mat.unit}</div>
+                                        <div>{mat.quantity?.toLocaleString()} {formatUnit(mat.unit)}</div>
                                         {mat.tiles_count && (
                                           <div className="text-xs text-slate-400 mt-1">
                                             ({mat.tiles_with_waste?.toLocaleString() || mat.tiles_count?.toLocaleString()} حبة)
