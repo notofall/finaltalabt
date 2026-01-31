@@ -127,7 +127,7 @@ export default function SystemAdminDashboard() {
 
   const actionLabels = {
     create: "إنشاء",
-    update: "تحديث",
+    update: «تحديث»,
     delete: "حذف",
     approve: "اعتماد",
     reject: "رفض",
@@ -2153,7 +2153,7 @@ export default function SystemAdminDashboard() {
                     <div className="text-center py-8 text-muted-foreground">
                       <Terminal className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <p>لا توجد سجلات</p>
-                      <p className="text-sm">اضغط على "تحديث" لتحميل السجلات</p>
+                      <p className="text-sm">اضغط على «تحديث» لتحميل السجلات</p>
                     </div>
                   ) : (
                     <div className="border rounded-lg overflow-hidden max-h-[400px] overflow-y-auto">
