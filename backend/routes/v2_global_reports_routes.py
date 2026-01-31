@@ -586,8 +586,9 @@ async def export_global_report_excel(
     row += 1
     ws_summary[f'A{row}'] = f"إجمالي الأصناف: {len(area_materials)}"
     row += 1
-    total_buildings_value = sum((m.calculated_quantity or 0) * (m.unit_price or 0) for m in area_materials)
-    ws_summary[f'A{row}'] = f"إجمالي القيمة: {total_buildings_value:,.2f} ريال"
+    # حساب قيمة المباني بشكل مبسط (مجموع factor * unit_price أو direct_quantity * unit_price)
+    total_buildings_value = sum((m.direct_quantity or m.factor or 0) * (m.unit_price or 0) for m in area_materials)
+    ws_summary[f'A{row}'] = f"إجمالي القيمة التقريبية: {total_buildings_value:,.2f} ريال"
     
     row += 2
     ws_summary[f'A{row}'] = "ملخص أوامر الشراء"
