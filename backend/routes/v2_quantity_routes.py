@@ -256,7 +256,8 @@ async def get_alerts(
     service: QuantityService = Depends(get_quantity_service)
 ):
     """
-    Get alerts for items needing attention
+    Get alerts for items needing attention (overdue, due_soon, high_priority)
+    Returns structured data matching frontend expectations
     Uses: QuantityService -> QuantityRepository
     """
     require_quantity_access(current_user)
