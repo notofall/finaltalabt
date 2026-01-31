@@ -201,11 +201,11 @@ class QuantityService(BaseService):
         return await self.repository.get_dashboard_stats()
     
     async def get_summary_report(self, project_id: Optional[str] = None) -> Dict:
-        """Get summary report"""
+        """Get summary report - returns structured data matching frontend"""
         return await self.repository.get_summary_report(project_id)
     
-    async def get_alerts(self, days_threshold: int = 7) -> List[Dict]:
-        """Get alerts for upcoming items"""
+    async def get_alerts(self, days_threshold: int = 7) -> Dict:
+        """Get alerts - returns structured data matching frontend (overdue, due_soon, high_priority)"""
         return await self.repository.get_alerts(days_threshold)
     
     # ==================== HELPERS ====================
