@@ -1873,7 +1873,7 @@ export default function SystemAdminDashboard() {
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
                         <Server className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>اضغط على "أدوات النظام" لتحميل المعلومات</p>
+                        <p>اضغط على «أدوات النظام» لتحميل المعلومات</p>
                       </div>
                     )}
                   </CardContent>
@@ -2023,7 +2023,7 @@ export default function SystemAdminDashboard() {
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
                         <Wrench className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>اضغط على "أدوات النظام" للتحقق من التحديثات</p>
+                        <p>اضغط على «أدوات النظام» للتحقق من التحديثات</p>
                       </div>
                     )}
                   </CardContent>
