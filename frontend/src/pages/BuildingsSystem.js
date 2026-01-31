@@ -1163,10 +1163,10 @@ const BuildingsSystem = () => {
   }, [selectedProject, fetchProjectDetails]);
 
   useEffect(() => {
-    if (selectCatalogDialogOpen) {
+    if (selectCatalogDialogOpen || areaMaterialDialogOpen) {
       fetchCatalogItems();
     }
-  }, [selectCatalogDialogOpen, catalogSearch, fetchCatalogItems]);
+  }, [selectCatalogDialogOpen, areaMaterialDialogOpen, catalogSearch, fetchCatalogItems]);
 
   const getFloorName = (num) => {
     if (num === -1) return "اللبشة";
