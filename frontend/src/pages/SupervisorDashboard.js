@@ -768,6 +768,66 @@ const SupervisorDashboard = () => {
                     </div>
                   </div>
 
+                  {/* اختيار الدور والنموذج (اختياري) */}
+                  {projectId && (floors.length > 0 || templates.length > 0) && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-3">
+                      <p className="text-sm font-medium text-blue-800 text-center">الدور / النموذج (اختياري)</p>
+                      
+                      {loadingFloorsTemplates ? (
+                        <div className="text-center text-slate-500 text-sm py-2">
+                          <Loader2 className="w-4 h-4 animate-spin inline ml-2" />
+                          جاري تحميل الأدوار والنماذج...
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* اختيار الدور */}
+                          {floors.length > 0 && (
+                            <div>
+                              <Label className="text-xs text-blue-700">الدور</Label>
+                              <select 
+                                value={selectedFloorId} 
+                                onChange={(e) => {
+                                  const floor = floors.find(f => f.id === e.target.value);
+                                  setSelectedFloorId(e.target.value);
+                                  setSelectedFloorName(floor ? floor.floor_name : "");
+                                }} 
+                                className="w-full h-10 mt-1 border border-blue-300 rounded-lg bg-white px-2 text-sm"
+                              >
+                                <option value="">بدون تحديد</option>
+                                {floors.map((floor) => (
+                                  <option key={floor.id} value={floor.id}>{floor.floor_name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                          
+                          {/* اختيار النموذج */}
+                          {templates.length > 0 && (
+                            <div>
+                              <Label className="text-xs text-blue-700">النموذج</Label>
+                              <select 
+                                value={selectedTemplateId} 
+                                onChange={(e) => {
+                                  const template = templates.find(t => t.id === e.target.value);
+                                  setSelectedTemplateId(e.target.value);
+                                  setSelectedTemplateName(template ? template.name : "");
+                                }} 
+                                className="w-full h-10 mt-1 border border-blue-300 rounded-lg bg-white px-2 text-sm"
+                              >
+                                <option value="">بدون تحديد</option>
+                                {templates.map((template) => (
+                                  <option key={template.id} value={template.id}>{template.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <p className="text-xs text-blue-600 text-center">سيتم ربط الطلب بالكميات المحجوزة للدور/النموذج المحدد</p>
+                    </div>
+                  )}
+
                   <div>
                     <Label className="text-sm font-medium">تاريخ الحاجة المتوقع</Label>
                     <Input type="date" value={expectedDeliveryDate} onChange={(e) => setExpectedDeliveryDate(e.target.value)} className="h-11 mt-1" />
