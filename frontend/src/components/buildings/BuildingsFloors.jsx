@@ -81,7 +81,7 @@ const BuildingsFloors = ({
                 {floors.map((floor) => (
                   <tr key={floor.id} className="border-b border-slate-700/50 text-white">
                     <td className="p-3">{floor.floor_name || getFloorName(floor.floor_number)}</td>
-                    <td className="p-3">{floor.area.toLocaleString()}</td>
+                    <td className="p-3">{floor.area.toLocaleString('en-US')}</td>
                     <td className="p-3">{floor.steel_factor}</td>
                     <td className="p-3 text-amber-400">{((floor.area * floor.steel_factor) / 1000).toFixed(2)}</td>
                     <td className="p-3 text-center">
@@ -105,7 +105,7 @@ const BuildingsFloors = ({
               <tfoot>
                 <tr className="bg-slate-700/30 text-emerald-400 font-semibold">
                   <td className="p-3">الإجمالي</td>
-                  <td className="p-3">{floors.reduce((sum, f) => sum + f.area, 0).toLocaleString()}</td>
+                  <td className="p-3">{floors.reduce((sum, f) => sum + f.area, 0).toLocaleString('en-US')}</td>
                   <td className="p-3">-</td>
                   <td className="p-3 text-amber-400">{(floors.reduce((sum, f) => sum + (f.area * f.steel_factor), 0) / 1000).toFixed(2)}</td>
                   <td className="p-3"></td>

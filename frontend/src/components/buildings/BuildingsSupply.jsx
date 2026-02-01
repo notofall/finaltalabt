@@ -49,9 +49,9 @@ const BuildingsSupply = ({ supplyItems, onSyncSupply }) => {
                   <tr key={item.id} className="border-b border-slate-700/50 text-white">
                     <td className="p-3">{item.item_name}</td>
                     <td className="p-3">{item.unit}</td>
-                    <td className="p-3">{item.required_quantity.toLocaleString()}</td>
-                    <td className="p-3 text-emerald-400 font-medium">{item.received_quantity.toLocaleString()}</td>
-                    <td className="p-3 text-orange-400">{item.remaining_quantity.toLocaleString()}</td>
+                    <td className="p-3">{item.required_quantity.toLocaleString('en-US')}</td>
+                    <td className="p-3 text-emerald-400 font-medium">{item.received_quantity.toLocaleString('en-US')}</td>
+                    <td className="p-3 text-orange-400">{item.remaining_quantity.toLocaleString('en-US')}</td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <Progress value={item.completion_percentage} className="h-2 flex-1" />

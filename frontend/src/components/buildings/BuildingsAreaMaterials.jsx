@@ -80,7 +80,7 @@ const BuildingsAreaMaterials = ({
                           : getFloorName(material.selected_floor_id)}
                       </Badge>
                     </td>
-                    <td className="p-3">{material.unit_price?.toLocaleString() || 0} ر.س</td>
+                    <td className="p-3">{material.unit_price?.toLocaleString('en-US') || 0} ر.س</td>
                     <td className="p-3 text-center">
                       <Button 
                         size="sm" 

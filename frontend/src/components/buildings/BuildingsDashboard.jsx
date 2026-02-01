@@ -36,7 +36,7 @@ const BuildingsDashboard = ({ projects, dashboardData, onSelectProject }) => {
                   <div className="text-slate-400">النماذج: <span className="text-white">{summary?.templates_count || 0}</span></div>
                   <div className="text-slate-400">الوحدات: <span className="text-white">{summary?.units_count || 0}</span></div>
                   <div className="text-slate-400">الأدوار: <span className="text-white">{summary?.floors_count || 0}</span></div>
-                  <div className="text-slate-400">المساحة: <span className="text-white">{(summary?.area || 0).toLocaleString()} م²</span></div>
+                  <div className="text-slate-400">المساحة: <span className="text-white">{(summary?.area || 0).toLocaleString('en-US')} م²</span></div>
                 </div>
               </div>
             );
