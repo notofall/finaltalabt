@@ -2180,7 +2180,7 @@ export default function SystemAdminDashboard() {
                           {systemLogs.map((log, index) => (
                             <tr key={index} className="hover:bg-muted/30">
                               <td className="px-4 py-2 whitespace-nowrap text-muted-foreground text-xs">
-                                {log.timestamp ? new Date(log.timestamp).toLocaleString('ar-SA', {
+                                {log.timestamp ? new Date(log.timestamp).toLocaleString('en-GB', {
                                   month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                                 }) : '-'}
                               </td>
