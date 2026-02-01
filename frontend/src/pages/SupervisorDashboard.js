@@ -1040,6 +1040,27 @@ const SupervisorDashboard = () => {
                 <div><span className="text-slate-500">المشروع:</span><p className="font-medium">{selectedRequest.project_name}</p></div>
                 <div><span className="text-slate-500">المهندس:</span><p className="font-medium">{selectedRequest.engineer_name}</p></div>
               </div>
+              
+              {/* عرض الدور والنموذج إذا كانا موجودين */}
+              {(selectedRequest.floor_name || selectedRequest.template_name) && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {selectedRequest.floor_name && (
+                      <div>
+                        <span className="text-blue-600 text-xs">الدور:</span>
+                        <p className="font-medium text-blue-800">{selectedRequest.floor_name}</p>
+                      </div>
+                    )}
+                    {selectedRequest.template_name && (
+                      <div>
+                        <span className="text-blue-600 text-xs">النموذج:</span>
+                        <p className="font-medium text-blue-800">{selectedRequest.template_name}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
               <div><span className="text-slate-500 text-sm">السبب:</span><p className="text-sm">{selectedRequest.reason}</p></div>
               {selectedRequest.rejection_reason && (
                 <div className="bg-red-50 p-2 rounded text-sm border border-red-200">
