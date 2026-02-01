@@ -2709,6 +2709,28 @@ const ProcurementDashboard = () => {
                 <div><span className="text-slate-500">المشرف:</span><p className="font-medium">{selectedOrder.supervisor_name || '-'}</p></div>
                 <div><span className="text-slate-500">المهندس:</span><p className="font-medium">{selectedOrder.engineer_name || '-'}</p></div>
               </div>
+              
+              {/* عرض الدور والنموذج إذا كانا موجودين */}
+              {(selectedOrder.floor_name || selectedOrder.template_name) && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+                  <p className="text-xs text-blue-600 font-medium mb-1">الدور / النموذج:</p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {selectedOrder.floor_name && (
+                      <div>
+                        <span className="text-blue-600 text-xs">الدور:</span>
+                        <p className="font-semibold text-blue-800">{selectedOrder.floor_name}</p>
+                      </div>
+                    )}
+                    {selectedOrder.template_name && (
+                      <div>
+                        <span className="text-blue-600 text-xs">النموذج:</span>
+                        <p className="font-semibold text-blue-800">{selectedOrder.template_name}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
               <div><span className="text-slate-500 text-sm">الحالة:</span> {getOrderStatusBadge(selectedOrder.status)}</div>
               {selectedOrder.notes && <div><span className="text-slate-500 text-sm">ملاحظات:</span><p className="text-sm">{selectedOrder.notes}</p></div>}
               
