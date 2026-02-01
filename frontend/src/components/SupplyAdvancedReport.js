@@ -158,9 +158,9 @@ const SupplyAdvancedReport = ({ projectId, projectName }) => {
           </div>
           <Progress value={summary.overall_completion} className="h-3" />
           <div className="flex justify-between mt-2 text-sm text-slate-400">
-            <span>المستلم: {summary.total_received?.toLocaleString()}</span>
-            <span>المتبقي: {summary.total_remaining?.toLocaleString()}</span>
-            <span>الإجمالي: {summary.total_required?.toLocaleString()}</span>
+            <span>المستلم: {summary.total_received?.toLocaleString('en-US')}</span>
+            <span>المتبقي: {summary.total_remaining?.toLocaleString('en-US')}</span>
+            <span>الإجمالي: {summary.total_required?.toLocaleString('en-US')}</span>
           </div>
         </CardContent>
       </Card>
@@ -174,16 +174,16 @@ const SupplyAdvancedReport = ({ projectId, projectName }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 bg-slate-700/30 rounded-lg">
               <p className="text-slate-400 text-sm">القيمة الإجمالية المطلوبة</p>
-              <p className="text-xl font-bold text-white">{summary.total_required_value?.toLocaleString()} ر.س</p>
+              <p className="text-xl font-bold text-white">{summary.total_required_value?.toLocaleString('en-US')} ر.س</p>
             </div>
             <div className="p-4 bg-emerald-900/20 rounded-lg">
               <p className="text-emerald-400 text-sm">القيمة المستلمة</p>
-              <p className="text-xl font-bold text-white">{summary.total_received_value?.toLocaleString()} ر.س</p>
+              <p className="text-xl font-bold text-white">{summary.total_received_value?.toLocaleString('en-US')} ر.س</p>
             </div>
             <div className="p-4 bg-amber-900/20 rounded-lg">
               <p className="text-amber-400 text-sm">القيمة المتبقية</p>
               <p className="text-xl font-bold text-white">
-                {((summary.total_required_value || 0) - (summary.total_received_value || 0)).toLocaleString()} ر.س
+                {((summary.total_required_value || 0) - (summary.total_received_value || 0)).toLocaleString('en-US')} ر.س
               </p>
             </div>
           </div>
@@ -248,16 +248,16 @@ const SupplyAdvancedReport = ({ projectId, projectName }) => {
                     <td className="p-3 text-slate-400">{item.item_code || "-"}</td>
                     <td className="p-3 text-white">{item.item_name}</td>
                     <td className="p-3 text-slate-400">{item.unit}</td>
-                    <td className="p-3 text-white">{item.required_quantity?.toLocaleString()}</td>
-                    <td className="p-3 text-emerald-400">{item.received_quantity?.toLocaleString()}</td>
-                    <td className="p-3 text-slate-400">{item.remaining_quantity?.toLocaleString()}</td>
+                    <td className="p-3 text-white">{item.required_quantity?.toLocaleString('en-US')}</td>
+                    <td className="p-3 text-emerald-400">{item.received_quantity?.toLocaleString('en-US')}</td>
+                    <td className="p-3 text-slate-400">{item.remaining_quantity?.toLocaleString('en-US')}</td>
                     <td className="p-3">
                       <Badge className="bg-emerald-600">
                         <CheckCircle className="w-3 h-3 ml-1" />
                         {item.completion_percentage}%
                       </Badge>
                     </td>
-                    <td className="p-3 text-slate-400">{item.remaining_value?.toLocaleString()}</td>
+                    <td className="p-3 text-slate-400">{item.remaining_value?.toLocaleString('en-US')}</td>
                   </tr>
                 ))}
                 
@@ -266,16 +266,16 @@ const SupplyAdvancedReport = ({ projectId, projectName }) => {
                     <td className="p-3 text-slate-400">{item.item_code || "-"}</td>
                     <td className="p-3 text-white">{item.item_name}</td>
                     <td className="p-3 text-slate-400">{item.unit}</td>
-                    <td className="p-3 text-white">{item.required_quantity?.toLocaleString()}</td>
-                    <td className="p-3 text-amber-400">{item.received_quantity?.toLocaleString()}</td>
-                    <td className="p-3 text-amber-400">{item.remaining_quantity?.toLocaleString()}</td>
+                    <td className="p-3 text-white">{item.required_quantity?.toLocaleString('en-US')}</td>
+                    <td className="p-3 text-amber-400">{item.received_quantity?.toLocaleString('en-US')}</td>
+                    <td className="p-3 text-amber-400">{item.remaining_quantity?.toLocaleString('en-US')}</td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <Progress value={item.completion_percentage} className="h-2 w-16" />
                         <span className="text-amber-400 text-xs">{item.completion_percentage}%</span>
                       </div>
                     </td>
-                    <td className="p-3 text-amber-400">{item.remaining_value?.toLocaleString()}</td>
+                    <td className="p-3 text-amber-400">{item.remaining_value?.toLocaleString('en-US')}</td>
                   </tr>
                 ))}
                 
@@ -284,16 +284,16 @@ const SupplyAdvancedReport = ({ projectId, projectName }) => {
                     <td className="p-3 text-slate-400">{item.item_code || "-"}</td>
                     <td className="p-3 text-white">{item.item_name}</td>
                     <td className="p-3 text-slate-400">{item.unit}</td>
-                    <td className="p-3 text-white">{item.required_quantity?.toLocaleString()}</td>
+                    <td className="p-3 text-white">{item.required_quantity?.toLocaleString('en-US')}</td>
                     <td className="p-3 text-red-400">0</td>
-                    <td className="p-3 text-red-400">{item.remaining_quantity?.toLocaleString()}</td>
+                    <td className="p-3 text-red-400">{item.remaining_quantity?.toLocaleString('en-US')}</td>
                     <td className="p-3">
                       <Badge variant="destructive">
                         <AlertCircle className="w-3 h-3 ml-1" />
                         0%
                       </Badge>
                     </td>
-                    <td className="p-3 text-red-400">{item.remaining_value?.toLocaleString()}</td>
+                    <td className="p-3 text-red-400">{item.remaining_value?.toLocaleString('en-US')}</td>
                   </tr>
                 ))}
               </tbody>

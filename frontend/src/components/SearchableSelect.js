@@ -183,7 +183,7 @@ export default function SearchableSelect({
                         <div className="flex items-center gap-3 shrink-0">
                           {opt.price !== undefined && (
                             <span className={`text-base md:text-sm font-bold px-3 py-1.5 rounded-lg ${isSelected ? 'bg-orange-200 text-orange-700' : 'bg-green-100 text-green-700'}`}>
-                              {opt.price?.toLocaleString()} ر.س
+                              {opt.price?.toLocaleString('en-US')} ر.س
                             </span>
                           )}
                           {isSelected && (
