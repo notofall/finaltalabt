@@ -680,7 +680,6 @@ async def update_order(
         items_result = await session.execute(
             select(PurchaseOrderItem)
             .where(PurchaseOrderItem.order_id == str(order_id))
-            .order_by(PurchaseOrderItem.created_at)
         )
         items = items_result.scalars().all()
         
