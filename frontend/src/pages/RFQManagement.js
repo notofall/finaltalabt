@@ -1096,7 +1096,7 @@ const RFQManagement = () => {
                         <TableCell className="text-center">{item.quantity}</TableCell>
                         <TableCell className="text-center">{item.unit}</TableCell>
                         <TableCell className="text-center">
-                          {item.estimated_price ? `${item.estimated_price.toLocaleString()} ريال` : "-"}
+                          {item.estimated_price ? `${item.estimated_price.toLocaleString('en-US')} ريال` : "-"}
                         </TableCell>
                         <TableCell className="text-center">
                           <Button
@@ -1221,7 +1221,7 @@ const RFQManagement = () => {
                         <TableCell className="text-center">{item.quantity}</TableCell>
                         <TableCell className="text-center">{item.unit}</TableCell>
                         <TableCell className="text-center">
-                          {item.estimated_price ? `${item.estimated_price.toLocaleString()} ريال` : "-"}
+                          {item.estimated_price ? `${item.estimated_price.toLocaleString('en-US')} ريال` : "-"}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -1353,7 +1353,7 @@ const RFQManagement = () => {
                             {q.is_winner && <Badge className="mr-2 bg-emerald-100 text-emerald-700">فائز</Badge>}
                           </TableCell>
                           <TableCell className="text-center font-bold">
-                            {q.final_amount?.toLocaleString()} ريال
+                            {q.final_amount?.toLocaleString('en-US')} ريال
                           </TableCell>
                           <TableCell className="text-center">
                             {q.delivery_days ? `${q.delivery_days} يوم` : "-"}
@@ -1538,7 +1538,7 @@ const RFQManagement = () => {
                         />
                       </TableCell>
                       <TableCell className="text-center font-medium">
-                        {(item.quantity * item.unit_price).toLocaleString()} ريال
+                        {(item.quantity * item.unit_price).toLocaleString('en-US')} ريال
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1601,13 +1601,13 @@ const RFQManagement = () => {
               <div className="flex justify-between">
                 <span>المجموع:</span>
                 <span className="font-medium">
-                  {quotationForm.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0).toLocaleString()} ريال
+                  {quotationForm.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0).toLocaleString('en-US')} ريال
                 </span>
               </div>
               <div className="flex justify-between text-red-600">
                 <span>الخصم ({quotationForm.discount_percentage}%):</span>
                 <span>
-                  -{(quotationForm.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0) * quotationForm.discount_percentage / 100).toLocaleString()} ريال
+                  -{(quotationForm.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0) * quotationForm.discount_percentage / 100).toLocaleString('en-US')} ريال
                 </span>
               </div>
               <div className="flex justify-between">
@@ -1616,7 +1616,7 @@ const RFQManagement = () => {
                   {(() => {
                     const total = quotationForm.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
                     const discount = total * quotationForm.discount_percentage / 100;
-                    return ((total - discount) * quotationForm.vat_percentage / 100).toLocaleString();
+                    return ((total - discount) * quotationForm.vat_percentage / 100).toLocaleString('en-US');
                   })()} ريال
                 </span>
               </div>
@@ -1629,7 +1629,7 @@ const RFQManagement = () => {
                     const discount = total * quotationForm.discount_percentage / 100;
                     const subtotal = total - discount;
                     const vat = subtotal * quotationForm.vat_percentage / 100;
-                    return (subtotal + vat).toLocaleString();
+                    return (subtotal + vat).toLocaleString('en-US');
                   })()} ريال
                 </span>
               </div>
@@ -1700,7 +1700,7 @@ const RFQManagement = () => {
                 <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
                   <p className="font-semibold text-emerald-700">
                     ✓ أفضل عرض: {comparisonData.summary.lowest_supplier} 
-                    ({comparisonData.summary.lowest_total?.toLocaleString()} ريال)
+                    ({comparisonData.summary.lowest_total?.toLocaleString('en-US')} ريال)
                   </p>
                 </div>
               )}
@@ -1729,7 +1729,7 @@ const RFQManagement = () => {
                           )}
                         </TableCell>
                         <TableCell className="text-center font-bold">
-                          {s.final_amount?.toLocaleString()} ريال
+                          {s.final_amount?.toLocaleString('en-US')} ريال
                         </TableCell>
                         <TableCell className="text-center">
                           {s.delivery_days ? `${s.delivery_days} يوم` : "-"}
@@ -1778,9 +1778,9 @@ const RFQManagement = () => {
                             <TableCell key={idx} className="text-center">
                               {price.unit_price ? (
                                 <div>
-                                  <div className="font-medium">{price.unit_price?.toLocaleString()} ريال</div>
+                                  <div className="font-medium">{price.unit_price?.toLocaleString('en-US')} ريال</div>
                                   <div className="text-xs text-slate-500">
-                                    الإجمالي: {price.total_price?.toLocaleString()}
+                                    الإجمالي: {price.total_price?.toLocaleString('en-US')}
                                   </div>
                                 </div>
                               ) : "-"}
@@ -1860,7 +1860,7 @@ const RFQManagement = () => {
                         <TableCell className="text-center">{item.quantity}</TableCell>
                         <TableCell className="text-center">{item.unit}</TableCell>
                         <TableCell className="text-center">
-                          {item.estimated_price ? `${Number(item.estimated_price).toLocaleString()} ريال` : "-"}
+                          {item.estimated_price ? `${Number(item.estimated_price).toLocaleString('en-US')} ريال` : "-"}
                         </TableCell>
                       </TableRow>
                     ))}
