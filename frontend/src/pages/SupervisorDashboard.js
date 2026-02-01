@@ -214,6 +214,40 @@ const SupervisorDashboard = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
   
+  // جلب الأدوار والنماذج عند اختيار المشروع
+  const fetchFloorsAndTemplates = async (projectIdValue) => {
+    if (!projectIdValue) {
+      setFloors([]);
+      setTemplates([]);
+      return;
+    }
+    
+    setLoadingFloorsTemplates(true);
+    try {
+      const [floorsRes, templatesRes] = await Promise.all([
+        axios.get(`${API_V2_URL}/buildings/projects/${projectIdValue}/floors`, getAuthHeaders()).catch(() => ({ data: [] })),
+        axios.get(`${API_V2_URL}/buildings/projects/${projectIdValue}/templates`, getAuthHeaders()).catch(() => ({ data: [] }))
+      ]);
+      
+      setFloors(Array.isArray(floorsRes.data) ? floorsRes.data : []);
+      setTemplates(Array.isArray(templatesRes.data) ? templatesRes.data : []);
+    } catch (error) {
+      console.log("Error fetching floors/templates:", error);
+      setFloors([]);
+      setTemplates([]);
+    } finally {
+      setLoadingFloorsTemplates(false);
+    }
+  };
+  
+  // تحديث الأدوار والنماذج عند تغيير المشروع
+  useEffect(() => {
+    if (projectId && dialogOpen) {
+      fetchFloorsAndTemplates(projectId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, dialogOpen]);
+  
   // Filtered requests based on filter mode
   const getFilteredRequests = () => {
     let filtered = [...requests];
