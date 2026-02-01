@@ -528,8 +528,23 @@ async def export_global_report_excel(
     try:
         from openpyxl import Workbook
         from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+        from openpyxl.drawing.image import Image as XlImage
     except ImportError:
         raise HTTPException(status_code=500, detail="مكتبة Excel غير متوفرة")
+    
+    # جلب إعدادات الشركة للشعار
+    company_settings = None
+    company_name = "نظام إدارة طلبات المواد"
+    try:
+        from app.services.settings_service import SettingsService
+        from app.repositories.settings_repository import SettingsRepository
+        settings_repo = SettingsRepository(session)
+        settings_service = SettingsService(settings_repo)
+        company_settings = await settings_service.get_company_settings()
+        if company_settings:
+            company_name = company_settings.get('company_name', company_name)
+    except Exception as e:
+        print(f"Could not load company settings: {e}")
     
     wb = Workbook()
     
@@ -546,6 +561,26 @@ async def export_global_report_excel(
     ws_summary = wb.active
     ws_summary.title = "ملخص شامل"
     ws_summary.sheet_view.rightToLeft = True
+    
+    # إضافة الشعار إذا كان موجوداً
+    logo_added = False
+    if company_settings:
+        logo_base64 = company_settings.get('company_logo_base64')
+        if logo_base64:
+            try:
+                import base64
+                import re
+                match = re.match(r'data:image/\w+;base64,(.+)', logo_base64)
+                if match:
+                    image_data = base64.b64decode(match.group(1))
+                    logo_buffer = io.BytesIO(image_data)
+                    img = XlImage(logo_buffer)
+                    img.width = 100
+                    img.height = 100
+                    ws_summary.add_image(img, 'A1')
+                    logo_added = True
+            except Exception as e:
+                print(f"Error adding logo to Excel: {e}")
     
     # جلب البيانات
     # المباني
@@ -571,9 +606,9 @@ async def export_global_report_excel(
         all_items = [i for i in all_items if i.order_id in order_ids]
     
     # كتابة الملخص
-    row = 1
+    row = 6 if logo_added else 1  # بدء من صف 6 إذا تمت إضافة الشعار
     ws_summary.merge_cells(f'A{row}:D{row}')
-    ws_summary[f'A{row}'] = "تقرير شامل - نظام إدارة طلبات المواد"
+    ws_summary[f'A{row}'] = f"تقرير شامل - {company_name}"
     ws_summary[f'A{row}'].font = Font(bold=True, size=14, color="FFFFFF")
     ws_summary[f'A{row}'].fill = title_fill
     
