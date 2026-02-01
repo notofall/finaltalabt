@@ -195,9 +195,9 @@ const SupervisorDashboard = () => {
     setShowSuggestions(false);
     
     if (item.alias_name) {
-      toast.success(`تم اختيار "${item.alias_name}" → مربوط بـ "${item.name}" (${item.item_code}) - السعر: ${item.price?.toLocaleString()} ريال`);
+      toast.success(`تم اختيار "${item.alias_name}" → مربوط بـ "${item.name}" (${item.item_code}) - السعر: ${item.price?.toLocaleString('en-US')} ريال`);
     } else {
-      toast.success(`تم اختيار "${item.name}" (${item.item_code}) - السعر: ${item.price?.toLocaleString()} ريال`);
+      toast.success(`تم اختيار "${item.name}" (${item.item_code}) - السعر: ${item.price?.toLocaleString('en-US')} ريال`);
     }
   };
 
@@ -686,7 +686,7 @@ const SupervisorDashboard = () => {
                                       </div>
                                       <div className="text-left">
                                         <span className="text-green-600 font-bold text-sm">
-                                          {item.price?.toLocaleString()} ريال
+                                          {item.price?.toLocaleString('en-US')} ريال
                                         </span>
                                         <div className="text-xs text-slate-400">{item.unit}</div>
                                       </div>
@@ -736,7 +736,7 @@ const SupervisorDashboard = () => {
                         type="number" 
                         min="0" 
                         step="0.01"
-                        placeholder={selectedCatalogItem ? `السعر من الكتالوج: ${selectedCatalogItem.price?.toLocaleString()} ريال` : "السعر التقديري (اختياري)"} 
+                        placeholder={selectedCatalogItem ? `السعر من الكتالوج: ${selectedCatalogItem.price?.toLocaleString('en-US')} ريال` : "السعر التقديري (اختياري)"} 
                         value={newItemEstPrice} 
                         onChange={(e) => setNewItemEstPrice(e.target.value)} 
                         className={`h-11 text-center ${selectedCatalogItem ? 'bg-green-50 border-green-300' : 'bg-white'}`}

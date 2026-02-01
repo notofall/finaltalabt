@@ -893,7 +893,7 @@ export default function SystemAdminDashboard() {
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-sm opacity-80">إجمالي المبالغ</p>
-                  <p className="text-xl font-bold">{stats.total_amount?.toLocaleString()}</p>
+                  <p className="text-xl font-bold">{stats.total_amount?.toLocaleString('en-US')}</p>
                 </div>
                 <Database className="h-8 w-8 opacity-50" />
               </div>
@@ -1163,7 +1163,7 @@ export default function SystemAdminDashboard() {
                             <td className="p-3 font-mono">{order.order_number || "-"}</td>
                             <td className="p-3">{order.project_name}</td>
                             <td className="p-3">{order.supplier_name}</td>
-                            <td className="p-3">{order.total_amount?.toLocaleString()} ريال</td>
+                            <td className="p-3">{order.total_amount?.toLocaleString('en-US')} ريال</td>
                             <td className="p-3">{order.deleted_at ? new Date(order.deleted_at).toLocaleDateString('ar-SA') : "-"}</td>
                             <td className="p-3">{order.deleted_by}</td>
                             <td className="p-3 max-w-[200px] truncate">{order.delete_reason || "-"}</td>
@@ -2335,7 +2335,7 @@ export default function SystemAdminDashboard() {
                 </div>
                 <div>
                   <span className="text-gray-500">المبلغ الإجمالي:</span>
-                  <span className="mr-2 font-bold">{showDeletedOrderDetails.total_amount?.toLocaleString()} ريال</span>
+                  <span className="mr-2 font-bold">{showDeletedOrderDetails.total_amount?.toLocaleString('en-US')} ريال</span>
                 </div>
                 <div>
                   <span className="text-gray-500">حالة الأمر قبل الحذف:</span>
@@ -2380,8 +2380,8 @@ export default function SystemAdminDashboard() {
                             <td className="p-2">{item.name}</td>
                             <td className="p-2">{item.quantity}</td>
                             <td className="p-2">{item.unit}</td>
-                            <td className="p-2">{item.unit_price?.toLocaleString()}</td>
-                            <td className="p-2">{item.total_price?.toLocaleString()}</td>
+                            <td className="p-2">{item.unit_price?.toLocaleString('en-US')}</td>
+                            <td className="p-2">{item.total_price?.toLocaleString('en-US')}</td>
                           </tr>
                         ))}
                       </tbody>

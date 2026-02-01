@@ -1392,7 +1392,7 @@ const BuildingsSystem = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-slate-400 text-sm">المساحة الإجمالية</p>
-                      <p className="text-2xl font-bold text-white">{(dashboardData?.total_area || 0).toLocaleString()} م²</p>
+                      <p className="text-2xl font-bold text-white">{(dashboardData?.total_area || 0).toLocaleString('en-US')} م²</p>
                     </div>
                     <Calculator className="w-10 h-10 text-purple-400 opacity-50" />
                   </div>
@@ -1473,7 +1473,7 @@ const BuildingsSystem = () => {
                               <div className="text-slate-400">النماذج: <span className="text-white">{summary?.templates_count || 0}</span></div>
                               <div className="text-slate-400">الوحدات: <span className="text-white">{summary?.units_count || 0}</span></div>
                               <div className="text-slate-400">الأدوار: <span className="text-white">{summary?.floors_count || 0}</span></div>
-                              <div className="text-slate-400">المساحة: <span className="text-white">{(summary?.area || 0).toLocaleString()} م²</span></div>
+                              <div className="text-slate-400">المساحة: <span className="text-white">{(summary?.area || 0).toLocaleString('en-US')} م²</span></div>
                             </div>
                           </div>
                         );
@@ -1533,13 +1533,13 @@ const BuildingsSystem = () => {
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                               <span className="text-slate-400">المساحة الإجمالية</span>
-                              <span className="text-white font-semibold">{(dashboardData?.total_area || 0).toLocaleString()} م²</span>
+                              <span className="text-white font-semibold">{(dashboardData?.total_area || 0).toLocaleString('en-US')} م²</span>
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-slate-400">متوسط مساحة المشروع</span>
                               <span className="text-white font-semibold">
                                 {dashboardData?.total_projects > 0 
-                                  ? Math.round((dashboardData?.total_area || 0) / dashboardData.total_projects).toLocaleString() 
+                                  ? Math.round((dashboardData?.total_area || 0) / dashboardData.total_projects).toLocaleString('en-US') 
                                   : 0} م²
                               </span>
                             </div>
@@ -1620,7 +1620,7 @@ const BuildingsSystem = () => {
                                 <td className="p-3">{project.templates_count}</td>
                                 <td className="p-3">{project.units_count}</td>
                                 <td className="p-3">{project.floors_count}</td>
-                                <td className="p-3">{project.area.toLocaleString()}</td>
+                                <td className="p-3">{project.area.toLocaleString('en-US')}</td>
                                 <td className="p-3 text-amber-400">{(project.area * 120 / 1000).toFixed(1)}</td>
                               </tr>
                             ))}
@@ -1633,7 +1633,7 @@ const BuildingsSystem = () => {
                                 <td className="p-3">{dashboardData?.total_templates || 0}</td>
                                 <td className="p-3">{dashboardData?.total_units || 0}</td>
                                 <td className="p-3">{dashboardData?.projects_summary?.reduce((s, p) => s + p.floors_count, 0) || 0}</td>
-                                <td className="p-3">{(dashboardData?.total_area || 0).toLocaleString()}</td>
+                                <td className="p-3">{(dashboardData?.total_area || 0).toLocaleString('en-US')}</td>
                                 <td className="p-3 text-amber-400">{((dashboardData?.total_area || 0) * 120 / 1000).toFixed(1)}</td>
                               </tr>
                             </tfoot>
@@ -1906,7 +1906,7 @@ const BuildingsSystem = () => {
                             {floors.map((floor) => (
                               <tr key={floor.id} className="border-b border-slate-700/50 text-white">
                                 <td className="p-3">{floor.floor_name || getFloorName(floor.floor_number)}</td>
-                                <td className="p-3">{floor.area.toLocaleString()}</td>
+                                <td className="p-3">{floor.area.toLocaleString('en-US')}</td>
                                 <td className="p-3">{floor.steel_factor}</td>
                                 <td className="p-3 text-amber-400">{((floor.area * floor.steel_factor) / 1000).toFixed(2)}</td>
                                 <td className="p-3 text-center">
@@ -1939,7 +1939,7 @@ const BuildingsSystem = () => {
                           <tfoot>
                             <tr className="bg-slate-700/30 text-emerald-400 font-semibold">
                               <td className="p-3">الإجمالي</td>
-                              <td className="p-3">{floors.reduce((sum, f) => sum + f.area, 0).toLocaleString()}</td>
+                              <td className="p-3">{floors.reduce((sum, f) => sum + f.area, 0).toLocaleString('en-US')}</td>
                               <td className="p-3">-</td>
                               <td className="p-3 text-amber-400">{(floors.reduce((sum, f) => sum + (f.area * f.steel_factor), 0) / 1000).toFixed(2)}</td>
                               <td className="p-3"></td>
@@ -2140,9 +2140,9 @@ const BuildingsSystem = () => {
                               <tr key={item.id} className="border-b border-slate-700/50 text-white">
                                 <td className="p-3">{item.item_name}</td>
                                 <td className="p-3">{formatUnit(item.unit)}</td>
-                                <td className="p-3">{item.required_quantity.toLocaleString()}</td>
-                                <td className="p-3 text-emerald-400 font-medium">{item.received_quantity.toLocaleString()}</td>
-                                <td className="p-3 text-orange-400">{item.remaining_quantity.toLocaleString()}</td>
+                                <td className="p-3">{item.required_quantity.toLocaleString('en-US')}</td>
+                                <td className="p-3 text-emerald-400 font-medium">{item.received_quantity.toLocaleString('en-US')}</td>
+                                <td className="p-3 text-orange-400">{item.remaining_quantity.toLocaleString('en-US')}</td>
                                 <td className="p-3">
                                   <div className="flex items-center gap-2">
                                     <Progress value={item.completion_percentage} className="h-2 flex-1" />
@@ -2199,7 +2199,7 @@ const BuildingsSystem = () => {
                           </div>
                           <div className="p-4 bg-blue-900/30 rounded-lg border border-blue-800">
                             <p className="text-blue-400 text-sm">المساحة</p>
-                            <p className="text-2xl font-bold text-white">{calculations.total_area?.toLocaleString()} م²</p>
+                            <p className="text-2xl font-bold text-white">{calculations.total_area?.toLocaleString('en-US')} م²</p>
                           </div>
                           <div className="p-4 bg-amber-900/30 rounded-lg border border-amber-800">
                             <p className="text-amber-400 text-sm">الحديد</p>
@@ -2207,7 +2207,7 @@ const BuildingsSystem = () => {
                           </div>
                           <div className="p-4 bg-purple-900/30 rounded-lg border border-purple-800">
                             <p className="text-purple-400 text-sm">التكلفة</p>
-                            <p className="text-2xl font-bold text-white">{calculations.total_materials_cost?.toLocaleString()} ر.س</p>
+                            <p className="text-2xl font-bold text-white">{calculations.total_materials_cost?.toLocaleString('en-US')} ر.س</p>
                           </div>
                         </div>
 
@@ -2229,7 +2229,7 @@ const BuildingsSystem = () => {
                                   {calculations.steel_calculation.floors.map((floor, idx) => (
                                     <tr key={idx} className="border-b border-slate-700/50 text-white">
                                       <td className="p-3">{floor.floor_name || getFloorName(floor.floor_number)}</td>
-                                      <td className="p-3">{floor.area?.toLocaleString()}</td>
+                                      <td className="p-3">{floor.area?.toLocaleString('en-US')}</td>
                                       <td className="p-3">{floor.steel_factor}</td>
                                       <td className="p-3 text-amber-400">{floor.steel_tons?.toFixed(2)}</td>
                                     </tr>
@@ -2238,7 +2238,7 @@ const BuildingsSystem = () => {
                                 <tfoot>
                                   <tr className="bg-slate-700/30 text-emerald-400 font-semibold">
                                     <td className="p-3">الإجمالي</td>
-                                    <td className="p-3">{calculations.total_area?.toLocaleString()}</td>
+                                    <td className="p-3">{calculations.total_area?.toLocaleString('en-US')}</td>
                                     <td className="p-3">-</td>
                                     <td className="p-3 text-amber-400">{calculations.steel_calculation.total_steel_tons}</td>
                                   </tr>
@@ -2270,16 +2270,16 @@ const BuildingsSystem = () => {
                                       <td className="p-3">{mat.item_code || "-"}</td>
                                       <td className="p-3">{mat.item_name}</td>
                                       <td className="p-3">{formatUnit(mat.unit)}</td>
-                                      <td className="p-3">{mat.quantity?.toLocaleString()}</td>
-                                      <td className="p-3">{mat.unit_price?.toLocaleString()}</td>
-                                      <td className="p-3 text-emerald-400">{mat.total_price?.toLocaleString()}</td>
+                                      <td className="p-3">{mat.quantity?.toLocaleString('en-US')}</td>
+                                      <td className="p-3">{mat.unit_price?.toLocaleString('en-US')}</td>
+                                      <td className="p-3 text-emerald-400">{mat.total_price?.toLocaleString('en-US')}</td>
                                     </tr>
                                   ))}
                                 </tbody>
                                 <tfoot>
                                   <tr className="bg-slate-700/30 text-emerald-400 font-semibold">
                                     <td colSpan="5" className="p-3">إجمالي مواد الوحدات</td>
-                                    <td className="p-3">{calculations.total_unit_materials_cost?.toLocaleString()} ر.س</td>
+                                    <td className="p-3">{calculations.total_unit_materials_cost?.toLocaleString('en-US')} ر.س</td>
                                   </tr>
                                 </tfoot>
                               </table>
@@ -2310,22 +2310,22 @@ const BuildingsSystem = () => {
                                       <td className="p-3">{formatUnit(mat.unit)}</td>
                                       <td className="p-3">{mat.factor}</td>
                                       <td className="p-3">
-                                        <div>{mat.quantity?.toLocaleString()} {formatUnit(mat.unit)}</div>
+                                        <div>{mat.quantity?.toLocaleString('en-US')} {formatUnit(mat.unit)}</div>
                                         {mat.tiles_count && (
                                           <div className="text-xs text-slate-400 mt-1">
-                                            ({mat.tiles_with_waste?.toLocaleString() || mat.tiles_count?.toLocaleString()} حبة)
+                                            ({mat.tiles_with_waste?.toLocaleString('en-US') || mat.tiles_count?.toLocaleString('en-US')} حبة)
                                           </div>
                                         )}
                                       </td>
-                                      <td className="p-3">{mat.unit_price?.toLocaleString()}</td>
-                                      <td className="p-3 text-emerald-400">{mat.total_price?.toLocaleString()}</td>
+                                      <td className="p-3">{mat.unit_price?.toLocaleString('en-US')}</td>
+                                      <td className="p-3 text-emerald-400">{mat.total_price?.toLocaleString('en-US')}</td>
                                     </tr>
                                   ))}
                                 </tbody>
                                 <tfoot>
                                   <tr className="bg-slate-700/30 text-emerald-400 font-semibold">
                                     <td colSpan="5" className="p-3">إجمالي مواد المساحة</td>
-                                    <td className="p-3">{calculations.total_area_materials_cost?.toLocaleString()} ر.س</td>
+                                    <td className="p-3">{calculations.total_area_materials_cost?.toLocaleString('en-US')} ر.س</td>
                                   </tr>
                                 </tfoot>
                               </table>
@@ -3046,7 +3046,7 @@ const BuildingsSystem = () => {
                     <span className="text-slate-400">{item.item_code}</span>
                   </div>
                   <div className="text-sm text-slate-400">
-                    {item.unit} - {item.price?.toLocaleString()} ر.س
+                    {item.unit} - {item.price?.toLocaleString('en-US')} ر.س
                   </div>
                 </div>
               ))}
