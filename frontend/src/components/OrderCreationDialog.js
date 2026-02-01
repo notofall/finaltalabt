@@ -117,7 +117,10 @@ const ItemCard = ({
   onCatalogSelect,
   onCatalogClear,
   onAutoSearch,
-  catalogItems
+  catalogItems,
+  catalogLoading,
+  catalogTotal,
+  onCatalogSearch
 }) => {
   const isLinked = !!catalogInfo?.catalog_item_id;
   
