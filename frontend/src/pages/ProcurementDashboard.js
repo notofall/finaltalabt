@@ -1378,7 +1378,7 @@ const ProcurementDashboard = () => {
       ...prev,
       [itemIndex]: catalogInfo
     }));
-    toast.success(`تم استخدام سعر الكتالوج: ${catalogInfo.price.toLocaleString()} ر.س`);
+    toast.success(`تم استخدام سعر الكتالوج: ${catalogInfo.price.toLocaleString('en-US')} ر.س`);
   };
 
   const handleCreateOrder = async () => {
@@ -4140,7 +4140,7 @@ const ProcurementDashboard = () => {
                             </TableCell>
                             <TableCell>{item.unit}</TableCell>
                             <TableCell className="font-medium text-green-600">
-                              {item.price?.toLocaleString()} ريال
+                              {item.price?.toLocaleString('en-US')} ريال
                             </TableCell>
                             <TableCell>{item.supplier_name || "-"}</TableCell>
                             <TableCell>
@@ -4218,7 +4218,7 @@ const ProcurementDashboard = () => {
                     <option value="">-- اختر الصنف الرسمي --</option>
                     {catalogItems.map(item => (
                       <option key={item.id} value={item.id}>
-                        {item.name} - {item.price?.toLocaleString()} ريال
+                        {item.name} - {item.price?.toLocaleString('en-US')} ريال
                       </option>
                     ))}
                   </select>
@@ -4357,7 +4357,7 @@ const ProcurementDashboard = () => {
                             </span>
                           </TableCell>
                           <TableCell className="font-medium">{category.name}</TableCell>
-                          <TableCell>{category.default_budget?.toLocaleString() || 0} ر.س</TableCell>
+                          <TableCell>{category.default_budget?.toLocaleString('en-US') || 0} ر.س</TableCell>
                           <TableCell>
                             <div className="flex gap-1">
                               <Button 
@@ -4419,19 +4419,19 @@ const ProcurementDashboard = () => {
                       <div className="bg-white rounded-lg p-3 text-center shadow-sm">
                         <p className="text-xs text-slate-500">التقديري</p>
                         <p className="text-lg font-bold text-slate-700">
-                          {reportsData.savings.summary.total_estimated?.toLocaleString() || 0} ر.س
+                          {reportsData.savings.summary.total_estimated?.toLocaleString('en-US') || 0} ر.س
                         </p>
                       </div>
                       <div className="bg-white rounded-lg p-3 text-center shadow-sm">
                         <p className="text-xs text-slate-500">الفعلي</p>
                         <p className="text-lg font-bold text-blue-600">
-                          {reportsData.savings.summary.total_actual?.toLocaleString() || 0} ر.س
+                          {reportsData.savings.summary.total_actual?.toLocaleString('en-US') || 0} ر.س
                         </p>
                       </div>
                       <div className="bg-white rounded-lg p-3 text-center shadow-sm">
                         <p className="text-xs text-slate-500">التوفير</p>
                         <p className={`text-lg font-bold ${reportsData.savings.summary.total_saving >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {reportsData.savings.summary.total_saving?.toLocaleString() || 0} ر.س
+                          {reportsData.savings.summary.total_saving?.toLocaleString('en-US') || 0} ر.س
                         </p>
                       </div>
                       <div className="bg-white rounded-lg p-3 text-center shadow-sm">
@@ -4477,10 +4477,10 @@ const ProcurementDashboard = () => {
                               <tr key={idx} className="border-b last:border-0 hover:bg-white/50">
                                 <td className="p-2 font-medium">{item.project}</td>
                                 <td className="p-2">{item.orders_count}</td>
-                                <td className="p-2 text-slate-600">{item.estimated?.toLocaleString()} ر.س</td>
-                                <td className="p-2 text-blue-600">{item.actual?.toLocaleString()} ر.س</td>
+                                <td className="p-2 text-slate-600">{item.estimated?.toLocaleString('en-US')} ر.س</td>
+                                <td className="p-2 text-blue-600">{item.actual?.toLocaleString('en-US')} ر.س</td>
                                 <td className={`p-2 font-bold ${item.saving >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                  {item.saving?.toLocaleString()} ر.س
+                                  {item.saving?.toLocaleString('en-US')} ر.س
                                 </td>
                                 <td className="p-2">
                                   <Badge variant={item.saving_percent >= 0 ? "default" : "destructive"} className="text-xs">
@@ -4529,10 +4529,10 @@ const ProcurementDashboard = () => {
                               <tr key={idx} className="border-b last:border-0 hover:bg-white/50">
                                 <td className="p-2 font-medium">{item.category}</td>
                                 <td className="p-2">{item.orders_count}</td>
-                                <td className="p-2 text-slate-600">{item.estimated?.toLocaleString()} ر.س</td>
-                                <td className="p-2 text-blue-600">{item.actual?.toLocaleString()} ر.س</td>
+                                <td className="p-2 text-slate-600">{item.estimated?.toLocaleString('en-US')} ر.س</td>
+                                <td className="p-2 text-blue-600">{item.actual?.toLocaleString('en-US')} ر.س</td>
                                 <td className={`p-2 font-bold ${item.saving >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                  {item.saving?.toLocaleString()} ر.س
+                                  {item.saving?.toLocaleString('en-US')} ر.س
                                 </td>
                                 <td className="p-2">
                                   <Badge variant={item.saving_percent >= 0 ? "default" : "destructive"} className="text-xs">
@@ -4611,7 +4611,7 @@ const ProcurementDashboard = () => {
                               <tr key={idx} className="border-b last:border-0">
                                 <td className="p-2 font-medium">{supplier.supplier_name}</td>
                                 <td className="p-2">{supplier.orders_count}</td>
-                                <td className="p-2 text-green-600">{supplier.total_value?.toLocaleString()} ر.س</td>
+                                <td className="p-2 text-green-600">{supplier.total_value?.toLocaleString('en-US')} ر.س</td>
                                 <td className="p-2">
                                   <Badge variant={supplier.delivery_rate >= 80 ? "default" : "secondary"}>
                                     {supplier.delivery_rate}%
@@ -5148,7 +5148,7 @@ const ProcurementDashboard = () => {
                 <p><strong>رقم الأمر:</strong> <span className="font-mono">{orderToDelete.order_number}</span></p>
                 <p><strong>المشروع:</strong> {orderToDelete.project_name}</p>
                 <p><strong>المورد:</strong> {orderToDelete.supplier_name}</p>
-                <p><strong>المبلغ:</strong> {orderToDelete.total_amount?.toLocaleString()} ريال</p>
+                <p><strong>المبلغ:</strong> {orderToDelete.total_amount?.toLocaleString('en-US')} ريال</p>
               </div>
             )}
             <div>

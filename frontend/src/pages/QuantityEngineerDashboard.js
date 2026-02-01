@@ -558,7 +558,7 @@ const QuantityEngineerDashboard = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold text-blue-600">{stats.total_remaining_qty?.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-blue-600">{stats.total_remaining_qty?.toLocaleString('en-US')}</p>
                     <p className="text-sm text-slate-500">الكمية المتبقية</p>
                   </div>
                   <TrendingUp className="h-8 w-8 text-blue-500" />
@@ -709,9 +709,9 @@ const QuantityEngineerDashboard = () => {
                             </td>
                             <td className="px-4 py-3 text-slate-600 text-sm">{item.category_name || "-"}</td>
                             <td className="px-4 py-3 text-slate-600">{item.project_name}</td>
-                            <td className="px-4 py-3 text-center font-bold">{item.planned_quantity?.toLocaleString()}</td>
-                            <td className="px-4 py-3 text-center text-green-600">{item.ordered_quantity?.toLocaleString()}</td>
-                            <td className="px-4 py-3 text-center text-orange-600 font-bold">{item.remaining_quantity?.toLocaleString()}</td>
+                            <td className="px-4 py-3 text-center font-bold">{item.planned_quantity?.toLocaleString('en-US')}</td>
+                            <td className="px-4 py-3 text-center text-green-600">{item.ordered_quantity?.toLocaleString('en-US')}</td>
+                            <td className="px-4 py-3 text-center text-orange-600 font-bold">{item.remaining_quantity?.toLocaleString('en-US')}</td>
                             <td className="px-4 py-3 text-center text-sm">
                               {item.expected_order_date ? new Date(item.expected_order_date).toLocaleDateString('ar-SA') : "-"}
                             </td>
@@ -964,9 +964,9 @@ const QuantityEngineerDashboard = () => {
                               <tr key={idx} className="hover:bg-slate-50">
                                 <td className="px-4 py-3 font-medium">{p.project_name}</td>
                                 <td className="px-4 py-3 text-center">{p.total_items}</td>
-                                <td className="px-4 py-3 text-center">{p.planned_qty?.toLocaleString()}</td>
-                                <td className="px-4 py-3 text-center text-green-600">{p.ordered_qty?.toLocaleString()}</td>
-                                <td className="px-4 py-3 text-center text-orange-600">{p.remaining_qty?.toLocaleString()}</td>
+                                <td className="px-4 py-3 text-center">{p.planned_qty?.toLocaleString('en-US')}</td>
+                                <td className="px-4 py-3 text-center text-green-600">{p.ordered_qty?.toLocaleString('en-US')}</td>
+                                <td className="px-4 py-3 text-center text-orange-600">{p.remaining_qty?.toLocaleString('en-US')}</td>
                                 <td className="px-4 py-3 text-center">
                                   <Badge className={
                                     p.planned_qty > 0 
@@ -1052,7 +1052,7 @@ const QuantityEngineerDashboard = () => {
                             <p className="font-medium">{item.name}</p>
                           </div>
                           <p className="text-xs text-slate-500">
-                            {item.unit} | {item.supplier_name || "بدون مورد"} | {item.price?.toLocaleString()} {item.currency}
+                            {item.unit} | {item.supplier_name || "بدون مورد"} | {item.price?.toLocaleString('en-US')} {item.currency}
                           </p>
                           <p className="text-xs text-purple-600">{item.category_name || "بدون تصنيف"}</p>
                         </div>
@@ -1111,7 +1111,7 @@ const QuantityEngineerDashboard = () => {
               <div className="bg-purple-50 p-3 rounded-lg">
                 <p className="font-bold text-purple-700">{selectedCatalogItem.name}</p>
                 <p className="text-sm text-slate-600">
-                  {selectedCatalogItem.unit} | {selectedCatalogItem.supplier_name || "بدون مورد"} | {selectedCatalogItem.price?.toLocaleString()} {selectedCatalogItem.currency}
+                  {selectedCatalogItem.unit} | {selectedCatalogItem.supplier_name || "بدون مورد"} | {selectedCatalogItem.price?.toLocaleString('en-US')} {selectedCatalogItem.currency}
                 </p>
                 <p className="text-xs text-purple-600 mt-1">التصنيف: {selectedCatalogItem.category_name || "بدون تصنيف"}</p>
               </div>
