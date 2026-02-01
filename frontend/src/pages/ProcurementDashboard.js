@@ -347,6 +347,24 @@ const ProcurementDashboard = () => {
     }
   };
 
+  // Live Catalog Search for Order Creation - البحث الحي في الكتالوج عند إصدار أمر الشراء
+  const searchCatalogLive = async (searchTerm = "") => {
+    setLiveCatalogLoading(true);
+    try {
+      // Search with higher limit to get more results
+      let url = `${API_V2_URL}/catalog/items?skip=0&limit=100`;
+      if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
+      const res = await axios.get(url, getAuthHeaders());
+      setLiveCatalogResults(res.data.items || []);
+      setLiveCatalogTotal(res.data.total || 0);
+    } catch (error) {
+      console.error("Live catalog search error:", error);
+      setLiveCatalogResults([]);
+    } finally {
+      setLiveCatalogLoading(false);
+    }
+  };
+
   // Fetch Item Aliases - Using V2 API
   const fetchAliases = async (search = "") => {
     try {
