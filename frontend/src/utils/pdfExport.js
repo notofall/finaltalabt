@@ -547,6 +547,8 @@ export const exportPurchaseOrderToPDF = (order, companySettings = null) => {
         <div class="info-item"><span class="info-label">المهندس:</span> <span class="info-value">${order.engineer_name || '-'}</span></div>
         <div class="info-item"><span class="info-label">مدير المشتريات:</span> <span class="info-value">${order.manager_name || '-'}</span></div>
         <div class="info-item"><span class="info-label">الحالة:</span> <span class="badge badge-blue">${getOrderStatusTextAr(order.status)}</span></div>
+        ${order.floor_name ? `<div class="info-item"><span class="info-label">الدور:</span> <span class="info-value" style="color: #2563eb; font-weight: bold;">${order.floor_name}</span></div>` : ''}
+        ${order.template_name ? `<div class="info-item"><span class="info-label">النموذج:</span> <span class="info-value" style="color: #2563eb; font-weight: bold;">${order.template_name}</span></div>` : ''}
         ${order.category_name ? `<div class="info-item" style="grid-column: span 2;"><span class="info-label">تصنيف الميزانية:</span> <span class="info-value" style="color: #ea580c;">${order.category_name}</span></div>` : ''}
       </div>
     </div>
