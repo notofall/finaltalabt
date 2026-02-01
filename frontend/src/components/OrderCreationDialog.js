@@ -497,6 +497,42 @@ const OrderCreationDialog = ({
             </div>
           ) : (
             <>
+              {/* معلومات المشروع والدور/النموذج - للقراءة فقط */}
+              {request && (
+                <div className="bg-gradient-to-l from-blue-50 to-slate-50 rounded-xl border-2 border-blue-200 p-3 space-y-2">
+                  <div className="flex items-center gap-2 text-blue-700 font-semibold text-sm">
+                    <Package className="w-4 h-4" />
+                    <span>معلومات الطلب</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-white rounded-lg p-2 border">
+                      <span className="text-slate-500">المشروع:</span>
+                      <p className="font-semibold text-slate-800">{request.project_name}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-2 border">
+                      <span className="text-slate-500">المشرف:</span>
+                      <p className="font-semibold text-slate-800">{request.supervisor_name}</p>
+                    </div>
+                  </div>
+                  {(request.floor_name || request.template_name) && (
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {request.floor_name && (
+                        <div className="bg-blue-100 rounded-lg p-2 border border-blue-300">
+                          <span className="text-blue-600">الدور:</span>
+                          <p className="font-semibold text-blue-800">{request.floor_name}</p>
+                        </div>
+                      )}
+                      {request.template_name && (
+                        <div className="bg-blue-100 rounded-lg p-2 border border-blue-300">
+                          <span className="text-blue-600">النموذج:</span>
+                          <p className="font-semibold text-blue-800">{request.template_name}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Items Section */}
               <AccordionSection
                 title="الأصناف"
