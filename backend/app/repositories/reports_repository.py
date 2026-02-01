@@ -125,6 +125,15 @@ class ReportsRepository:
         )
         return result.scalar_one_or_none()
     
+    async def get_projects_by_ids(self, project_ids: List[str]) -> List[Project]:
+        """Get projects by list of IDs"""
+        if not project_ids:
+            return []
+        result = await self.session.execute(
+            select(Project).where(Project.id.in_(project_ids))
+        )
+        return list(result.scalars().all())
+    
     async def get_orders_by_project(self, project_id: str) -> List[PurchaseOrder]:
         """Get orders for project"""
         result = await self.session.execute(
