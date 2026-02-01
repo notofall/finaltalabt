@@ -168,6 +168,9 @@ async def init_postgres_db() -> None:
         # Run migrations for project system
         await run_project_migrations()
         
+        # Run migrations for floor/template fields
+        await run_floor_template_migrations()
+        
         # Record schema version
         await record_initial_schema_version()
         
