@@ -102,6 +102,11 @@ class RequestCreate(BaseModel):
     reason: str
     engineer_id: str
     expected_delivery_date: Optional[str] = None
+    # حقول الدور والنموذج (اختياري)
+    floor_id: Optional[str] = None
+    floor_name: Optional[str] = None
+    template_id: Optional[str] = None
+    template_name: Optional[str] = None
 
 
 class RequestUpdate(BaseModel):
@@ -109,6 +114,11 @@ class RequestUpdate(BaseModel):
     project_id: str
     reason: str
     engineer_id: str
+    # حقول الدور والنموذج (اختياري)
+    floor_id: Optional[str] = None
+    floor_name: Optional[str] = None
+    template_id: Optional[str] = None
+    template_name: Optional[str] = None
 
 
 # ==================== Helper ====================
