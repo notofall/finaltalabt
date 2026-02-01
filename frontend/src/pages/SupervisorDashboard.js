@@ -409,7 +409,12 @@ const SupervisorDashboard = () => {
         project_id: projectId, 
         reason, 
         engineer_id: engineerId,
-        expected_delivery_date: expectedDeliveryDate || null
+        expected_delivery_date: expectedDeliveryDate || null,
+        // حقول الدور والنموذج (اختياري)
+        floor_id: selectedFloorId || null,
+        floor_name: selectedFloorName || null,
+        template_id: selectedTemplateId || null,
+        template_name: selectedTemplateName || null
       }, getAuthHeaders());
       toast.success("تم إنشاء الطلب بنجاح");
       setDialogOpen(false);
