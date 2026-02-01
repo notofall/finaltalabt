@@ -762,9 +762,6 @@ const SupervisorDashboard = () => {
                           <option key={proj.id} value={proj.id}>{proj.name} - {proj.owner_name}</option>
                         ))}
                       </select>
-                      <Button type="button" variant="outline" onClick={() => setProjectDialogOpen(true)} className="h-11 px-3">
-                        <Plus className="w-4 h-4" />
-                      </Button>
                     </div>
                   </div>
 
