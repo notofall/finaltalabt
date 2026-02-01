@@ -2910,7 +2910,10 @@ const ProcurementDashboard = () => {
         loadingItems={loadingItems}
         suppliers={suppliers}
         budgetCategories={budgetCategories}
-        catalogItems={catalogItems}
+        catalogItems={liveCatalogResults}
+        catalogLoading={liveCatalogLoading}
+        catalogTotal={liveCatalogTotal}
+        onCatalogSearch={searchCatalogLive}
         defaultCategories={defaultCategories}
         onAddSupplier={() => setSupplierDialogOpen(true)}
         onSearchCatalog={async (itemName, itemIndex) => {
