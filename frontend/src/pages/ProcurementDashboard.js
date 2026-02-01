@@ -1097,7 +1097,7 @@ const ProcurementDashboard = () => {
       // Transform API response to match expected format
       const apiData = res.data;
       const transformedData = {
-        total_estimated: apiData.summary?.total_budget || 0,
+        total_estimated: apiData.summary?.total_estimated || apiData.summary?.total_budget || 0,
         total_spent: apiData.summary?.total_spent || 0,
         total_remaining: apiData.summary?.total_remaining || 0,
         overall_variance_percentage: apiData.summary?.overall_percentage || 0,
@@ -1106,45 +1106,70 @@ const ProcurementDashboard = () => {
         project: null
       };
       
-      // If filtering by project, get that project's data
-      if (projectId && apiData.projects?.length > 0) {
-        const project = apiData.projects[0];
-        transformedData.project = {
-          name: project.project_name,
-          owner_name: "",
-          location: ""
-        };
-        transformedData.categories = project.categories?.map(cat => ({
-          id: cat.category_id,
-          name: cat.category_name,
-          project_name: project.project_name,
-          estimated_budget: cat.budget,
-          actual_spent: cat.spent,
-          remaining: cat.remaining,
-          status: cat.remaining < 0 ? 'over_budget' : 'within_budget'
-        })) || [];
-        transformedData.total_estimated = project.total_budget;
-        transformedData.total_spent = project.total_spent;
-        transformedData.total_remaining = project.remaining;
-      } else {
-        // Get all categories from all projects
-        apiData.projects?.forEach(project => {
-          project.categories?.forEach(cat => {
-            transformedData.categories.push({
-              id: cat.category_id,
-              name: cat.category_name,
-              project_name: project.project_name,
-              estimated_budget: cat.budget,
-              actual_spent: cat.spent,
-              remaining: cat.remaining,
-              status: cat.remaining < 0 ? 'over_budget' : 'within_budget'
+      // If API returns categories directly (new format)
+      if (apiData.categories && apiData.categories.length > 0) {
+        transformedData.categories = apiData.categories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          code: cat.code,
+          project_id: cat.project_id,
+          project_name: cat.project_name || '',
+          estimated_budget: cat.estimated_budget || 0,
+          actual_spent: cat.spent_amount || 0,
+          remaining: cat.remaining_amount || 0,
+          percentage_used: cat.percentage_used || 0,
+          status: (cat.remaining_amount || 0) < 0 ? 'over_budget' : 'within_budget'
+        }));
+        
+        // Filter by project if specified
+        if (projectId) {
+          transformedData.categories = transformedData.categories.filter(cat => cat.project_id === projectId);
+          // Recalculate totals for filtered project
+          transformedData.total_estimated = transformedData.categories.reduce((sum, cat) => sum + (cat.estimated_budget || 0), 0);
+          transformedData.total_spent = transformedData.categories.reduce((sum, cat) => sum + (cat.actual_spent || 0), 0);
+          transformedData.total_remaining = transformedData.total_estimated - transformedData.total_spent;
+        }
+      }
+      // Legacy format with projects array
+      else if (apiData.projects && apiData.projects.length > 0) {
+        if (projectId) {
+          const project = apiData.projects[0];
+          transformedData.project = {
+            name: project.project_name,
+            owner_name: "",
+            location: ""
+          };
+          transformedData.categories = project.categories?.map(cat => ({
+            id: cat.category_id,
+            name: cat.category_name,
+            project_name: project.project_name,
+            estimated_budget: cat.budget,
+            actual_spent: cat.spent,
+            remaining: cat.remaining,
+            status: cat.remaining < 0 ? 'over_budget' : 'within_budget'
+          })) || [];
+          transformedData.total_estimated = project.total_budget;
+          transformedData.total_spent = project.total_spent;
+          transformedData.total_remaining = project.remaining;
+        } else {
+          apiData.projects?.forEach(project => {
+            project.categories?.forEach(cat => {
+              transformedData.categories.push({
+                id: cat.category_id,
+                name: cat.category_name,
+                project_name: project.project_name,
+                estimated_budget: cat.budget,
+                actual_spent: cat.spent,
+                remaining: cat.remaining,
+                status: cat.remaining < 0 ? 'over_budget' : 'within_budget'
+              });
             });
           });
-        });
+        }
       }
       
       // Filter over budget categories
-      transformedData.over_budget = transformedData.categories.filter(cat => cat.remaining < 0);
+      transformedData.over_budget = transformedData.categories.filter(cat => (cat.remaining || 0) < 0);
       
       setBudgetReport(transformedData);
       setBudgetReportDialogOpen(true);
