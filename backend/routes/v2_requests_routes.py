@@ -142,6 +142,11 @@ def request_to_response(req: MaterialRequest, items: List[dict]) -> dict:
         "manager_rejection_reason": getattr(req, 'manager_rejection_reason', None),
         "rejected_by_manager_id": getattr(req, 'rejected_by_manager_id', None),
         "expected_delivery_date": req.expected_delivery_date,
+        # حقول الدور والنموذج
+        "floor_id": getattr(req, 'floor_id', None),
+        "floor_name": getattr(req, 'floor_name', None),
+        "template_id": getattr(req, 'template_id', None),
+        "template_name": getattr(req, 'template_name', None),
         "created_at": to_iso_string(req.created_at),
         "updated_at": to_iso_string(req.updated_at)
     }
