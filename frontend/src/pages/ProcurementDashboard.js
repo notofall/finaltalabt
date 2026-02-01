@@ -3544,7 +3544,7 @@ const ProcurementDashboard = () => {
                           <Label className="text-xs text-slate-600 whitespace-nowrap">ربط بالكتالوج:</Label>
                           <div className="flex-1">
                             <SearchableSelect
-                              options={catalogItems.map(cat => ({
+                              options={liveCatalogResults.map(cat => ({
                                 id: cat.id,
                                 name: `${cat.item_code} - ${cat.name}`,
                                 price: cat.price,
@@ -3558,7 +3558,7 @@ const ProcurementDashboard = () => {
                                 }));
                                 // Auto-fill price from catalog if available
                                 if (selectedId) {
-                                  const catalogItem = catalogItems.find(c => c.id === selectedId);
+                                  const catalogItem = liveCatalogResults.find(c => c.id === selectedId);
                                   if (catalogItem?.price) {
                                     setEditOrderData(prev => ({
                                       ...prev,
@@ -3571,6 +3571,9 @@ const ProcurementDashboard = () => {
                               searchPlaceholder="ابحث بالكود أو الاسم..."
                               showPrice={true}
                               maxHeight="200px"
+                              onSearch={searchCatalogLive}
+                              loading={liveCatalogLoading}
+                              totalCount={liveCatalogTotal}
                             />
                           </div>
                           {editOrderData.item_catalog_links[item.id] ? (
