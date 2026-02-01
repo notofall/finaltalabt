@@ -394,7 +394,7 @@ datetime.now(timezone.utc)
 ### URLs
 ```
 Production: http://13.235.247.19
-Preview: https://logo-reporter.preview.emergentagent.com
+Preview: https://build-link.preview.emergentagent.com
 API Base: /api/v2/
 ```
 

@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 
 class BudgetManagementTester:
-    def __init__(self, base_url="https://logo-reporter.preview.emergentagent.com"):
+    def __init__(self, base_url="https://build-link.preview.emergentagent.com"):
         self.base_url = base_url
         self.manager_token = None
         self.supervisor_token = None

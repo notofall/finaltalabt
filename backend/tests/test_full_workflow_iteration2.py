@@ -20,7 +20,7 @@ import os
 from datetime import datetime, timedelta
 
 # Base URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://logo-reporter.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://build-link.preview.emergentagent.com')
 
 # Test credentials
 CREDENTIALS = {
