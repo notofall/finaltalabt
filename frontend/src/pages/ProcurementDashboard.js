@@ -159,7 +159,11 @@ const ProcurementDashboard = () => {
     expected_delivery_date: "",
     supplier_invoice_number: "",
     item_prices: {},
-    item_catalog_links: {}  // {itemId: catalog_item_id}
+    item_catalog_links: {},  // {itemId: catalog_item_id}
+    floor_id: "",
+    floor_name: "",
+    template_id: "",
+    template_name: ""
   });
   const [editCatalogSearchTerm, setEditCatalogSearchTerm] = useState(""); // Search in catalog dropdown
 
