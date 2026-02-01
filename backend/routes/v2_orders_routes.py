@@ -549,6 +549,22 @@ async def create_order(
     if not supplier:
         raise HTTPException(status_code=404, detail="المورد غير موجود")
     
+    # جلب بيانات الدور والنموذج من الطلب إذا كان موجوداً
+    floor_id = None
+    floor_name = None
+    template_id = None
+    template_name = None
+    if data.request_id:
+        request_result = await session.execute(
+            select(MaterialRequest).where(MaterialRequest.id == data.request_id)
+        )
+        request = request_result.scalar_one_or_none()
+        if request:
+            floor_id = getattr(request, 'floor_id', None)
+            floor_name = getattr(request, 'floor_name', None)
+            template_id = getattr(request, 'template_id', None)
+            template_name = getattr(request, 'template_name', None)
+    
     # Generate order number
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     order_number = f"PO-{now.strftime('%Y%m%d')}-{str(uuid_lib.uuid4())[:8].upper()}"
