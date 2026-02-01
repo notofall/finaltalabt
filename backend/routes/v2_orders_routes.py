@@ -609,6 +609,11 @@ async def create_order(
         expected_delivery_date=delivery_date,
         manager_id=str(current_user.id),
         manager_name=current_user.name,
+        # نقل حقول الدور والنموذج من الطلب
+        floor_id=floor_id,
+        floor_name=floor_name,
+        template_id=template_id,
+        template_name=template_name,
         created_at=now,
         updated_at=now
     )
