@@ -57,6 +57,11 @@ class RequestResponse(BaseModel):
     status: str
     rejection_reason: Optional[str]
     expected_delivery_date: Optional[str]
+    # حقول الدور والنموذج
+    floor_id: Optional[str] = None
+    floor_name: Optional[str] = None
+    template_id: Optional[str] = None
+    template_name: Optional[str] = None
     created_at: Optional[str]
     updated_at: Optional[str]
 
