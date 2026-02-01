@@ -3497,6 +3497,84 @@ const ProcurementDashboard = () => {
                 )}
               </div>
 
+              {/* معلومات المشروع والدور/النموذج */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-3">
+                <p className="text-sm font-medium text-blue-700 border-b border-blue-200 pb-2">معلومات المشروع والدور</p>
+                
+                {/* المشروع - للقراءة فقط */}
+                <div className="bg-white rounded-lg p-2 border">
+                  <Label className="text-xs text-slate-500">المشروع (للقراءة فقط)</Label>
+                  <p className="font-semibold text-slate-800">{editingOrder?.project_name}</p>
+                </div>
+                
+                {/* الدور والنموذج - قابل للتعديل */}
+                {(orderFloors.length > 0 || orderTemplates.length > 0 || editOrderData.floor_name || editOrderData.template_name) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* الدور */}
+                    <div className="space-y-1">
+                      <Label className="text-xs text-blue-600">الدور</Label>
+                      {orderFloors.length > 0 ? (
+                        <select
+                          value={editOrderData.floor_id}
+                          onChange={(e) => {
+                            const floor = orderFloors.find(f => f.id === e.target.value);
+                            setEditOrderData(prev => ({
+                              ...prev,
+                              floor_id: e.target.value,
+                              floor_name: floor ? floor.floor_name : ""
+                            }));
+                          }}
+                          className="w-full h-9 rounded-md border border-blue-300 bg-white px-2 text-sm"
+                        >
+                          <option value="">-- بدون تحديد --</option>
+                          {orderFloors.map((floor) => (
+                            <option key={floor.id} value={floor.id}>{floor.floor_name}</option>
+                          ))}
+                        </select>
+                      ) : editOrderData.floor_name ? (
+                        <p className="font-semibold text-blue-800 bg-white p-2 rounded border">{editOrderData.floor_name}</p>
+                      ) : (
+                        <p className="text-slate-400 text-sm">لا توجد أدوار مسجلة</p>
+                      )}
+                    </div>
+                    
+                    {/* النموذج */}
+                    <div className="space-y-1">
+                      <Label className="text-xs text-blue-600">النموذج</Label>
+                      {orderTemplates.length > 0 ? (
+                        <select
+                          value={editOrderData.template_id}
+                          onChange={(e) => {
+                            const template = orderTemplates.find(t => t.id === e.target.value);
+                            setEditOrderData(prev => ({
+                              ...prev,
+                              template_id: e.target.value,
+                              template_name: template ? template.name : ""
+                            }));
+                          }}
+                          className="w-full h-9 rounded-md border border-blue-300 bg-white px-2 text-sm"
+                        >
+                          <option value="">-- بدون تحديد --</option>
+                          {orderTemplates.map((template) => (
+                            <option key={template.id} value={template.id}>{template.name}</option>
+                          ))}
+                        </select>
+                      ) : editOrderData.template_name ? (
+                        <p className="font-semibold text-blue-800 bg-white p-2 rounded border">{editOrderData.template_name}</p>
+                      ) : (
+                        <p className="text-slate-400 text-sm">لا توجد نماذج مسجلة</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {loadingFloorsTemplates && (
+                  <div className="text-center text-blue-600 text-sm py-2">
+                    <Loader2 className="w-4 h-4 animate-spin inline ml-2" />
+                    جاري تحميل الأدوار والنماذج...
+                  </div>
+                )}
+              </div>
 
               {/* Supplier */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
