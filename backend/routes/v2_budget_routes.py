@@ -7,10 +7,13 @@ Architecture: Route -> Service -> Repository
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel
 from typing import Optional, List
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services import BudgetService
 from app.dependencies import get_budget_service
 from routes.v2_auth_routes import get_current_user, require_admin
+from database.connection import get_postgres_session
 
 # Create router
 router = APIRouter(prefix="/api/v2/budget", tags=["V2 Budget"])
