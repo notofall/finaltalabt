@@ -591,7 +591,7 @@ async def create_order(
         notes=data.notes,
         terms_conditions=data.terms_conditions,
         expected_delivery_date=delivery_date,
-        created_by=str(current_user.id),
+        manager_id=str(current_user.id),
         manager_name=current_user.name,
         created_at=now,
         updated_at=now
