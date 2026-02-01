@@ -260,6 +260,11 @@ class PurchaseOrder(Base):
     received_by_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
     received_by_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     delivery_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # حقول الدور والنموذج (اختياري) - لربط الأمر بنظام كميات المباني
+    floor_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True, index=True)
+    floor_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    template_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True, index=True)
+    template_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     gm_approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
