@@ -589,6 +589,9 @@ const OrderCreationDialog = ({
                         })}
                         onAutoSearch={() => handleAutoSearch(item.index, item.name)}
                         catalogItems={catalogItems || []}
+                        catalogLoading={catalogLoading}
+                        catalogTotal={catalogTotal}
+                        onCatalogSearch={onCatalogSearch}
                       />
                     ))}
                   </div>
