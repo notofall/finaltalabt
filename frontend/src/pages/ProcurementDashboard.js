@@ -1641,10 +1641,18 @@ const ProcurementDashboard = () => {
       expected_delivery_date: order.expected_delivery_date?.split("T")[0] || "",
       supplier_invoice_number: order.supplier_invoice_number || "",
       item_prices: prices,
-      item_catalog_links: catalogLinks
+      item_catalog_links: catalogLinks,
+      floor_id: order.floor_id || "",
+      floor_name: order.floor_name || "",
+      template_id: order.template_id || "",
+      template_name: order.template_name || ""
     });
     // Load catalog items for linking
     fetchCatalog("", 1);
+    // تحميل الأدوار والنماذج للمشروع
+    if (order.project_id) {
+      fetchFloorsAndTemplatesForOrder(order.project_id);
+    }
     setEditOrderDialogOpen(true);
   };
 
