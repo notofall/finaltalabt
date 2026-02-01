@@ -1705,7 +1705,7 @@ export default function SystemAdminDashboard() {
                         {auditLogs.map((log) => (
                           <tr key={log.id} className="hover:bg-muted/30 transition-colors">
                             <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                              {log.timestamp ? new Date(log.timestamp).toLocaleString('ar-SA', {
+                              {log.timestamp ? new Date(log.timestamp).toLocaleString('en-GB', {
                                 year: 'numeric',
                                 month: 'short',
                                 day: 'numeric',
