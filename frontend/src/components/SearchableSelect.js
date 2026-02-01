@@ -1,9 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Search, X, ChevronDown, Check, Package } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Search, X, ChevronDown, Check, Package, Loader2 } from 'lucide-react';
 
 /**
  * SearchableSelect - قائمة منسدلة قابلة للبحث
- * تدعم آلاف العناصر مع البحث الفوري
+ * تدعم آلاف العناصر مع البحث الفوري أو البحث من API
+ * 
+ * Props:
+ * - onSearch: (optional) callback للبحث من API - يُستدعى مع (searchTerm)
+ * - loading: (optional) حالة التحميل أثناء البحث من API
+ * - totalCount: (optional) العدد الإجمالي للعناصر في الـ API
  */
 export default function SearchableSelect({
   options = [],
@@ -17,20 +22,30 @@ export default function SearchableSelect({
   className = "",
   disabled = false,
   maxHeight = "250px",
-  showPrice = false
+  showPrice = false,
+  // New props for API search
+  onSearch,
+  loading = false,
+  totalCount = null
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const containerRef = useRef(null);
   const inputRef = useRef(null);
+  const searchTimeoutRef = useRef(null);
 
-  // Filter options based on search
-  const filteredOptions = options.filter(opt => {
-    const searchLower = search.toLowerCase();
-    const name = typeof opt === 'string' ? opt : (opt[displayKey] || '');
-    const supplier = opt.supplier_name || '';
-    return name.toLowerCase().includes(searchLower) || supplier.toLowerCase().includes(searchLower);
-  });
+  // Filter options based on search (only if no onSearch provided - local filtering)
+  const filteredOptions = onSearch 
+    ? options // API provides filtered results
+    : options.filter(opt => {
+        const searchLower = search.toLowerCase();
+        const name = typeof opt === 'string' ? opt : (opt[displayKey] || '');
+        const itemCode = opt.item_code || '';
+        const supplier = opt.supplier_name || '';
+        return name.toLowerCase().includes(searchLower) || 
+               itemCode.toLowerCase().includes(searchLower) ||
+               supplier.toLowerCase().includes(searchLower);
+      });
 
   // Get selected option display text
   const selectedOption = options.find(opt => {
@@ -41,6 +56,31 @@ export default function SearchableSelect({
   const displayText = selectedOption 
     ? (typeof selectedOption === 'string' ? selectedOption : selectedOption[displayKey])
     : null;
+
+  // Handle search change with debounce for API search
+  const handleSearchChange = useCallback((e) => {
+    const newSearch = e.target.value;
+    setSearch(newSearch);
+    
+    if (onSearch) {
+      // Clear existing timeout
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+      // Debounce API call by 300ms
+      searchTimeoutRef.current = setTimeout(() => {
+        onSearch(newSearch);
+      }, 300);
+    }
+  }, [onSearch]);
+
+  // Trigger search when modal opens (if onSearch provided)
+  useEffect(() => {
+    if (isOpen && onSearch) {
+      onSearch(search);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -60,6 +100,15 @@ export default function SearchableSelect({
     }
   }, [isOpen]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleSelect = (opt) => {
     const optValue = typeof opt === 'string' ? opt : opt[valueKey];
     onChange(optValue, opt);
@@ -72,6 +121,10 @@ export default function SearchableSelect({
     onChange("", null);
     setSearch("");
   };
+
+  // Calculate counts for display
+  const displayCount = filteredOptions.length;
+  const totalDisplayCount = totalCount !== null ? totalCount : options.length;
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
@@ -126,29 +179,38 @@ export default function SearchableSelect({
             {/* Search input */}
             <div className="p-4 bg-gradient-to-b from-slate-50 to-white border-b border-slate-200 shrink-0">
               <div className="relative">
-                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-orange-500" />
+                {loading ? (
+                  <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-orange-500 animate-spin" />
+                ) : (
+                  <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-orange-500" />
+                )}
                 <input
                   ref={inputRef}
                   type="text"
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={handleSearchChange}
                   placeholder={searchPlaceholder}
                   className="w-full pr-12 pl-4 py-4 text-base bg-white border-2 border-slate-200 rounded-xl focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-100 transition-all"
                   autoFocus
                 />
               </div>
-              {options.length > 0 && (
-                <p className="text-xs text-slate-500 mt-2 text-center">{filteredOptions.length} من {options.length} صنف</p>
-              )}
+              <p className="text-xs text-slate-500 mt-2 text-center">
+                {loading ? 'جاري البحث...' : `${displayCount} ${onSearch ? 'نتيجة' : `من ${totalDisplayCount} صنف`}`}
+              </p>
             </div>
 
             {/* Options list */}
             <div className="overflow-y-auto flex-1">
-              {filteredOptions.length === 0 ? (
+              {loading ? (
+                <div className="p-8 text-center">
+                  <Loader2 className="w-12 h-12 text-orange-500 mx-auto mb-3 animate-spin" />
+                  <p className="text-slate-500 text-base">جاري البحث في الكتالوج...</p>
+                </div>
+              ) : filteredOptions.length === 0 ? (
                 <div className="p-8 text-center">
                   <Package className="w-16 h-16 text-slate-300 mx-auto mb-3" />
                   <p className="text-slate-500 text-base">
-                    {search ? `لا توجد نتائج لـ "${search}"` : (options.length === 0 ? 'جاري التحميل...' : 'ابدأ الكتابة للبحث')}
+                    {search ? `لا توجد نتائج لـ "${search}"` : (options.length === 0 ? 'لا توجد أصناف' : 'ابدأ الكتابة للبحث')}
                   </p>
                 </div>
               ) : (
