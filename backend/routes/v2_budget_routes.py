@@ -236,17 +236,33 @@ async def get_category(
 async def create_category(
     data: CategoryCreate,
     current_user = Depends(get_current_user),
-    budget_service: BudgetService = Depends(get_budget_service)
+    budget_service: BudgetService = Depends(get_budget_service),
+    session: AsyncSession = Depends(get_postgres_session)
 ):
     """
     Create budget category for a project
     Uses: BudgetService -> BudgetRepository
     """
+    # جلب اسم المشروع
+    from database.models import Project
+    project_result = await session.execute(
+        select(Project).where(Project.id == data.project_id)
+    )
+    project = project_result.scalar_one_or_none()
+    project_name = project.name if project else ""
+    
+    # جلب معلومات المستخدم الحالي
+    created_by = str(current_user.id) if hasattr(current_user, 'id') else "system"
+    created_by_name = current_user.name if hasattr(current_user, 'name') else "النظام"
+    
     category = await budget_service.create_category(
         name=data.name,
         project_id=data.project_id,
         estimated_budget=data.estimated_budget,
-        code=data.code
+        code=data.code,
+        project_name=project_name,
+        created_by=created_by,
+        created_by_name=created_by_name
     )
     return category_to_response(category)
 
