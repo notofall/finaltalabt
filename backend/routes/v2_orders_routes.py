@@ -667,9 +667,10 @@ async def update_order(
     
     # Update allowed fields
     allowed_fields = ["notes", "terms_conditions", "expected_delivery_date", 
-                      "supplier_name", "supplier_id", "category_id", "supplier_invoice_number"]
+                      "supplier_name", "supplier_id", "category_id", "supplier_invoice_number",
+                      "floor_id", "floor_name", "template_id", "template_name"]
     for field in allowed_fields:
-        if field in data and data[field] is not None:
+        if field in data:
             setattr(order, field, data[field])
     
     # Update item prices if provided
