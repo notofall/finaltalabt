@@ -390,6 +390,13 @@ const SupervisorDashboard = () => {
     setSelectedCatalogItem(null);
     setCatalogSuggestions([]);
     setShowSuggestions(false);
+    // إعادة تعيين حقول الدور والنموذج
+    setFloors([]);
+    setTemplates([]);
+    setSelectedFloorId("");
+    setSelectedFloorName("");
+    setSelectedTemplateId("");
+    setSelectedTemplateName("");
   };
 
   const handleSubmit = async (e) => {
