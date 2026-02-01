@@ -180,12 +180,12 @@ const SupplyTrackingView = () => {
               <p className="text-xs text-slate-500">الأصناف</p>
             </div>
             <div className="bg-green-50 rounded-lg p-2 text-center">
-              <p className="text-lg font-bold text-green-600">{selectedProject.total_received.toLocaleString()}</p>
+              <p className="text-lg font-bold text-green-600">{selectedProject.total_received.toLocaleString('en-US')}</p>
               <p className="text-xs text-slate-500">المستلم</p>
             </div>
             <div className="bg-orange-50 rounded-lg p-2 text-center">
               <p className="text-lg font-bold text-orange-600">
-                {(selectedProject.total_required - selectedProject.total_received).toLocaleString()}
+                {(selectedProject.total_required - selectedProject.total_received).toLocaleString('en-US')}
               </p>
               <p className="text-xs text-slate-500">المتبقي</p>
             </div>
@@ -247,13 +247,13 @@ const SupplyTrackingView = () => {
                           {item.unit}
                         </TableCell>
                         <TableCell className="text-center text-sm font-medium">
-                          {item.required_quantity.toLocaleString()}
+                          {item.required_quantity.toLocaleString('en-US')}
                         </TableCell>
                         <TableCell className="text-center text-sm font-medium text-green-600">
-                          {item.received_quantity.toLocaleString()}
+                          {item.received_quantity.toLocaleString('en-US')}
                         </TableCell>
                         <TableCell className="text-center text-sm font-medium text-orange-600">
-                          {item.remaining_quantity.toLocaleString()}
+                          {item.remaining_quantity.toLocaleString('en-US')}
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-1.5">

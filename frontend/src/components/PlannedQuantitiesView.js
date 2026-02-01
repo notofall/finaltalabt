@@ -109,7 +109,7 @@ const PlannedQuantitiesView = ({ projectId = null, showProjectFilter = true }) =
               <p className="text-xs text-slate-500">إجمالي الأصناف</p>
             </div>
             <div className="bg-blue-50 p-3 rounded-lg text-center">
-              <p className="text-xl font-bold text-blue-600">{data.summary?.total_remaining?.toLocaleString() || 0}</p>
+              <p className="text-xl font-bold text-blue-600">{data.summary?.total_remaining?.toLocaleString('en-US') || 0}</p>
               <p className="text-xs text-slate-500">الكمية المتبقية</p>
             </div>
             <div className="bg-orange-50 p-3 rounded-lg text-center">
@@ -166,9 +166,9 @@ const PlannedQuantitiesView = ({ projectId = null, showProjectFilter = true }) =
                         <div className="text-xs text-slate-500">{item.unit} | {item.category_name || "-"}</div>
                       </td>
                       <td className="px-3 py-2 text-slate-600 text-sm">{item.project_name}</td>
-                      <td className="px-3 py-2 text-center">{item.planned_quantity?.toLocaleString()}</td>
+                      <td className="px-3 py-2 text-center">{item.planned_quantity?.toLocaleString('en-US')}</td>
                       <td className="px-3 py-2 text-center font-bold text-orange-600">
-                        {item.remaining_quantity?.toLocaleString()}
+                        {item.remaining_quantity?.toLocaleString('en-US')}
                       </td>
                       <td className="px-3 py-2 text-center text-sm">
                         {item.expected_order_date ? (

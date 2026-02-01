@@ -48,7 +48,7 @@ const BuildingsCalculations = ({ calculations, onCalculate, onExportBOQ }) => {
               </div>
               <div className="p-4 bg-blue-900/30 rounded-lg border border-blue-800">
                 <p className="text-blue-400 text-sm">المساحة</p>
-                <p className="text-2xl font-bold text-white">{calculations.total_area?.toLocaleString()} م²</p>
+                <p className="text-2xl font-bold text-white">{calculations.total_area?.toLocaleString('en-US')} م²</p>
               </div>
               <div className="p-4 bg-amber-900/30 rounded-lg border border-amber-800">
                 <p className="text-amber-400 text-sm">الحديد</p>
@@ -56,7 +56,7 @@ const BuildingsCalculations = ({ calculations, onCalculate, onExportBOQ }) => {
               </div>
               <div className="p-4 bg-purple-900/30 rounded-lg border border-purple-800">
                 <p className="text-purple-400 text-sm">التكلفة</p>
-                <p className="text-2xl font-bold text-white">{calculations.total_materials_cost?.toLocaleString()} ر.س</p>
+                <p className="text-2xl font-bold text-white">{calculations.total_materials_cost?.toLocaleString('en-US')} ر.س</p>
               </div>
             </div>
 
@@ -78,7 +78,7 @@ const BuildingsCalculations = ({ calculations, onCalculate, onExportBOQ }) => {
                       {calculations.steel_calculation.floors.map((floor, idx) => (
                         <tr key={idx} className="border-b border-slate-700/50 text-white">
                           <td className="p-3">{floor.floor_name || getFloorName(floor.floor_number)}</td>
-                          <td className="p-3">{floor.area?.toLocaleString()}</td>
+                          <td className="p-3">{floor.area?.toLocaleString('en-US')}</td>
                           <td className="p-3">{floor.steel_factor}</td>
                           <td className="p-3 text-amber-400">{floor.steel_tons?.toFixed(2)}</td>
                         </tr>
@@ -87,7 +87,7 @@ const BuildingsCalculations = ({ calculations, onCalculate, onExportBOQ }) => {
                     <tfoot>
                       <tr className="bg-slate-700/30 text-emerald-400 font-semibold">
                         <td className="p-3">الإجمالي</td>
-                        <td className="p-3">{calculations.total_area?.toLocaleString()}</td>
+                        <td className="p-3">{calculations.total_area?.toLocaleString('en-US')}</td>
                         <td className="p-3">-</td>
                         <td className="p-3 text-amber-400">{calculations.steel_calculation.total_steel_tons}</td>
                       </tr>
@@ -119,16 +119,16 @@ const BuildingsCalculations = ({ calculations, onCalculate, onExportBOQ }) => {
                           <td className="p-3">{mat.item_code || "-"}</td>
                           <td className="p-3">{mat.item_name}</td>
                           <td className="p-3">{mat.unit}</td>
-                          <td className="p-3">{mat.quantity?.toLocaleString()}</td>
-                          <td className="p-3">{mat.unit_price?.toLocaleString()}</td>
-                          <td className="p-3 text-emerald-400">{mat.total_price?.toLocaleString()}</td>
+                          <td className="p-3">{mat.quantity?.toLocaleString('en-US')}</td>
+                          <td className="p-3">{mat.unit_price?.toLocaleString('en-US')}</td>
+                          <td className="p-3 text-emerald-400">{mat.total_price?.toLocaleString('en-US')}</td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
                       <tr className="bg-slate-700/30 text-emerald-400 font-semibold">
                         <td colSpan="5" className="p-3">إجمالي مواد الوحدات</td>
-                        <td className="p-3">{calculations.total_unit_materials_cost?.toLocaleString()} ر.س</td>
+                        <td className="p-3">{calculations.total_unit_materials_cost?.toLocaleString('en-US')} ر.س</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -158,16 +158,16 @@ const BuildingsCalculations = ({ calculations, onCalculate, onExportBOQ }) => {
                           <td className="p-3">{mat.item_name}</td>
                           <td className="p-3">{mat.unit}</td>
                           <td className="p-3">{mat.factor}</td>
-                          <td className="p-3">{mat.quantity?.toLocaleString()}</td>
-                          <td className="p-3">{mat.unit_price?.toLocaleString()}</td>
-                          <td className="p-3 text-emerald-400">{mat.total_price?.toLocaleString()}</td>
+                          <td className="p-3">{mat.quantity?.toLocaleString('en-US')}</td>
+                          <td className="p-3">{mat.unit_price?.toLocaleString('en-US')}</td>
+                          <td className="p-3 text-emerald-400">{mat.total_price?.toLocaleString('en-US')}</td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
                       <tr className="bg-slate-700/30 text-emerald-400 font-semibold">
                         <td colSpan="5" className="p-3">إجمالي مواد المساحة</td>
-                        <td className="p-3">{calculations.total_area_materials_cost?.toLocaleString()} ر.س</td>
+                        <td className="p-3">{calculations.total_area_materials_cost?.toLocaleString('en-US')} ر.س</td>
                       </tr>
                     </tfoot>
                   </table>
