@@ -194,6 +194,11 @@ class MaterialRequest(Base):
     manager_rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # سبب رفض مدير المشتريات
     rejected_by_manager_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)  # معرف مدير المشتريات الذي رفض
     expected_delivery_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    # حقول الدور والنموذج (اختياري) - لربط الطلب بنظام كميات المباني
+    floor_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True, index=True)
+    floor_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    template_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True, index=True)
+    template_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
