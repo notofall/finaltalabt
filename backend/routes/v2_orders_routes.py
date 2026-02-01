@@ -415,6 +415,11 @@ async def create_order_from_request(
         notes=data.notes,
         terms_conditions=data.terms_conditions,
         expected_delivery_date=data.expected_delivery_date,
+        # نقل حقول الدور والنموذج من الطلب
+        floor_id=getattr(request, 'floor_id', None),
+        floor_name=getattr(request, 'floor_name', None),
+        template_id=getattr(request, 'template_id', None),
+        template_name=getattr(request, 'template_name', None),
         created_at=datetime.now(timezone.utc).replace(tzinfo=None)
     )
     
