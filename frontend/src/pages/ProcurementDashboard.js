@@ -184,6 +184,11 @@ const ProcurementDashboard = () => {
   const [catalogPage, setCatalogPage] = useState(1);
   const [catalogTotalPages, setCatalogTotalPages] = useState(1);
   
+  // Live catalog search for order creation - البحث الحي في الكتالوج
+  const [liveCatalogResults, setLiveCatalogResults] = useState([]);
+  const [liveCatalogLoading, setLiveCatalogLoading] = useState(false);
+  const [liveCatalogTotal, setLiveCatalogTotal] = useState(0);
+  
   // Reports state - التقارير
   const [reportsData, setReportsData] = useState(null);
   const [reportsLoading, setReportsLoading] = useState(false);
