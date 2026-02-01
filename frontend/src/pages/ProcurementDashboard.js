@@ -16,6 +16,7 @@ import { Checkbox } from "../components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Package, LogOut, Clock, CheckCircle, RefreshCw, FileText, ShoppingCart, Truck, Eye, Download, Calendar, Filter, Check, AlertCircle, Plus, Users, X, Edit, DollarSign, BarChart3, Trash2, KeyRound, Loader2, Search, TrendingUp, Menu, Settings, ChevronLeft, ChevronDown, Upload, PieChart, AlertTriangle, FileSpreadsheet, Building2, User } from "lucide-react";
 import { exportRequestToPDF, exportPurchaseOrderToPDF, exportRequestsTableToPDF, exportPurchaseOrdersTableToPDF, exportBudgetReportToPDF, exportCostReportToPDF, fetchAndCacheCompanySettings } from "../utils/pdfExport";
+import { formatNumber, formatCurrency } from "../utils/formatters";
 import ChangePasswordDialog from "../components/ChangePasswordDialog";
 import SearchableSelect from "../components/SearchableSelect";
 import AdvancedReports from "../components/AdvancedReports";
