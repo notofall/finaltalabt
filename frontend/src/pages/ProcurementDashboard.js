@@ -206,6 +206,37 @@ const ProcurementDashboard = () => {
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [deleteReason, setDeleteReason] = useState("");
 
+  // Floors and Templates State for Order Edit
+  const [orderFloors, setOrderFloors] = useState([]);
+  const [orderTemplates, setOrderTemplates] = useState([]);
+  const [loadingFloorsTemplates, setLoadingFloorsTemplates] = useState(false);
+
+  // جلب الأدوار والنماذج للمشروع
+  const fetchFloorsAndTemplatesForOrder = async (projectId) => {
+    if (!projectId) {
+      setOrderFloors([]);
+      setOrderTemplates([]);
+      return;
+    }
+    
+    setLoadingFloorsTemplates(true);
+    try {
+      const [floorsRes, templatesRes] = await Promise.all([
+        axios.get(`${API_V2_URL}/buildings/projects/${projectId}/floors`, getAuthHeaders()).catch(() => ({ data: [] })),
+        axios.get(`${API_V2_URL}/buildings/projects/${projectId}/templates`, getAuthHeaders()).catch(() => ({ data: [] }))
+      ]);
+      
+      setOrderFloors(Array.isArray(floorsRes.data) ? floorsRes.data : []);
+      setOrderTemplates(Array.isArray(templatesRes.data) ? templatesRes.data : []);
+    } catch (error) {
+      console.log("Error fetching floors/templates:", error);
+      setOrderFloors([]);
+      setOrderTemplates([]);
+    } finally {
+      setLoadingFloorsTemplates(false);
+    }
+  };
+
   const fetchData = useCallback(async () => {
     try {
       // Fetch company settings for PDF export
