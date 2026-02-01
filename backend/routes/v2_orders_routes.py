@@ -75,6 +75,11 @@ class OrderResponse(BaseModel):
     notes: Optional[str]
     supplier_invoice_number: Optional[str]
     expected_delivery_date: Optional[str]
+    # حقول الدور والنموذج
+    floor_id: Optional[str] = None
+    floor_name: Optional[str] = None
+    template_id: Optional[str] = None
+    template_name: Optional[str] = None
     created_at: Optional[str]
     approved_at: Optional[str]
     printed_at: Optional[str]
