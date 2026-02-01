@@ -57,6 +57,15 @@ const SupervisorDashboard = () => {
   const [reason, setReason] = useState("");
   const [engineerId, setEngineerId] = useState("");
   const [expectedDeliveryDate, setExpectedDeliveryDate] = useState("");
+  
+  // حالة الدور والنموذج
+  const [floors, setFloors] = useState([]);
+  const [templates, setTemplates] = useState([]);
+  const [selectedFloorId, setSelectedFloorId] = useState("");
+  const [selectedFloorName, setSelectedFloorName] = useState("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [selectedTemplateName, setSelectedTemplateName] = useState("");
+  const [loadingFloorsTemplates, setLoadingFloorsTemplates] = useState(false);
 
   // Catalog suggestions state - اقتراحات الكتالوج
   const [catalogSuggestions, setCatalogSuggestions] = useState([]);
