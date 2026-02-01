@@ -411,7 +411,8 @@ const SupervisorDashboard = () => {
           name: item.name, 
           quantity: parseFloat(item.quantity), 
           unit: item.unit,
-          estimated_price: item.estimated_price
+          estimated_price: item.estimated_price,
+          catalog_item_id: item.catalog_item_id || null  // ✅ إضافة ربط الكتالوج
         })),
         project_id: projectId, 
         reason, 
