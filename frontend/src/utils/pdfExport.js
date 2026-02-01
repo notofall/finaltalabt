@@ -402,7 +402,7 @@ export const exportRequestToPDF = (request, companySettings = null) => {
       <td style="font-size: 10px;">${item.name || '-'}</td>
       <td style="text-align: center; width: 60px;">${item.quantity || 0}</td>
       <td style="text-align: center; width: 60px;">${item.unit || 'قطعة'}</td>
-      <td style="text-align: center; width: 80px;">${item.estimated_price ? item.estimated_price.toLocaleString('ar-SA') + ' ر.س' : '-'}</td>
+      <td style="text-align: center; width: 80px;">${item.estimated_price ? item.estimated_price.toLocaleString('en-US') + ' ر.س' : '-'}</td>
     </tr>
   `).join('');
 
@@ -499,8 +499,8 @@ export const exportPurchaseOrderToPDF = (order, companySettings = null) => {
       <td style="font-size: 10px;">${item.name || '-'}</td>
       <td style="text-align: center; width: 50px;">${item.quantity || 0}</td>
       <td style="text-align: center; width: 55px;">${item.unit || 'قطعة'}</td>
-      <td style="text-align: center; width: 70px;">${unitPrice > 0 ? unitPrice.toLocaleString('ar-SA') : '-'}</td>
-      <td style="text-align: center; width: 80px; font-weight: 600; color: #059669;">${itemTotal > 0 ? itemTotal.toLocaleString('ar-SA') : '-'}</td>
+      <td style="text-align: center; width: 70px;">${unitPrice > 0 ? unitPrice.toLocaleString('en-US') : '-'}</td>
+      <td style="text-align: center; width: 80px; font-weight: 600; color: #059669;">${itemTotal > 0 ? itemTotal.toLocaleString('en-US') : '-'}</td>
     </tr>
   `}).join('');
 
@@ -569,7 +569,7 @@ export const exportPurchaseOrderToPDF = (order, companySettings = null) => {
       <tfoot>
         <tr style="background: #fef3c7;">
           <td colspan="5" style="text-align: left; font-weight: 700; font-size: 10px; padding: 6px 8px;">المجموع الكلي</td>
-          <td style="text-align: center; font-size: 12px; font-weight: 700; color: #ea580c; padding: 6px 8px;">${totalAmount > 0 ? totalAmount.toLocaleString('ar-SA') + ' ر.س' : '-'}</td>
+          <td style="text-align: center; font-size: 12px; font-weight: 700; color: #ea580c; padding: 6px 8px;">${totalAmount > 0 ? totalAmount.toLocaleString('en-US') + ' ر.س' : '-'}</td>
         </tr>
       </tfoot>
     </table>
@@ -735,7 +735,7 @@ export const exportPurchaseOrdersTableToPDF = (orders, exportedBy = null, dateRa
         <td>${itemsSummary}</td>
         <td>${o.project_name || '-'}</td>
         <td><span class="badge badge-green">${o.supplier_name || '-'}</span></td>
-        <td style="text-align: center; font-weight: 600; color: #059669;">${o.total_amount > 0 ? o.total_amount.toLocaleString('ar-SA') : '-'}</td>
+        <td style="text-align: center; font-weight: 600; color: #059669;">${o.total_amount > 0 ? o.total_amount.toLocaleString('en-US') : '-'}</td>
         <td><span class="badge badge-blue">${getOrderStatusTextAr(o.status)}</span></td>
         <td>${formatDateShort(o.created_at)}</td>
       </tr>
@@ -761,7 +761,7 @@ export const exportPurchaseOrdersTableToPDF = (orders, exportedBy = null, dateRa
       </div>
       <div style="flex: 1; min-width: 100px; background: #fff7ed; border-radius: 6px; padding: 10px; text-align: center;">
         <p style="font-size: 9px; color: #6b7280; margin: 0;">إجمالي المبلغ</p>
-        <p style="font-size: 14px; font-weight: 700; color: #ea580c; margin: 3px 0 0 0;">${totalAmount.toLocaleString('ar-SA')} ر.س</p>
+        <p style="font-size: 14px; font-weight: 700; color: #ea580c; margin: 3px 0 0 0;">${totalAmount.toLocaleString('en-US')} ر.س</p>
       </div>
       <div style="flex: 1; min-width: 100px; background: #ecfdf5; border-radius: 6px; padding: 10px; text-align: center;">
         <p style="font-size: 9px; color: #6b7280; margin: 0;">تم التسليم</p>
@@ -786,7 +786,7 @@ export const exportPurchaseOrdersTableToPDF = (orders, exportedBy = null, dateRa
       <tfoot>
         <tr style="background: #fef3c7;">
           <td colspan="5" style="text-align: left; font-weight: 700; font-size: 11px; padding: 8px;">المجموع الكلي (${orders.length} أمر)</td>
-          <td style="text-align: center; font-size: 12px; font-weight: 700; color: #ea580c; padding: 8px;">${totalAmount.toLocaleString('ar-SA')} ر.س</td>
+          <td style="text-align: center; font-size: 12px; font-weight: 700; color: #ea580c; padding: 8px;">${totalAmount.toLocaleString('en-US')} ر.س</td>
           <td colspan="2"></td>
         </tr>
       </tfoot>
@@ -962,9 +962,9 @@ export const exportBudgetReportToPDF = (report, projectName = null) => {
     <tr style="background: ${idx % 2 === 0 ? '#f9fafb' : '#fff'};">
       <td style="font-weight: 600; font-size: 10px;">${cat.name}</td>
       <td style="font-size: 10px;">${cat.project_name || '-'}</td>
-      <td style="text-align: center; color: #2563eb; font-size: 10px;">${cat.estimated_budget?.toLocaleString('ar-SA')}</td>
-      <td style="text-align: center; color: #ea580c; font-size: 10px;">${cat.actual_spent?.toLocaleString('ar-SA')}</td>
-      <td style="text-align: center; font-weight: 600; color: ${cat.remaining >= 0 ? '#059669' : '#dc2626'}; font-size: 10px;">${cat.remaining?.toLocaleString('ar-SA')}</td>
+      <td style="text-align: center; color: #2563eb; font-size: 10px;">${cat.estimated_budget?.toLocaleString('en-US')}</td>
+      <td style="text-align: center; color: #ea580c; font-size: 10px;">${cat.actual_spent?.toLocaleString('en-US')}</td>
+      <td style="text-align: center; font-weight: 600; color: ${cat.remaining >= 0 ? '#059669' : '#dc2626'}; font-size: 10px;">${cat.remaining?.toLocaleString('en-US')}</td>
       <td style="text-align: center;">
         <span style="padding: 2px 6px; border-radius: 3px; font-size: 8px; background: ${cat.status === 'over_budget' ? '#fef2f2' : '#f0fdf4'}; color: ${cat.status === 'over_budget' ? '#dc2626' : '#059669'};">
           ${cat.status === 'over_budget' ? 'تجاوز' : 'ضمن'}
@@ -992,15 +992,15 @@ export const exportBudgetReportToPDF = (report, projectName = null) => {
     <div style="display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap;">
       <div style="flex: 1; min-width: 120px; background: #eff6ff; border-radius: 6px; padding: 10px; text-align: center;">
         <p style="font-size: 9px; color: #6b7280; margin: 0;">الميزانية التقديرية</p>
-        <p style="font-size: 14px; font-weight: 700; color: #2563eb; margin: 3px 0 0 0;">${report.total_estimated?.toLocaleString('ar-SA')} ر.س</p>
+        <p style="font-size: 14px; font-weight: 700; color: #2563eb; margin: 3px 0 0 0;">${report.total_estimated?.toLocaleString('en-US')} ر.س</p>
       </div>
       <div style="flex: 1; min-width: 120px; background: #fff7ed; border-radius: 6px; padding: 10px; text-align: center;">
         <p style="font-size: 9px; color: #6b7280; margin: 0;">المصروف الفعلي</p>
-        <p style="font-size: 14px; font-weight: 700; color: #ea580c; margin: 3px 0 0 0;">${report.total_spent?.toLocaleString('ar-SA')} ر.س</p>
+        <p style="font-size: 14px; font-weight: 700; color: #ea580c; margin: 3px 0 0 0;">${report.total_spent?.toLocaleString('en-US')} ر.س</p>
       </div>
       <div style="flex: 1; min-width: 120px; background: ${report.total_remaining >= 0 ? '#f0fdf4' : '#fef2f2'}; border-radius: 6px; padding: 10px; text-align: center;">
         <p style="font-size: 9px; color: #6b7280; margin: 0;">المتبقي</p>
-        <p style="font-size: 14px; font-weight: 700; color: ${report.total_remaining >= 0 ? '#059669' : '#dc2626'}; margin: 3px 0 0 0;">${report.total_remaining?.toLocaleString('ar-SA')} ر.س</p>
+        <p style="font-size: 14px; font-weight: 700; color: ${report.total_remaining >= 0 ? '#059669' : '#dc2626'}; margin: 3px 0 0 0;">${report.total_remaining?.toLocaleString('en-US')} ر.س</p>
       </div>
       <div style="flex: 1; min-width: 120px; background: #f1f5f9; border-radius: 6px; padding: 10px; text-align: center;">
         <p style="font-size: 9px; color: #6b7280; margin: 0;">نسبة الاستهلاك</p>
@@ -1014,7 +1014,7 @@ export const exportBudgetReportToPDF = (report, projectName = null) => {
         ${report.over_budget.map(cat => `
           <div style="display: flex; justify-content: space-between; font-size: 9px; padding: 2px 0; border-bottom: 1px solid #fee2e2;">
             <span>${cat.name}</span>
-            <span style="color: #dc2626; font-weight: 600;">${Math.abs(cat.remaining)?.toLocaleString('ar-SA')} ر.س</span>
+            <span style="color: #dc2626; font-weight: 600;">${Math.abs(cat.remaining)?.toLocaleString('en-US')} ر.س</span>
           </div>
         `).join('')}
       </div>
@@ -1068,9 +1068,9 @@ export const exportCostReportToPDF = (reportsData, type = 'all', exportedBy = nu
       <tr style="background: ${idx % 2 === 0 ? '#f9fafb' : '#fff'};">
         <td style="font-weight: 600;">${item.project}</td>
         <td style="text-align: center;">${item.orders_count}</td>
-        <td style="text-align: center;">${item.estimated?.toLocaleString('ar-SA')} ر.س</td>
-        <td style="text-align: center; color: #2563eb;">${item.actual?.toLocaleString('ar-SA')} ر.س</td>
-        <td style="text-align: center; font-weight: 600; color: ${item.saving >= 0 ? '#059669' : '#dc2626'};">${item.saving?.toLocaleString('ar-SA')} ر.س</td>
+        <td style="text-align: center;">${item.estimated?.toLocaleString('en-US')} ر.س</td>
+        <td style="text-align: center; color: #2563eb;">${item.actual?.toLocaleString('en-US')} ر.س</td>
+        <td style="text-align: center; font-weight: 600; color: ${item.saving >= 0 ? '#059669' : '#dc2626'};">${item.saving?.toLocaleString('en-US')} ر.س</td>
         <td style="text-align: center;">
           <span style="padding: 2px 8px; border-radius: 4px; font-size: 10px; background: ${item.saving_percent >= 0 ? '#dcfce7' : '#fee2e2'}; color: ${item.saving_percent >= 0 ? '#059669' : '#dc2626'};">
             ${item.saving_percent}%
@@ -1094,9 +1094,9 @@ export const exportCostReportToPDF = (reportsData, type = 'all', exportedBy = nu
       <tr style="background: ${idx % 2 === 0 ? '#f9fafb' : '#fff'};">
         <td style="font-weight: 600;">${item.category}</td>
         <td style="text-align: center;">${item.orders_count}</td>
-        <td style="text-align: center;">${item.estimated?.toLocaleString('ar-SA')} ر.س</td>
-        <td style="text-align: center; color: #2563eb;">${item.actual?.toLocaleString('ar-SA')} ر.س</td>
-        <td style="text-align: center; font-weight: 600; color: ${item.saving >= 0 ? '#059669' : '#dc2626'};">${item.saving?.toLocaleString('ar-SA')} ر.س</td>
+        <td style="text-align: center;">${item.estimated?.toLocaleString('en-US')} ر.س</td>
+        <td style="text-align: center; color: #2563eb;">${item.actual?.toLocaleString('en-US')} ر.س</td>
+        <td style="text-align: center; font-weight: 600; color: ${item.saving >= 0 ? '#059669' : '#dc2626'};">${item.saving?.toLocaleString('en-US')} ر.س</td>
         <td style="text-align: center;">
           <span style="padding: 2px 8px; border-radius: 4px; font-size: 10px; background: ${item.saving_percent >= 0 ? '#dcfce7' : '#fee2e2'}; color: ${item.saving_percent >= 0 ? '#059669' : '#dc2626'};">
             ${item.saving_percent}%
@@ -1115,15 +1115,15 @@ export const exportCostReportToPDF = (reportsData, type = 'all', exportedBy = nu
       </div>
       <div style="flex: 1; min-width: 100px; background: #eff6ff; border-radius: 6px; padding: 10px; text-align: center;">
         <p style="font-size: 9px; color: #6b7280; margin: 0;">التقديري</p>
-        <p style="font-size: 14px; font-weight: 700; color: #2563eb; margin: 3px 0 0 0;">${savings.summary.total_estimated?.toLocaleString('ar-SA') || 0} ر.س</p>
+        <p style="font-size: 14px; font-weight: 700; color: #2563eb; margin: 3px 0 0 0;">${savings.summary.total_estimated?.toLocaleString('en-US') || 0} ر.س</p>
       </div>
       <div style="flex: 1; min-width: 100px; background: #fff7ed; border-radius: 6px; padding: 10px; text-align: center;">
         <p style="font-size: 9px; color: #6b7280; margin: 0;">الفعلي</p>
-        <p style="font-size: 14px; font-weight: 700; color: #ea580c; margin: 3px 0 0 0;">${savings.summary.total_actual?.toLocaleString('ar-SA') || 0} ر.س</p>
+        <p style="font-size: 14px; font-weight: 700; color: #ea580c; margin: 3px 0 0 0;">${savings.summary.total_actual?.toLocaleString('en-US') || 0} ر.س</p>
       </div>
       <div style="flex: 1; min-width: 100px; background: ${savings.summary.total_saving >= 0 ? '#f0fdf4' : '#fef2f2'}; border-radius: 6px; padding: 10px; text-align: center;">
         <p style="font-size: 9px; color: #6b7280; margin: 0;">التوفير</p>
-        <p style="font-size: 14px; font-weight: 700; color: ${savings.summary.total_saving >= 0 ? '#059669' : '#dc2626'}; margin: 3px 0 0 0;">${savings.summary.total_saving?.toLocaleString('ar-SA') || 0} ر.س</p>
+        <p style="font-size: 14px; font-weight: 700; color: ${savings.summary.total_saving >= 0 ? '#059669' : '#dc2626'}; margin: 3px 0 0 0;">${savings.summary.total_saving?.toLocaleString('en-US') || 0} ر.س</p>
       </div>
       <div style="flex: 1; min-width: 100px; background: ${savings.summary.saving_percent >= 0 ? '#ecfdf5' : '#fef2f2'}; border-radius: 6px; padding: 10px; text-align: center;">
         <p style="font-size: 9px; color: #6b7280; margin: 0;">نسبة التوفير</p>
@@ -1155,9 +1155,9 @@ export const exportCostReportToPDF = (reportsData, type = 'all', exportedBy = nu
               <tr style="background: ${idx % 2 === 0 ? '#f9fafb' : '#fff'};">
                 <td style="font-weight: 600; font-size: 10px;">${item.project}</td>
                 <td style="text-align: center; font-size: 10px;">${item.orders_count}</td>
-                <td style="text-align: center; font-size: 10px;">${item.estimated?.toLocaleString('ar-SA')} ر.س</td>
-                <td style="text-align: center; color: #2563eb; font-size: 10px;">${item.actual?.toLocaleString('ar-SA')} ر.س</td>
-                <td style="text-align: center; font-weight: 600; color: ${item.saving >= 0 ? '#059669' : '#dc2626'}; font-size: 10px;">${item.saving?.toLocaleString('ar-SA')} ر.س</td>
+                <td style="text-align: center; font-size: 10px;">${item.estimated?.toLocaleString('en-US')} ر.س</td>
+                <td style="text-align: center; color: #2563eb; font-size: 10px;">${item.actual?.toLocaleString('en-US')} ر.س</td>
+                <td style="text-align: center; font-weight: 600; color: ${item.saving >= 0 ? '#059669' : '#dc2626'}; font-size: 10px;">${item.saving?.toLocaleString('en-US')} ر.س</td>
                 <td style="text-align: center;">
                   <span style="padding: 1px 4px; border-radius: 3px; font-size: 8px; background: ${item.saving_percent >= 0 ? '#dcfce7' : '#fee2e2'}; color: ${item.saving_percent >= 0 ? '#059669' : '#dc2626'};">${item.saving_percent}%</span>
                 </td>
@@ -1188,9 +1188,9 @@ export const exportCostReportToPDF = (reportsData, type = 'all', exportedBy = nu
               <tr style="background: ${idx % 2 === 0 ? '#f9fafb' : '#fff'};">
                 <td style="font-weight: 600; font-size: 10px;">${item.category}</td>
                 <td style="text-align: center; font-size: 10px;">${item.orders_count}</td>
-                <td style="text-align: center; font-size: 10px;">${item.estimated?.toLocaleString('ar-SA')} ر.س</td>
-                <td style="text-align: center; color: #2563eb; font-size: 10px;">${item.actual?.toLocaleString('ar-SA')} ر.س</td>
-                <td style="text-align: center; font-weight: 600; color: ${item.saving >= 0 ? '#059669' : '#dc2626'}; font-size: 10px;">${item.saving?.toLocaleString('ar-SA')} ر.س</td>
+                <td style="text-align: center; font-size: 10px;">${item.estimated?.toLocaleString('en-US')} ر.س</td>
+                <td style="text-align: center; color: #2563eb; font-size: 10px;">${item.actual?.toLocaleString('en-US')} ر.س</td>
+                <td style="text-align: center; font-weight: 600; color: ${item.saving >= 0 ? '#059669' : '#dc2626'}; font-size: 10px;">${item.saving?.toLocaleString('en-US')} ر.س</td>
                 <td style="text-align: center;">
                   <span style="padding: 1px 4px; border-radius: 3px; font-size: 8px; background: ${item.saving_percent >= 0 ? '#dcfce7' : '#fee2e2'}; color: ${item.saving_percent >= 0 ? '#059669' : '#dc2626'};">${item.saving_percent}%</span>
                 </td>

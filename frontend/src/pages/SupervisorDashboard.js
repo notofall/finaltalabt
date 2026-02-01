@@ -1196,7 +1196,7 @@ const SupervisorDashboard = () => {
                   <div><span className="text-slate-500">رقم الأمر:</span> <span className="font-mono font-bold text-orange-600">{selectedDelivery.id?.slice(0,8).toUpperCase()}</span></div>
                   <div><span className="text-slate-500">المورد:</span> {selectedDelivery.supplier_name}</div>
                   <div><span className="text-slate-500">المشروع:</span> {selectedDelivery.project_name}</div>
-                  <div><span className="text-slate-500">الإجمالي:</span> {(selectedDelivery.total_amount || 0).toLocaleString('ar-SA')} ر.س</div>
+                  <div><span className="text-slate-500">الإجمالي:</span> {(selectedDelivery.total_amount || 0).toLocaleString('en-US')} ر.س</div>
                 </div>
               </div>
 

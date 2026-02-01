@@ -2646,7 +2646,7 @@ const ProcurementDashboard = () => {
                           <div className="grid grid-cols-2 gap-2 text-xs">
                             <div><span className="text-slate-400">المورد:</span> {order.supplier_name}</div>
                             {order.total_amount > 0 && (
-                              <div><span className="text-slate-400">المبلغ:</span> <span className="font-bold text-emerald-600">{order.total_amount.toLocaleString('ar-SA')} ر.س</span></div>
+                              <div><span className="text-slate-400">المبلغ:</span> <span className="font-bold text-emerald-600">{order.total_amount.toLocaleString('en-US')} ر.س</span></div>
                             )}
                             {order.supplier_receipt_number && (
                               <div className="col-span-2">
@@ -2686,7 +2686,7 @@ const ProcurementDashboard = () => {
                               <TableCell className="font-mono text-orange-600 font-bold">{order.order_number || order.id?.slice(0, 8).toUpperCase()}</TableCell>
                               <TableCell>{order.project_name}</TableCell>
                               <TableCell>{order.supplier_name}</TableCell>
-                              <TableCell className="text-center font-bold text-emerald-600">{order.total_amount > 0 ? `${order.total_amount.toLocaleString('ar-SA')} ر.س` : '-'}</TableCell>
+                              <TableCell className="text-center font-bold text-emerald-600">{order.total_amount > 0 ? `${order.total_amount.toLocaleString('en-US')} ر.س` : '-'}</TableCell>
                               <TableCell className="text-center">
                                 {order.supplier_receipt_number ? (
                                   <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">{order.supplier_receipt_number}</span>
@@ -2812,7 +2812,7 @@ const ProcurementDashboard = () => {
                     {item.unit_price > 0 && (
                       <div className="text-left">
                         <span className="text-slate-600 text-xs">{item.unit_price} × {item.quantity} = </span>
-                        <span className="font-bold text-emerald-600">{(item.total_price || item.unit_price * item.quantity).toLocaleString('ar-SA')} ر.س</span>
+                        <span className="font-bold text-emerald-600">{(item.total_price || item.unit_price * item.quantity).toLocaleString('en-US')} ر.س</span>
                       </div>
                     )}
                   </div>
@@ -2820,7 +2820,7 @@ const ProcurementDashboard = () => {
                 {selectedOrder.total_amount > 0 && (
                   <div className="flex justify-between items-center pt-2 border-t mt-2">
                     <span className="font-bold">الإجمالي:</span>
-                    <span className="text-lg font-bold text-orange-600">{selectedOrder.total_amount.toLocaleString('ar-SA')} ر.س</span>
+                    <span className="text-lg font-bold text-orange-600">{selectedOrder.total_amount.toLocaleString('en-US')} ر.س</span>
                   </div>
                 )}
               </div>
@@ -3176,7 +3176,7 @@ const ProcurementDashboard = () => {
                                 <p className="font-medium">{cat.name}</p>
                               </div>
                               <p className="text-xs text-slate-500 mt-1">
-                                الميزانية الافتراضية: {(cat.default_budget || 0).toLocaleString('ar-SA')} ر.س
+                                الميزانية الافتراضية: {(cat.default_budget || 0).toLocaleString('en-US')} ر.س
                               </p>
                             </div>
                             <div className="flex gap-1">
@@ -3300,18 +3300,18 @@ const ProcurementDashboard = () => {
                             <div className="text-left">
                               <p className="text-sm">
                                 <span className="text-slate-500">التقديري: </span>
-                                <span className="font-medium">{cat.estimated_budget?.toLocaleString('ar-SA')} ر.س</span>
+                                <span className="font-medium">{cat.estimated_budget?.toLocaleString('en-US')} ر.س</span>
                               </p>
                               <p className="text-sm">
                                 <span className="text-slate-500">المصروف: </span>
                                 <span className={`font-medium ${cat.actual_spent > cat.estimated_budget ? 'text-red-600' : 'text-green-600'}`}>
-                                  {cat.actual_spent?.toLocaleString('ar-SA')} ر.س
+                                  {cat.actual_spent?.toLocaleString('en-US')} ر.س
                                 </span>
                               </p>
                               <p className="text-xs">
                                 <span className="text-slate-500">المتبقي: </span>
                                 <span className={cat.remaining < 0 ? 'text-red-600 font-bold' : 'text-blue-600'}>
-                                  {cat.remaining?.toLocaleString('ar-SA')} ر.س
+                                  {cat.remaining?.toLocaleString('en-US')} ر.س
                                 </span>
                               </p>
                             </div>
@@ -3388,20 +3388,20 @@ const ProcurementDashboard = () => {
                 <Card className="border-r-4 border-blue-500">
                   <CardContent className="p-3">
                     <p className="text-xs text-slate-500">الميزانية التقديرية</p>
-                    <p className="text-lg font-bold text-blue-600">{budgetReport.total_estimated?.toLocaleString('ar-SA')} ر.س</p>
+                    <p className="text-lg font-bold text-blue-600">{budgetReport.total_estimated?.toLocaleString('en-US')} ر.س</p>
                   </CardContent>
                 </Card>
                 <Card className="border-r-4 border-orange-500">
                   <CardContent className="p-3">
                     <p className="text-xs text-slate-500">المصروف الفعلي</p>
-                    <p className="text-lg font-bold text-orange-600">{budgetReport.total_spent?.toLocaleString('ar-SA')} ر.س</p>
+                    <p className="text-lg font-bold text-orange-600">{budgetReport.total_spent?.toLocaleString('en-US')} ر.س</p>
                   </CardContent>
                 </Card>
                 <Card className={`border-r-4 ${budgetReport.total_remaining >= 0 ? 'border-green-500' : 'border-red-500'}`}>
                   <CardContent className="p-3">
                     <p className="text-xs text-slate-500">المتبقي</p>
                     <p className={`text-lg font-bold ${budgetReport.total_remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {budgetReport.total_remaining?.toLocaleString('ar-SA')} ر.س
+                      {budgetReport.total_remaining?.toLocaleString('en-US')} ر.س
                     </p>
                   </CardContent>
                 </Card>
@@ -3428,7 +3428,7 @@ const ProcurementDashboard = () => {
                     {budgetReport.over_budget.map(cat => (
                       <div key={cat.id} className="flex justify-between text-sm">
                         <span>{cat.name} - {cat.project_name}</span>
-                        <span className="text-red-600 font-medium">تجاوز: {Math.abs(cat.remaining)?.toLocaleString('ar-SA')} ر.س</span>
+                        <span className="text-red-600 font-medium">تجاوز: {Math.abs(cat.remaining)?.toLocaleString('en-US')} ر.س</span>
                       </div>
                     ))}
                   </div>
@@ -3453,10 +3453,10 @@ const ProcurementDashboard = () => {
                       <TableRow key={cat.id}>
                         <TableCell className="font-medium">{cat.name}</TableCell>
                         <TableCell className="text-sm text-slate-600">{cat.project_name}</TableCell>
-                        <TableCell className="text-center">{cat.estimated_budget?.toLocaleString('ar-SA')}</TableCell>
-                        <TableCell className="text-center">{cat.actual_spent?.toLocaleString('ar-SA')}</TableCell>
+                        <TableCell className="text-center">{cat.estimated_budget?.toLocaleString('en-US')}</TableCell>
+                        <TableCell className="text-center">{cat.actual_spent?.toLocaleString('en-US')}</TableCell>
                         <TableCell className={`text-center font-medium ${cat.remaining < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                          {cat.remaining?.toLocaleString('ar-SA')}
+                          {cat.remaining?.toLocaleString('en-US')}
                         </TableCell>
                         <TableCell className="text-center">
                           <Badge className={cat.status === 'over_budget' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}>
@@ -3569,7 +3569,7 @@ const ProcurementDashboard = () => {
                       {editingOrder.items?.reduce((sum, item, idx) => {
                         const price = parseFloat(editOrderData.item_prices[idx]) || 0;
                         return sum + (price * item.quantity);
-                      }, 0).toLocaleString('ar-SA')} ر.س
+                      }, 0).toLocaleString('en-US')} ر.س
                     </span>
                   </div>
                 )}

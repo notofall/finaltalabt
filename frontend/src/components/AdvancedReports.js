@@ -189,7 +189,7 @@ export default function AdvancedReports({ onClose }) {
   const exportToPDF = (reportType) => {
     try {
       let content = "";
-      const now = new Date().toLocaleString('ar-SA');
+      const now = new Date().toLocaleString('en-US');
       
       // Get active filter names
       const activeFilters = [];

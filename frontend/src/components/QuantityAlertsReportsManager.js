@@ -88,12 +88,12 @@ const QuantityAlertsReportsManager = () => {
 
   const formatNumber = (num) => {
     if (num === null || num === undefined) return "0";
-    return Number(num).toLocaleString('ar-SA');
+    return Number(num).toLocaleString('en-US');
   };
 
   const formatCurrency = (num) => {
     if (num === null || num === undefined) return "0";
-    return Number(num).toLocaleString('ar-SA');
+    return Number(num).toLocaleString('en-US');
   };
 
   // Tab configuration

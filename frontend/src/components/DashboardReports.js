@@ -98,7 +98,7 @@ export const SupervisorReports = ({ requests = [] }) => {
               <DollarSign className="w-4 h-4 text-emerald-600" />
               <span className="text-xs text-slate-500">القيمة التقديرية</span>
             </div>
-            <p className="text-lg font-bold text-emerald-600">{totalEstimatedAmount.toLocaleString('ar-SA')} <span className="text-xs">ر.س</span></p>
+            <p className="text-lg font-bold text-emerald-600">{totalEstimatedAmount.toLocaleString('en-US')} <span className="text-xs">ر.س</span></p>
           </div>
         </div>
         
@@ -318,7 +318,7 @@ export const GMReports = ({ pendingOrders = [], gmApprovedOrders = [], procureme
               <DollarSign className="w-4 h-4 text-emerald-600" />
               <span className="text-xs text-slate-500">إجمالي معتمد</span>
             </div>
-            <p className="text-lg font-bold text-emerald-600">{totalApprovedAmount.toLocaleString('ar-SA')} <span className="text-xs">ر.س</span></p>
+            <p className="text-lg font-bold text-emerald-600">{totalApprovedAmount.toLocaleString('en-US')} <span className="text-xs">ر.س</span></p>
           </div>
           <div className="bg-white rounded-lg p-3 border shadow-sm">
             <div className="flex items-center gap-2 mb-1">
@@ -334,7 +334,7 @@ export const GMReports = ({ pendingOrders = [], gmApprovedOrders = [], procureme
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-yellow-600" />
               <span className="text-sm text-yellow-800">
-                {pendingOrders.length} أمر بانتظار اعتمادك بقيمة {pendingAmount.toLocaleString('ar-SA')} ر.س
+                {pendingOrders.length} أمر بانتظار اعتمادك بقيمة {pendingAmount.toLocaleString('en-US')} ر.س
               </span>
             </div>
           </div>
@@ -345,12 +345,12 @@ export const GMReports = ({ pendingOrders = [], gmApprovedOrders = [], procureme
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-slate-50 rounded-lg p-3">
                 <p className="text-xs text-slate-500 mb-1">اعتمادات المدير العام</p>
-                <p className="text-lg font-bold text-purple-600">{gmApprovedAmount.toLocaleString('ar-SA')} ر.س</p>
+                <p className="text-lg font-bold text-purple-600">{gmApprovedAmount.toLocaleString('en-US')} ر.س</p>
               </div>
               <div className="bg-slate-50 rounded-lg p-3">
                 <p className="text-xs text-slate-500 mb-1">اعتمادات المشتريات</p>
                 <p className="text-lg font-bold text-blue-600">
-                  {(totalApprovedAmount - gmApprovedAmount).toLocaleString('ar-SA')} ر.س
+                  {(totalApprovedAmount - gmApprovedAmount).toLocaleString('en-US')} ر.س
                 </p>
               </div>
             </div>
@@ -458,11 +458,11 @@ export const DeliveryReports = ({ orders = [], stats = {} }) => {
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-slate-50 rounded-lg p-3">
                 <p className="text-xs text-slate-500 mb-1">إجمالي القيمة</p>
-                <p className="text-lg font-bold text-slate-700">{totalAmount.toLocaleString('ar-SA')} ر.س</p>
+                <p className="text-lg font-bold text-slate-700">{totalAmount.toLocaleString('en-US')} ر.س</p>
               </div>
               <div className="bg-slate-50 rounded-lg p-3">
                 <p className="text-xs text-slate-500 mb-1">القيمة المستلمة</p>
-                <p className="text-lg font-bold text-emerald-600">{deliveredAmount.toLocaleString('ar-SA')} ر.س</p>
+                <p className="text-lg font-bold text-emerald-600">{deliveredAmount.toLocaleString('en-US')} ر.س</p>
               </div>
             </div>
             

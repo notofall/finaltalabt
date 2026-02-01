@@ -660,8 +660,8 @@ const OrderCreationDialog = ({
                     return (
                       <div className={`text-xs p-2 rounded-lg ${willExceed ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
                         {willExceed 
-                          ? `⚠️ تجاوز الميزانية بـ ${(total - (cat.remaining || 0)).toLocaleString('ar-SA')} ر.س`
-                          : `✓ ضمن الميزانية - سيتبقى ${((cat.remaining || 0) - total).toLocaleString('ar-SA')} ر.س`
+                          ? `⚠️ تجاوز الميزانية بـ ${(total - (cat.remaining || 0)).toLocaleString('en-US')} ر.س`
+                          : `✓ ضمن الميزانية - سيتبقى ${((cat.remaining || 0) - total).toLocaleString('en-US')} ر.س`
                         }
                       </div>
                     );
@@ -725,7 +725,7 @@ const OrderCreationDialog = ({
                 <span className="text-xs text-slate-500">({selectedItemIndices.length} صنف)</span>
               </div>
               <span className="font-bold text-xl text-orange-600">
-                {total.toLocaleString('ar-SA')} ر.س
+                {total.toLocaleString('en-US')} ر.س
               </span>
             </div>
             

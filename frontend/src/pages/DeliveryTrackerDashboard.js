@@ -393,7 +393,7 @@ const DeliveryTrackerDashboard = () => {
           <div class="info-item"><span class="info-label">المورد:</span> <span class="info-value">${order.supplier_name || '-'}</span></div>
           <div class="info-item"><span class="info-label">تاريخ أمر الشراء:</span> <span class="info-value">${formatDate(order.created_at)}</span></div>
           <div class="info-item"><span class="info-label">المستلم:</span> <span class="info-value">${order.received_by_name || '-'}</span></div>
-          <div class="info-item"><span class="info-label">المبلغ الإجمالي:</span> <span class="info-value" style="color: #059669;">${order.total_amount?.toLocaleString('ar-SA') || 0} ر.س</span></div>
+          <div class="info-item"><span class="info-label">المبلغ الإجمالي:</span> <span class="info-value" style="color: #059669;">${order.total_amount?.toLocaleString('en-US') || 0} ر.س</span></div>
         </div>
         
         <h3 style="color: #374151; margin-bottom: 10px; font-size: 14px; border-bottom: 2px solid #059669; padding-bottom: 5px;">تفاصيل المواد المستلمة</h3>
@@ -617,7 +617,7 @@ const DeliveryTrackerDashboard = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                       <div><span className="text-slate-400">المورد:</span> {order.supplier_name}</div>
-                      <div><span className="text-slate-400">المبلغ:</span> <span className="font-bold text-emerald-600">{order.total_amount?.toLocaleString('ar-SA')} ر.س</span></div>
+                      <div><span className="text-slate-400">المبلغ:</span> <span className="font-bold text-emerald-600">{order.total_amount?.toLocaleString('en-US')} ر.س</span></div>
                       <div><span className="text-slate-400">رقم الطلب:</span> {order.request_number || '-'}</div>
                     </div>
                     <div className="flex gap-2">
@@ -659,7 +659,7 @@ const DeliveryTrackerDashboard = () => {
                             {order.items?.length || 0} صنف
                           </span>
                         </TableCell>
-                        <TableCell className="text-center font-bold text-emerald-600">{order.total_amount?.toLocaleString('ar-SA')} ر.س</TableCell>
+                        <TableCell className="text-center font-bold text-emerald-600">{order.total_amount?.toLocaleString('en-US')} ر.س</TableCell>
                         <TableCell className="text-center">{getStatusBadge(order.status)}</TableCell>
                         <TableCell className="text-center">
                           <div className="flex gap-1 justify-center">
@@ -708,7 +708,7 @@ const DeliveryTrackerDashboard = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                       <div><span className="text-slate-400">المورد:</span> {order.supplier_name}</div>
-                      <div><span className="text-slate-400">المبلغ:</span> <span className="font-bold text-emerald-600">{order.total_amount?.toLocaleString('ar-SA')} ر.س</span></div>
+                      <div><span className="text-slate-400">المبلغ:</span> <span className="font-bold text-emerald-600">{order.total_amount?.toLocaleString('en-US')} ر.س</span></div>
                       <div>
                         <span className="text-slate-400">رقم الاستلام:</span> 
                         <span className="font-bold text-blue-600 mr-1">{order.supplier_receipt_number || '-'}</span>
@@ -753,7 +753,7 @@ const DeliveryTrackerDashboard = () => {
                         <TableCell className="font-bold text-emerald-700">{order.order_number || order.id?.slice(0, 8).toUpperCase()}</TableCell>
                         <TableCell>{order.project_name}</TableCell>
                         <TableCell>{order.supplier_name}</TableCell>
-                        <TableCell className="text-center font-bold text-emerald-600">{order.total_amount?.toLocaleString('ar-SA')} ر.س</TableCell>
+                        <TableCell className="text-center font-bold text-emerald-600">{order.total_amount?.toLocaleString('en-US')} ر.س</TableCell>
                         <TableCell className="text-center">
                           <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">{order.supplier_receipt_number || '-'}</span>
                         </TableCell>
@@ -795,7 +795,7 @@ const DeliveryTrackerDashboard = () => {
                 <div><span className="text-slate-500">رقم الأمر:</span> <span className="font-bold">{selectedOrder.order_number || selectedOrder.id?.slice(0, 8).toUpperCase()}</span></div>
                 <div><span className="text-slate-500">المشروع:</span> {selectedOrder.project_name}</div>
                 <div><span className="text-slate-500">المورد:</span> {selectedOrder.supplier_name}</div>
-                <div><span className="text-slate-500">المبلغ:</span> <span className="font-bold text-emerald-600">{selectedOrder.total_amount?.toLocaleString('ar-SA')} ر.س</span></div>
+                <div><span className="text-slate-500">المبلغ:</span> <span className="font-bold text-emerald-600">{selectedOrder.total_amount?.toLocaleString('en-US')} ر.س</span></div>
                 <div><span className="text-slate-500">الحالة:</span> {getStatusBadge(selectedOrder.status)}</div>
                 <div><span className="text-slate-500">التاريخ:</span> {formatDate(selectedOrder.created_at)}</div>
                 {selectedOrder.supplier_receipt_number && (
@@ -955,7 +955,7 @@ const DeliveryTrackerDashboard = () => {
               <div className="bg-purple-50 p-3 rounded-lg">
                 <p className="text-sm"><span className="text-slate-500">رقم الأمر:</span> <span className="font-bold text-purple-700">{selectedOrder.order_number}</span></p>
                 <p className="text-sm"><span className="text-slate-500">المورد:</span> {selectedOrder.supplier_name}</p>
-                <p className="text-sm"><span className="text-slate-500">المبلغ:</span> <span className="font-bold text-emerald-600">{selectedOrder.total_amount?.toLocaleString('ar-SA')} ر.س</span></p>
+                <p className="text-sm"><span className="text-slate-500">المبلغ:</span> <span className="font-bold text-emerald-600">{selectedOrder.total_amount?.toLocaleString('en-US')} ر.س</span></p>
               </div>
 
               <div>
