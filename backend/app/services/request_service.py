@@ -103,7 +103,12 @@ class RequestService(BaseService[MaterialRequest]):
         engineer_name: str,
         expected_delivery_date: Optional[str] = None,
         supervisor_prefix: Optional[str] = None,
-        project_code: Optional[str] = None
+        project_code: Optional[str] = None,
+        # حقول الدور والنموذج (اختياري)
+        floor_id: Optional[str] = None,
+        floor_name: Optional[str] = None,
+        template_id: Optional[str] = None,
+        template_name: Optional[str] = None
     ) -> MaterialRequest:
         """
         Create a new material request with unique sequential numbering
@@ -142,6 +147,11 @@ class RequestService(BaseService[MaterialRequest]):
             engineer_name=engineer_name,
             status="pending_engineer",
             expected_delivery_date=expected_delivery_date,
+            # حقول الدور والنموذج
+            floor_id=floor_id,
+            floor_name=floor_name,
+            template_id=template_id,
+            template_name=template_name,
             created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             updated_at=datetime.now(timezone.utc).replace(tzinfo=None)
         )
