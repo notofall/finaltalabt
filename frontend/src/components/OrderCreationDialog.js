@@ -234,6 +234,9 @@ const ItemCard = ({
                 searchPlaceholder="ابحث بالكود أو الاسم..."
                 displayKey="name"
                 valueKey="id"
+                onSearch={onCatalogSearch}
+                loading={catalogLoading}
+                totalCount={catalogTotal}
               />
             )}
           </div>
