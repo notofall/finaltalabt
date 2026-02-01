@@ -64,6 +64,14 @@ class ReportsService:
         """Get budget report"""
         categories = await self.repository.get_budget_categories(project_id)
         
+        # جلب أسماء المشاريع
+        project_names = {}
+        if categories:
+            project_ids = list(set([cat.project_id for cat in categories if cat.project_id]))
+            if project_ids:
+                projects = await self.repository.get_projects_by_ids(project_ids)
+                project_names = {p.id: p.name for p in projects}
+        
         report = []
         total_estimated = 0
         total_spent = 0
@@ -76,12 +84,15 @@ class ReportsService:
             total_estimated += estimated
             total_spent += spent
             
+            # جلب اسم المشروع من القاموس أو من التصنيف نفسه
+            cat_project_name = cat.project_name or project_names.get(cat.project_id, "")
+            
             report.append({
                 "id": cat.id,
                 "code": cat.code,
                 "name": cat.name,
                 "project_id": cat.project_id,
-                "project_name": cat.project_name or "",
+                "project_name": cat_project_name,
                 "estimated_budget": estimated,
                 "spent_amount": float(spent),
                 "remaining_amount": float(remaining),
