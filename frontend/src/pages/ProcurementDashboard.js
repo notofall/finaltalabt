@@ -1708,7 +1708,12 @@ const ProcurementDashboard = () => {
         terms_conditions: editOrderData.terms_conditions,
         expected_delivery_date: editOrderData.expected_delivery_date || null,
         supplier_invoice_number: editOrderData.supplier_invoice_number,
-        item_prices: pricesArray
+        item_prices: pricesArray,
+        // إضافة حقول الدور والنموذج
+        floor_id: editOrderData.floor_id || null,
+        floor_name: editOrderData.floor_name || null,
+        template_id: editOrderData.template_id || null,
+        template_name: editOrderData.template_name || null
       }, getAuthHeaders());
       
       // Update catalog links for items that changed
