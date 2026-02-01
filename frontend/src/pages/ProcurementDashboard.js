@@ -1908,9 +1908,9 @@ const ProcurementDashboard = () => {
     setExportApprovalTypeFilter("all");
   };
 
-  const formatDate = (dateString) => new Date(dateString).toLocaleDateString("ar-SA", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  const formatDateFull = (dateString) => new Date(dateString).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" });
-  const formatCurrency = (amount) => `${(amount || 0).toLocaleString('ar-SA')} ر.س`;
+  const formatDate = (dateString) => new Date(dateString).toLocaleDateString("en-GB", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  const formatDateFull = (dateString) => new Date(dateString).toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
+  // formatCurrency is now imported from ../utils/formatters
   
   const getItemsSummary = (items) => !items?.length ? "-" : items.length === 1 ? items[0].name : `${items[0].name} +${items.length - 1}`;
 
