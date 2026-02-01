@@ -439,6 +439,82 @@ async def run_project_migrations() -> None:
         logger.warning(f"Project migrations warning: {e}")
 
 
+async def run_floor_template_migrations() -> None:
+    """Run migrations for floor/template fields in material_requests and purchase_orders"""
+    global engine
+    
+    if engine is None:
+        return
+    
+    try:
+        database_url = get_database_url()
+        is_sqlite = 'sqlite' in database_url
+        
+        async with engine.begin() as conn:
+            if is_sqlite:
+                # Check if columns exist in SQLite for material_requests
+                try:
+                    result = await conn.execute(text("PRAGMA table_info(material_requests)"))
+                    columns = [row[1] for row in result.fetchall()]
+                    
+                    if 'floor_id' not in columns:
+                        await conn.execute(text("ALTER TABLE material_requests ADD COLUMN floor_id VARCHAR(36)"))
+                    if 'floor_name' not in columns:
+                        await conn.execute(text("ALTER TABLE material_requests ADD COLUMN floor_name VARCHAR(255)"))
+                    if 'template_id' not in columns:
+                        await conn.execute(text("ALTER TABLE material_requests ADD COLUMN template_id VARCHAR(36)"))
+                    if 'template_name' not in columns:
+                        await conn.execute(text("ALTER TABLE material_requests ADD COLUMN template_name VARCHAR(255)"))
+                except Exception as e:
+                    pass
+                
+                # Check if columns exist in SQLite for purchase_orders
+                try:
+                    result = await conn.execute(text("PRAGMA table_info(purchase_orders)"))
+                    columns = [row[1] for row in result.fetchall()]
+                    
+                    if 'floor_id' not in columns:
+                        await conn.execute(text("ALTER TABLE purchase_orders ADD COLUMN floor_id VARCHAR(36)"))
+                    if 'floor_name' not in columns:
+                        await conn.execute(text("ALTER TABLE purchase_orders ADD COLUMN floor_name VARCHAR(255)"))
+                    if 'template_id' not in columns:
+                        await conn.execute(text("ALTER TABLE purchase_orders ADD COLUMN template_id VARCHAR(36)"))
+                    if 'template_name' not in columns:
+                        await conn.execute(text("ALTER TABLE purchase_orders ADD COLUMN template_name VARCHAR(255)"))
+                except Exception as e:
+                    pass
+                
+                logger.info("✅ Floor/Template migrations applied for SQLite")
+            else:
+                # PostgreSQL
+                pg_migrations = [
+                    # material_requests columns
+                    "ALTER TABLE material_requests ADD COLUMN IF NOT EXISTS floor_id VARCHAR(36)",
+                    "ALTER TABLE material_requests ADD COLUMN IF NOT EXISTS floor_name VARCHAR(255)",
+                    "ALTER TABLE material_requests ADD COLUMN IF NOT EXISTS template_id VARCHAR(36)",
+                    "ALTER TABLE material_requests ADD COLUMN IF NOT EXISTS template_name VARCHAR(255)",
+                    # purchase_orders columns
+                    "ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS floor_id VARCHAR(36)",
+                    "ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS floor_name VARCHAR(255)",
+                    "ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS template_id VARCHAR(36)",
+                    "ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS template_name VARCHAR(255)",
+                    # Create indexes
+                    "CREATE INDEX IF NOT EXISTS idx_requests_floor ON material_requests(floor_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_requests_template ON material_requests(template_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_orders_floor ON purchase_orders(floor_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_orders_template ON purchase_orders(template_id)",
+                ]
+                for migration in pg_migrations:
+                    try:
+                        await conn.execute(text(migration))
+                    except:
+                        pass
+                
+                logger.info("✅ Floor/Template migrations applied for PostgreSQL")
+    except Exception as e:
+        logger.warning(f"Floor/Template migrations warning: {e}")
+
+
 async def get_postgres_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Dependency function that provides a database session to routes.
