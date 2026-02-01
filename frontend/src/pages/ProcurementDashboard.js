@@ -1948,52 +1948,99 @@ const ProcurementDashboard = () => {
               </div>
             </div>
             
-            {/* Desktop Navigation - Hidden on Mobile */}
+            {/* Desktop Navigation - Grouped */}
             <div className="hidden lg:flex items-center gap-1">
-              <Button variant="ghost" size="sm" onClick={() => setProjectDialogOpen(true)} className="text-slate-300 hover:text-white h-8 px-2">
-                <Building2 className="w-4 h-4 ml-1" />المشاريع
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setBudgetDialogOpen(true)} className="text-slate-300 hover:text-white h-8 px-2">
-                <DollarSign className="w-4 h-4 ml-1" />الميزانيات
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setSuppliersListDialogOpen(true)} className="text-slate-300 hover:text-white h-8 px-2">
-                <Users className="w-4 h-4 ml-1" />الموردين
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/rfq')} className="text-indigo-400 hover:text-indigo-300 h-8 px-2" title="طلبات عروض الأسعار">
-                <FileText className="w-4 h-4 ml-1" />عروض الأسعار
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/buildings')} className="text-emerald-400 hover:text-emerald-300 h-8 px-2" title="نظام العمائر">
-                <Building2 className="w-4 h-4 ml-1" />الكميات
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setAdvancedReportsOpen(true)} className="text-purple-400 hover:text-purple-300 h-8 px-2" title="التقارير المتقدمة">
-                <PieChart className="w-4 h-4 ml-1" />التقارير
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setQuantityAlertsOpen(true)} className="text-orange-400 hover:text-orange-300 h-8 px-2" title="تنبيهات الكميات">
-                <AlertTriangle className="w-4 h-4 ml-1" />الكميات
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setExportDialogOpen(true)} className="text-green-400 hover:text-green-300 h-8 px-2" title="تصدير PDF">
-                <Download className="w-4 h-4 ml-1" />تصدير
-              </Button>
-              <Button variant="ghost" size="sm" onClick={openCatalogDialog} className="text-slate-300 hover:text-white h-8 px-2" title="كتالوج الأسعار">
-                <Package className="w-4 h-4 ml-1" />الكتالوج
-              </Button>
+              {/* مجموعة الإدارة */}
+              <div className="relative group">
+                <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800 h-9 px-3 rounded-lg">
+                  <Building2 className="w-4 h-4 ml-1" />
+                  <span>الإدارة</span>
+                  <ChevronDown className="w-3 h-3 mr-1" />
+                </Button>
+                <div className="absolute top-full right-0 mt-1 w-48 bg-slate-800 rounded-lg shadow-xl border border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <button onClick={() => setProjectDialogOpen(true)} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-t-lg">
+                    <Building2 className="w-4 h-4" />المشاريع
+                  </button>
+                  <button onClick={() => setBudgetDialogOpen(true)} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white">
+                    <DollarSign className="w-4 h-4" />الميزانيات
+                  </button>
+                  <button onClick={() => setSuppliersListDialogOpen(true)} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-b-lg">
+                    <Users className="w-4 h-4" />الموردين
+                  </button>
+                </div>
+              </div>
+
+              {/* مجموعة الأنظمة */}
+              <div className="relative group">
+                <Button variant="ghost" size="sm" className="text-emerald-400 hover:text-emerald-300 hover:bg-slate-800 h-9 px-3 rounded-lg">
+                  <FileText className="w-4 h-4 ml-1" />
+                  <span>الأنظمة</span>
+                  <ChevronDown className="w-3 h-3 mr-1" />
+                </Button>
+                <div className="absolute top-full right-0 mt-1 w-48 bg-slate-800 rounded-lg shadow-xl border border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <button onClick={() => navigate('/rfq')} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-indigo-400 hover:bg-slate-700 hover:text-indigo-300 rounded-t-lg">
+                    <FileText className="w-4 h-4" />عروض الأسعار
+                  </button>
+                  <button onClick={() => navigate('/buildings')} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-emerald-400 hover:bg-slate-700 hover:text-emerald-300">
+                    <Building2 className="w-4 h-4" />نظام الكميات
+                  </button>
+                  <button onClick={openCatalogDialog} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-b-lg">
+                    <Package className="w-4 h-4" />كتالوج الأسعار
+                  </button>
+                </div>
+              </div>
+
+              {/* مجموعة التقارير */}
+              <div className="relative group">
+                <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300 hover:bg-slate-800 h-9 px-3 rounded-lg">
+                  <PieChart className="w-4 h-4 ml-1" />
+                  <span>التقارير</span>
+                  <ChevronDown className="w-3 h-3 mr-1" />
+                </Button>
+                <div className="absolute top-full right-0 mt-1 w-52 bg-slate-800 rounded-lg shadow-xl border border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <button onClick={() => setAdvancedReportsOpen(true)} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-purple-400 hover:bg-slate-700 hover:text-purple-300 rounded-t-lg">
+                    <PieChart className="w-4 h-4" />التقارير المتقدمة
+                  </button>
+                  <button onClick={() => setQuantityAlertsOpen(true)} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-orange-400 hover:bg-slate-700 hover:text-orange-300">
+                    <AlertTriangle className="w-4 h-4" />تنبيهات الكميات
+                  </button>
+                  <button onClick={() => setExportDialogOpen(true)} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-green-400 hover:bg-slate-700 hover:text-green-300 rounded-b-lg">
+                    <Download className="w-4 h-4" />تصدير PDF
+                  </button>
+                </div>
+              </div>
+
+              {/* فاصل */}
+              <div className="h-6 w-px bg-slate-700 mx-2"></div>
+
+              {/* أزرار سريعة */}
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={handleRefresh} 
                 disabled={refreshing}
-                className="text-slate-300 hover:text-white h-8 px-2"
+                className="text-slate-300 hover:text-white hover:bg-slate-800 h-9 w-9 p-0 rounded-lg"
                 title="تحديث البيانات"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setPasswordDialogOpen(true)} className="text-slate-300 hover:text-white h-8 px-2">
-                <KeyRound className="w-4 h-4" />
-              </Button>
-              <span className="text-xs text-slate-300 mx-2">{user?.name}</span>
-              <Button variant="ghost" size="sm" onClick={logout} className="text-slate-300 hover:text-white h-8 px-2">
-                <LogOut className="w-4 h-4" />
-              </Button>
+              
+              {/* المستخدم */}
+              <div className="relative group">
+                <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800 h-9 px-3 rounded-lg">
+                  <User className="w-4 h-4 ml-1" />
+                  <span className="text-xs max-w-[80px] truncate">{user?.name}</span>
+                  <ChevronDown className="w-3 h-3 mr-1" />
+                </Button>
+                <div className="absolute top-full left-0 mt-1 w-44 bg-slate-800 rounded-lg shadow-xl border border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <button onClick={() => setPasswordDialogOpen(true)} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white rounded-t-lg">
+                    <KeyRound className="w-4 h-4" />تغيير كلمة المرور
+                  </button>
+                  <button onClick={logout} className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-slate-700 hover:text-red-300 rounded-b-lg">
+                    <LogOut className="w-4 h-4" />تسجيل الخروج
+                  </button>
+                </div>
+              </div>
             </div>
             
             {/* Mobile Navigation - Visible on Mobile/Tablet */}
