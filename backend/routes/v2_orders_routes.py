@@ -134,6 +134,11 @@ def order_to_response(order: PurchaseOrder, items: List[dict]) -> dict:
         "notes": order.notes,
         "supplier_invoice_number": order.supplier_invoice_number,
         "expected_delivery_date": order.expected_delivery_date,
+        # حقول الدور والنموذج
+        "floor_id": getattr(order, 'floor_id', None),
+        "floor_name": getattr(order, 'floor_name', None),
+        "template_id": getattr(order, 'template_id', None),
+        "template_name": getattr(order, 'template_name', None),
         "created_at": to_iso_string(order.created_at),
         "approved_at": to_iso_string(order.approved_at),
         "printed_at": to_iso_string(order.printed_at)
