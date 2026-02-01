@@ -81,6 +81,7 @@ class ReportsService:
                 "code": cat.code,
                 "name": cat.name,
                 "project_id": cat.project_id,
+                "project_name": cat.project_name or "",
                 "estimated_budget": estimated,
                 "spent_amount": float(spent),
                 "remaining_amount": float(remaining),
